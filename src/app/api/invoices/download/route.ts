@@ -215,7 +215,7 @@ export async function POST(req: NextRequest) {
         const productsRaw = await db.product.findMany({
             where: { id: { in: productIds } }
         });
-        const productMap = new Map(productsRaw.map(p => [p.id, p]));
+        const productMap = new Map(productsRaw.map((p: any) => [p.id, p]));
 
         // --- HSN Summary Data Preparation ---
         const hsnSummaryMap = new Map();
