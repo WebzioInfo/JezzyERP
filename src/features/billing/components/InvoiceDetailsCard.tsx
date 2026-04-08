@@ -131,7 +131,7 @@ export function InvoiceDetailsCard({
                                 />
                                 <div className="flex items-center gap-1.5 ml-1">
                                     <Info size={10} className="text-slate-400 shrink-0" />
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Format: J/B2B/XX/FY</p>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Format: JE/B2B/XX/FY</p>
                                 </div>
                             </div>
                         </div>

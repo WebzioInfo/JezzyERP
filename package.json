@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "api": "json-server --watch db.json --port 10000"
   },
   "dependencies": {

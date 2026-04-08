@@ -27,7 +27,7 @@ export class InvoiceService {
         const settings = await tx.companySetting.findFirst();
         const prefix = settings?.invoicePrefix || "B2B";
         
-        // J/B2B/01/24-25 Format
+        // JE/B2B/01/24-25 Format
         const docDate = new Date(validatedData.date);
         const year = docDate.getFullYear();
         const month = docDate.getMonth(); // 0-11
@@ -40,7 +40,7 @@ export class InvoiceService {
         }
         
         const seq = String(nextSequence).padStart(2, '0');
-        invoiceNo = `J/${prefix}/${seq}/${fy}`;
+        invoiceNo = `JE/${prefix}/${seq}/${fy}`;
       }
 
       // 3. Persistence
