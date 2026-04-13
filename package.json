@@ -68,7 +68,5 @@
     "url": "https://github.com/WebzioInfo/jezzy-erp/issues"
   },
   "homepage": "https://github.com/WebzioInfo/jezzy-erp#readme",
-  "prisma": {
-    "seed": "node prisma/seed.mjs"
-  }
 }
+
