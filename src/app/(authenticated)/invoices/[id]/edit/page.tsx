@@ -21,6 +21,7 @@ export default async function EditInvoicePage({ params }: PageProps) {
         where: { id },
         select: {
             id: true,
+            clientId: true,
             invoiceNo: true,
             date: true,
             gstType: true,

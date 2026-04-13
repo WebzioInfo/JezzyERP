@@ -1,7 +1,7 @@
 //generateInvoicePDF.ts
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { numberToWords } from "@/utils/numberToWords";
+import { numberToWords } from "@/utils/financials";
 import { formatDateDMY } from "@/utils/date";
 
 export async function generateInvoicePDF(invoice: any, settings: any) {
@@ -102,7 +102,7 @@ State: ${invoice.client.state}
                 i + 1,
                 p.description,
                 p.hsn || "—",
-                p.qty,
+                Number(p.qty).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 3 }),
                 `Rs. ${Number(p.rate).toFixed(2)}`,
                 `${p.taxPercent}%`,
                 `Rs. ${Number(p.totalAmount).toFixed(2)}`

@@ -149,6 +149,8 @@ export async function POST(req: NextRequest) {
         let infoY = y;
         infoY = drawInfoRow("Invoice No:", invoice.invoiceNo, infoY);
         infoY = drawInfoRow("Date:", fmtDate(invoice.date), infoY);
+        if ((invoice as any).ewayBill) infoY = drawInfoRow("E-Way Bill:", (invoice as any).ewayBill, infoY);
+        if ((invoice as any).vehicleNo) infoY = drawInfoRow("Vehicle No:", (invoice as any).vehicleNo, infoY);
 
         // --- BILL TO & SHIP TO (LEFT - Split Screen) ---
         let addrY = y;
@@ -198,7 +200,7 @@ export async function POST(req: NextRequest) {
 
         const shipping = {
             name: inv.shippingName || billing.name,
-            address1: inv.shippingAddress2 || billing.address1,
+            address1: inv.shippingAddress1 || billing.address1,
             address2: inv.shippingAddress2 || billing.address2,
             pinCode: inv.shippingPinCode || billing.pinCode,
             gst: inv.billingGst || inv.client?.gst
@@ -261,7 +263,7 @@ export async function POST(req: NextRequest) {
                 ...(showPkg ? [pkgValue] : []),
                 `${productName.toUpperCase()}${subTitle}${pkgInDesc}`,
                 item.hsn || "-",
-                `${Number(item.qty)} ${item.unit || "NOS"}`,
+                `${Number(item.qty).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 3 })} ${item.unit || "NOS"}`,
                 fmt(item.rate.toNumber()),
                 item.unit || "NOS",
                 fmt(item.qty * item.rate.toNumber()),
@@ -402,14 +404,14 @@ export async function POST(req: NextRequest) {
         doc.text(`Amount Chargeable (in words):`, LEFT_MARGIN, y);
         y += 5;
         doc.setFont("helvetica", "normal");
-        doc.text(`INR ${numberToWords(rounded)} Only`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
+        doc.text(`INR ${numberToWords(rounded)}`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
 
         y += 10;
         doc.setFont("helvetica", "bold");
         doc.text(`Tax Amount (in words):`, LEFT_MARGIN, y);
         y += 5;
         doc.setFont("helvetica", "normal");
-        doc.text(`INR ${numberToWords(taxVal)} Only`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
+        doc.text(`INR ${numberToWords(taxVal)}`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
 
         y += 15;
 

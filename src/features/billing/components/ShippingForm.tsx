@@ -1,8 +1,6 @@
-"use client";
-
-//ShippingForm.tsx
-import React from 'react';
 import { Address } from '@/types/invoice';
+import { Input } from '@/ui/core/Input';
+import { User, MapPin, Hash, Truck } from 'lucide-react';
 
 export default function ShippingForm({ shipping, setShipping }: { 
   shipping: Address; 
@@ -13,68 +11,55 @@ export default function ShippingForm({ shipping, setShipping }: {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="relative">
-        <input
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-          placeholder="Name"
-          value={shipping.name}
-          onChange={e => update("name", e.target.value)}
-        />
-        <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
-          Name
-        </label>
-      </div>
+    <div className="space-y-4 animate-in fade-in duration-500">
+      <Input
+        label="Shipping Receiver Name"
+        placeholder="Contact person or Location name"
+        value={shipping.name}
+        onChange={e => update("name", e.target.value)}
+        icon={<User size={16} />}
+        className="h-12 font-bold"
+      />
 
-      <div className="relative">
-        <input
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-          placeholder="State"
-          value={shipping.state}
-          onChange={e => update("state", e.target.value)}
-        />
-        <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
-          State
-        </label>
-      </div>
-
-      <div className="relative">
-        <input
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-          placeholder="Pin Code"
-          value={shipping.pinCode ?? ""}
-          onChange={e => update("pinCode", e.target.value)}
-        />
-        <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
-          Pin Code
-        </label>
-      </div>
-
-      <div className="relative col-span-2">
-        <input
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-          placeholder="Address Line 1"
+      <div className="space-y-4 pt-2 border-t border-slate-50">
+        <Input
+          label="Address Line 1"
+          placeholder="Delivery building, Door no, etc."
           value={shipping.address1}
           onChange={e => update("address1", e.target.value)}
+          icon={<Truck size={16} />}
+          className="h-12"
         />
-        <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
-          Address Line 1
-        </label>
-      </div>
-
-      <div className="relative col-span-2">
-        <input
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-          placeholder="Address Line 2"
+        <Input
+          label="Address Line 2"
+          placeholder="Locality, Landmark (Optional)"
           value={shipping.address2 ?? ""}
           onChange={e => update("address2", e.target.value)}
+          icon={<MapPin size={16} />}
+          className="h-12"
         />
-        <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600">
-          Address Line 2
-        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Shipping State"
+            placeholder="State"
+            value={shipping.state}
+            onChange={e => update("state", e.target.value)}
+            className="h-12 font-bold"
+          />
+          <Input
+            label="Shipping Pin Code"
+            placeholder="000000"
+            value={shipping.pinCode ?? ""}
+            onChange={e => update("pinCode", e.target.value)}
+            icon={<Hash size={14} />}
+            className="h-12 font-mono"
+          />
+        </div>
       </div>
     </div>
   );
 }
+
 
 

@@ -155,15 +155,43 @@ export function InvoiceDetailsCard({
 
                     {/* Address Overrides */}
                     <div className="md:col-span-12 space-y-4 pt-4 border-t border-slate-100">
-                        <button
-                            type="button"
-                            onClick={() => setShowAddresses(!showAddresses)}
-                            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-primary-600 transition-colors"
-                        >
-                            <MapPin size={14} className={showAddresses ? "text-primary-500" : "text-slate-300"} />
-                            {showAddresses ? "Hide Address Management" : "Manage Billing & Shipping Addresses"}
-                            {showAddresses ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
+                        <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 pb-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowAddresses(!showAddresses)}
+                                className="flex items-center gap-2 group"
+                            >
+                                <div className={cn(
+                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                    showAddresses ? "bg-primary-600 text-white shadow-lg shadow-primary-200" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
+                                )}>
+                                    <MapPin size={16} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Address Overrides</p>
+                                    <p className="text-sm font-bold text-slate-700 leading-none">
+                                        {showAddresses ? "Hide Management" : "Review Billing & Shipping"}
+                                    </p>
+                                </div>
+                                {showAddresses ? <ChevronUp size={14} className="ml-2 text-slate-400" /> : <ChevronDown size={14} className="ml-2 text-slate-400 group-hover:translate-y-0.5 transition-transform" />}
+                            </button>
+
+                            {!showAddresses && (
+                                <div className="flex items-center gap-6 ml-auto pr-2">
+                                    <div className="hidden sm:flex flex-col items-end">
+                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Billed To</span>
+                                        <span className="text-[11px] font-bold text-slate-500 max-w-[150px] truncate italic">{billingAddress.name || 'No Name'}</span>
+                                    </div>
+                                    <div className="w-px h-6 bg-slate-100 hidden sm:block"></div>
+                                    <div className="hidden sm:flex flex-col items-end">
+                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Shipping To</span>
+                                        <span className="text-[11px] font-bold text-slate-500 max-w-[150px] truncate italic">
+                                            {shippingSameAsBilling ? "Same as Billing" : (shippingAddress.name || 'No Name')}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {showAddresses && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-top-4 duration-500">

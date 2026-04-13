@@ -32,6 +32,15 @@ const LineItemRow = React.memo(({
     removeItem: (index: number) => void;
     handleProductSelect: (index: number, productId: string) => void;
 }) => {
+    const [localQty, setLocalQty] = React.useState(item.qty.toString());
+
+    // Sync local state when item.qty changes from parent (e.g. initial load or bulk updates)
+    React.useEffect(() => {
+        if (Number(localQty) !== item.qty) {
+            setLocalQty(item.qty.toString());
+        }
+    }, [item.qty]);
+
     return (
         <div className="group relative grid grid-cols-1 lg:grid-cols-12 gap-5 items-start p-4 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl transition-all duration-200">
             {/* Index Badge */}
@@ -83,16 +92,24 @@ const LineItemRow = React.memo(({
                 />
             </div>
 
-            {/* Quantity & Unit */}
             <div className="col-span-1">
                 <div className="space-y-1">
                     <Input
                         label={`Qty (${item.unit || 'NOS'})`}
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        value={item.qty}
-                        onChange={e => updateItem(index, "qty", parseFloat(e.target.value) || 0)}
+                        type="text"
+                        inputMode="decimal"
+                        value={localQty}
+                        onChange={e => {
+                            const val = e.target.value;
+                            // Allow typing numbers and decimals
+                            if (/^\d*\.?\d*$/.test(val)) {
+                                setLocalQty(val);
+                                const num = parseFloat(val);
+                                if (!isNaN(num)) {
+                                    updateItem(index, "qty", num);
+                                }
+                            }
+                        }}
                         className="text-center h-10 font-black"
                     />
                 </div>

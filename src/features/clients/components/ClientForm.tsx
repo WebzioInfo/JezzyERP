@@ -122,7 +122,7 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                 <div className="md:col-span-2 space-y-2">
-                                    <label className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-500 ml-1">Principal Address Line</label>
+                                    <label className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-500 ml-1">Address Line 1</label>
                                     <div className="relative group">
                                         <div className="absolute left-5 top-5 text-slate-300 group-focus-within:text-primary-500 transition-colors">
                                             <MapPin size={20} />
@@ -148,7 +148,7 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
                                 />
                                 <div className="md:col-span-3">
                                     <Input
-                                        label="Secondary Address Info (Optional)"
+                                        label="Address Line 2 (Optional)"
                                         name="address2"
                                         defaultValue={client?.address2}
                                         placeholder="Landmark, Area, Secondary Locality"

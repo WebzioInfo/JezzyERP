@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Client } from "@/features/clients/types";
 import { Product } from "@/features/inventory/types";
 import { Button } from "@/ui/core/Button";
@@ -19,6 +20,7 @@ interface BillingEngineProps {
 }
 
 export function BillingEngine({ clients, products, mode = "INVOICE", initialData }: BillingEngineProps) {
+    const router = useRouter();
     const {
         state,
         isPending,
@@ -184,22 +186,33 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                                     </p>
                                 </div>
 
-                                <Button
-                                    className="w-full h-16 text-xl font-black gap-3 rounded-2xl shadow-2xl transition-all uppercase italic tracking-widest"
-                                    onClick={handleSubmit}
-                                    loading={isPending}
-                                    variant="primary"
-                                    disabled={isPending || state.items.length === 0 || !state.clientId}
-                                >
-                                    {initialData?.id ? (
-                                        <><CheckCircle2 className="w-6 h-6" /> Update {mode === "QUOTATION" ? "Quotation" : "Invoice"}</>
-                                    ) : mode === "QUOTATION" ? (
-                                        <><ClipboardList className="w-6 h-6" /> Save Quotation</>
-                                    ) : (
-                                        <><CheckCircle2 className="w-6 h-6" /> Deploy Invoice</>
-                                    )}
-                                    <ArrowRight size={20} className="ml-1 opacity-50" />
-                                </Button>
+                                <div className="flex gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-16 flex-1 text-slate-500 font-bold rounded-2xl border-slate-200"
+                                        onClick={() => router.back()}
+                                        disabled={isPending}
+                                    >
+                                        Discard
+                                    </Button>
+                                    <Button
+                                        className="flex-[2] h-16 text-xl font-black gap-3 rounded-2xl shadow-2xl transition-all uppercase italic tracking-widest"
+                                        onClick={handleSubmit}
+                                        loading={isPending}
+                                        variant="primary"
+                                        disabled={isPending || state.items.length === 0 || !state.clientId}
+                                    >
+                                        {initialData?.id ? (
+                                            <><CheckCircle2 className="w-6 h-6" /> Update {mode === "QUOTATION" ? "Quotation" : "Invoice"}</>
+                                        ) : mode === "QUOTATION" ? (
+                                            <><ClipboardList className="w-6 h-6" /> Save Quotation</>
+                                        ) : (
+                                            <><CheckCircle2 className="w-6 h-6" /> Deploy Invoice</>
+                                        )}
+                                        <ArrowRight size={20} className="ml-1 opacity-50" />
+                                    </Button>
+                                </div>
 
                                 <p className="text-center text-[10px] text-slate-400 mt-6 leading-relaxed font-bold uppercase tracking-widest italic">
                                     Authoritative Document Submission Engine v4

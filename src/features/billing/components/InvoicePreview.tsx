@@ -140,8 +140,8 @@ export default function InvoicePreview({ invoice }: Props) {
 
           {/* Transport details in small pills? */}
           <div className="flex flex-wrap gap-2">
-            {invoice.wayBill && (
-              <div className="bg-slate-100 px-2 py-1 rounded text-[9px] font-bold text-slate-500 border border-slate-200 uppercase tracking-widest">EWB: {invoice.wayBill}</div>
+            {invoice.ewayBill && (
+              <div className="bg-slate-100 px-2 py-1 rounded text-[9px] font-bold text-slate-500 border border-slate-200 uppercase tracking-widest">EWB: {invoice.ewayBill}</div>
             )}
             {invoice.vehicleNo && (
               <div className="bg-slate-100 px-2 py-1 rounded text-[9px] font-bold text-slate-500 border border-slate-200 uppercase tracking-widest">V#: {invoice.vehicleNo}</div>
@@ -170,7 +170,9 @@ export default function InvoicePreview({ invoice }: Props) {
                 <td className="p-4 text-center border-r border-slate-100 font-bold text-slate-400">{i + 1}</td>
                 <td className="p-4 border-r border-slate-100 font-bold text-slate-900 italic">{p.description}</td>
                 <td className="p-4 text-center border-r border-slate-100 font-mono text-slate-400">{p.hsn || '-'}</td>
-                <td className="p-4 text-center border-r border-slate-100 font-black text-slate-800">{p.qty || 0} {p.unit || "NOS"}</td>
+                <td className="p-4 text-center border-r border-slate-100 font-black text-slate-800">
+                  {Number(p.qty || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 3 })} {p.unit || "NOS"}
+                </td>
                 <td className="p-4 text-right border-r border-slate-100 font-bold">Rs. {Number(p.rate || 0).toFixed(2)}</td>
                 {showGST && (
                   <td className="p-4 text-center border-r border-slate-100 font-bold">{Number(p.taxPercent || p.gstRate || 0)}%</td>
