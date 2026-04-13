@@ -48,7 +48,7 @@ export function usePurchaseEngine(products: any[], initialData?: any) {
     const removeItem = (index: number) => {
         setState(s => ({
             ...s,
-            items: s.items.filter((_, i: number) => i !== index)
+            items: s.items.filter((_: any, i: number) => i !== index)
         }));
     };
 

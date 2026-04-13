@@ -86,7 +86,7 @@ function billingReducer(state: BillingState, action: BillingAction): BillingStat
         case "REMOVE_ITEM":
             return {
                 ...state,
-                items: state.items.filter((_, i) => i !== action.index)
+                items: state.items.filter((_: any, i) => i !== action.index)
             };
         case "UPDATE_ITEM":
             const updatedItems = [...state.items];

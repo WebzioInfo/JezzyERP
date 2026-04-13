@@ -59,7 +59,7 @@ export class PaymentService {
 
       // 5. Create audit log
       await recordAuditLog(tx, {
-        userId: data.recordedBy,
+        userId: data.recordedBy ?? null,
         action: "PAYMENT_RECORDED",
         entityType: "Payment",
         entityId: payment.id,

@@ -1,10 +1,13 @@
-import { Product } from "@/features/inventory/types";
+export interface CalculationItem {
+  qty: number;
+  rate: number;
+  gstRate: number;
+}
 
-
-export const calculateTotals = (products: Product[]) => {
-  return products.reduce(
+export const calculateTotals = (items: CalculationItem[]) => {
+  return items.reduce(
     (acc, p) => {
-      const qty = p.qty ?? 0;
+      const qty = p.qty || 0;
       const rate = Number(p.rate) || 0;
       const gstRate = Number(p.gstRate) || 0;
 
