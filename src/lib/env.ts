@@ -14,12 +14,13 @@ if (!parsed.success) {
     if (isBuildPhase) {
         console.warn("⚠️ [ENV] Essential environment variables are missing during build phase. Using mock values to allow build to complete.");
     } else {
-        console.error("❌ Invalid environment variables:", parsed.error.flatten().fieldErrors);
-        throw new Error("Invalid environment variables. Please check your .env file or deployment settings.");
+        // Log the error but DO NOT throw to prevent crashing the whole site (Middleware/Pages)
+        console.error("❌ [ENV] Invalid or missing environment variables:", parsed.error.flatten().fieldErrors);
+        console.error("❌ [ENV] Application features depending on these variables (like DB or Auth) will fail until they are provided.");
     }
 }
 
-// During build phase, we provide safe fallbacks if validation failed
+// Ensure the exported env object is always defined with at least fallbacks to prevent crashes
 export const env = parsed.success ? parsed.data : {
     DATABASE_URL: process.env.DATABASE_URL || "postgresql://mock:mock@localhost:5432/mock",
     JWT_SECRET: process.env.JWT_SECRET || "fallback_secret_for_build_phase_min_32_characters_long",
