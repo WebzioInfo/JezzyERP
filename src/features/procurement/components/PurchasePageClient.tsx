@@ -5,6 +5,7 @@ import { PurchaseEngine } from "./PurchaseEngine";
 import { PurchaseUpload } from "./PurchaseUpload";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "@/ui/core/Button";
+import { useRouter } from "next/navigation";
 
 interface PurchasePageClientProps {
     vendors: any[];
@@ -14,6 +15,7 @@ interface PurchasePageClientProps {
 export function PurchasePageClient({ vendors, products }: PurchasePageClientProps) {
     const [mode, setMode] = useState<"upload" | "form">("upload");
     const [extractedData, setExtractedData] = useState<any>(null);
+    const router = useRouter();
 
     const handleExtract = (data: any) => {
         // Attempt to find matching vendor by GST
@@ -46,7 +48,7 @@ export function PurchasePageClient({ vendors, products }: PurchasePageClientProp
         if (data.mode === 'resell') {
             // Store and redirect to Sales Invoice
             sessionStorage.setItem("jezzy_resell_pack", JSON.stringify(extracted));
-            window.location.href = "/invoices/new?source=resell";
+            router.push("/invoices/new?source=resell");
             return;
         }
 
@@ -58,17 +60,17 @@ export function PurchasePageClient({ vendors, products }: PurchasePageClientProp
         <div className="space-y-10 max-w-7xl mx-auto pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase">
+                    <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase animate-in slide-in-from-left duration-700">
                         Procure <span className="text-primary-600">Inventory</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 font-medium italic uppercase tracking-tighter">
+                    <p className="text-slate-500 mt-2 font-medium italic uppercase tracking-tighter animate-in slide-in-from-left duration-700 delay-100">
                         {mode === "upload" 
                             ? "Use AI Intelligence to extract supply chain data from your bills." 
                             : "Fine-tune and commit the extracted inward supply record."}
                     </p>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 animate-in slide-in-from-right duration-700">
                     {mode === "form" && (
                         <Button 
                             variant="ghost" 
@@ -92,15 +94,17 @@ export function PurchasePageClient({ vendors, products }: PurchasePageClientProp
                 </div>
             </div>
 
-            {mode === "upload" ? (
-                <PurchaseUpload products={products} onExtract={handleExtract} />
-            ) : (
-                <PurchaseEngine 
-                    vendors={vendors} 
-                    products={products} 
-                    initialData={extractedData} 
-                />
-            )}
+            <div className="animate-in fade-in zoom-in-95 duration-700 delay-200">
+                {mode === "upload" ? (
+                    <PurchaseUpload products={products} onExtract={handleExtract} />
+                ) : (
+                    <PurchaseEngine 
+                        vendors={vendors} 
+                        products={products} 
+                        initialData={extractedData} 
+                    />
+                )}
+            </div>
         </div>
     );
 }

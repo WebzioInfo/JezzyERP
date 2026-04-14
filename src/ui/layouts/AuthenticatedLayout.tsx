@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUIStore } from "@/lib/store/uiStore";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -159,23 +161,14 @@ export default function AuthenticatedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { sidebarCollapsed, toggleSidebar, mobileMenuOpen, setMobileMenuOpen, setSidebarCollapsed } = useUIStore();
   const pathname = usePathname();
 
-  // Load sidebar state from localStorage on mount
+  // Sync sidebar state from store persistence if needed or just use it
   useEffect(() => {
-    const saved = localStorage.getItem("sidebar-collapsed");
-    if (saved === "true") setIsSidebarOpen(false);
+    // Zustand persist takes care of it, but we can sync manually if required
   }, []);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => {
-      const newState = !prev;
-      localStorage.setItem("sidebar-collapsed", String(!newState));
-      return newState;
-    });
-  };
 
   return (
     <div className="flex h-screen mesh-bg-soft overflow-hidden text-slate-900 font-sans">
@@ -183,11 +176,11 @@ export default function AuthenticatedLayout({
       <aside
         className={cn(
           "hidden lg:flex flex-col transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-50 p-4 relative",
-          isSidebarOpen ? "w-(--sidebar-width)" : "w-(--sidebar-collapsed-width)"
+          !sidebarCollapsed ? "w-(--sidebar-width)" : "w-(--sidebar-collapsed-width)"
         )}
       >
         <div className="glass clay-card h-full flex flex-col overflow-hidden border-0 shadow-2xl shadow-primary-900/5">
-          <SidebarContent isCollapsed={!isSidebarOpen} pathname={pathname} />
+          <SidebarContent isCollapsed={sidebarCollapsed} pathname={pathname} />
         </div>
 
         {/* Toggle Button */}
@@ -195,23 +188,28 @@ export default function AuthenticatedLayout({
           onClick={toggleSidebar}
           className="absolute -right-3 top-24 w-8 h-8 glass clay-card flex items-center justify-center text-slate-400 shadow-xl hover:text-primary-600 transition-all z-50 hover:scale-110 active:scale-90 border-white/50"
         >
-          {isSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRightIcon size={16} />}
+          {sidebarCollapsed ? <ChevronRightIcon size={16} /> : <ChevronLeft size={16} />}
         </button>
       </aside>
 
       {/* ── Mobile Menu (Overlay) ── */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-60 lg:hidden animate-in fade-in duration-300"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-60 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Mobile Sidebar ── */}
       <aside
         className={cn(
           "fixed top-0 bottom-0 left-0 w-(--sidebar-width) p-4 z-70 transition-transform duration-500 cubic-bezier(0.34,1.56,0.64,1) lg:hidden",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="glass clay-card h-full flex flex-col overflow-hidden border-0">
@@ -222,7 +220,7 @@ export default function AuthenticatedLayout({
               </div>
               <span className="font-black tracking-tighter text-2xl font-display text-primary-600 uppercase">JEZZY</span>
             </div>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
+            <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
               <X size={18} />
             </button>
           </div>
@@ -235,9 +233,9 @@ export default function AuthenticatedLayout({
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <Header
-          onMenuClick={() => setIsMobileMenuOpen(true)}
+          onMenuClick={() => setMobileMenuOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 scroll-smooth animate-in">
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 scroll-smooth">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>

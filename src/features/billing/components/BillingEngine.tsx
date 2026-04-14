@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Client } from "@/features/clients/types";
 import { Product } from "@/features/inventory/types";
 import { Button } from "@/ui/core/Button";
-import { formatCurrency } from "@/utils/financials";
-import { CheckCircle2, AlertCircle, ClipboardList, Info, ArrowRight, Zap } from "lucide-react";
-import { useBillingEngine } from "@/hooks/useBillingEngine";
+import { formatCurrency } from "@/utils/index";
+import { CheckCircle2, AlertCircle, ClipboardList, Info, ArrowRight, Zap, GraduationCap } from "lucide-react";
+import { useTransactionStore, useTransactionTotals } from "@/lib/store/transactionStore";
 import { InvoiceDetailsCard } from "./InvoiceDetailsCard";
-import { LineItemsTable } from "./LineItemsTable";
+import { TransactionTable } from "@/ui/core/TransactionTable";
 import { Card } from "@/ui/core/Card";
+import { createInvoiceAction, updateInvoiceAction } from "@/features/billing/actions/billing";
+import { createQuotationAction } from "@/features/billing/actions/quotations";
 
 interface BillingEngineProps {
     clients: Client[];
@@ -21,56 +23,39 @@ interface BillingEngineProps {
 
 export function BillingEngine({ clients, products, mode = "INVOICE", initialData }: BillingEngineProps) {
     const router = useRouter();
-    const {
-        state,
-        isPending,
-        error,
-        calculations,
-        handleAddItem,
-        updateItem,
-        removeItem,
-        handleProductSelect,
-        handleSubmit,
-        setClientId, setDate, setValidUntil, setGstType, setInvoiceNo, setEwayBill, setVehicleNo, setNotes,
-        setBillingAddress, setShippingAddress, setShippingSameAsBilling, setItems
-    } = useBillingEngine(products, mode, initialData);
+    const [isPending, setIsPending] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Auto-populate addresses when client changes
-    const [prevClientId, setPrevClientId] = React.useState("");
-    
-    // AI Resell Workflow: Handle data from Procurement Page
+    const store = useTransactionStore();
+    const totals = useTransactionTotals();
+
+    // Initialize store
     useEffect(() => {
+        store.reset();
+        store.setMode(mode);
+        if (initialData) {
+            store.initialize(initialData);
+        }
+
+        // AI Resell Workflow: Handle data from Procurement Page
         if (typeof window !== "undefined") {
             const resellData = sessionStorage.getItem("jezzy_resell_pack");
             if (resellData) {
                 try {
                     const data = JSON.parse(resellData);
-                    const items = data.lineItems;
-                    if (items && items.length > 0) {
-                        setItems(items.map((it: any) => ({
-                            productId: it.productId,
-                            description: it.description,
-                            hsn: it.hsn || "",
-                            qty: Number(it.qty || 1),
-                            rate: Number(it.sellingRate || it.rate || 0), // Use suggested selling rate
-                            unit: it.unit || "NOS",
-                            taxPercent: Number(it.taxPercent || 18),
-                            pkgCount: it.pkgCount || 1,
-                            pkgType: it.pkgType || "BOX"
-                        })));
-                    }
+                    store.initialize({ ...data, mode: "INVOICE" });
                     sessionStorage.removeItem("jezzy_resell_pack");
                 } catch (e) {
                     console.error("Failed to parse jezzy_resell_pack", e);
                 }
             }
         }
-    }, [setItems]);
-    
+    }, [mode, initialData]);
 
+    // Auto-populate addresses when client changes
     useEffect(() => {
-        if (state.clientId && state.clientId !== prevClientId) {
-            const client = clients.find(c => c.id === state.clientId);
+        if (store.entityId) {
+            const client = clients.find(c => c.id === store.entityId);
             if (client) {
                 const address = {
                     name: client.name,
@@ -81,77 +66,116 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                     phone: client.phone || "",
                     gst: client.gst || ""
                 };
-                setBillingAddress(address);
-                if (state.shippingSameAsBilling) {
-                    setShippingAddress(address);
+                store.setField("billingAddress", address);
+                if (store.shippingSameAsBilling) {
+                    store.setField("shippingAddress", address);
                 }
-                setPrevClientId(state.clientId);
             }
         }
-    }, [state.clientId, clients, setBillingAddress, setShippingAddress, state.shippingSameAsBilling, prevClientId]);
+    }, [store.entityId, clients]);
+
+    const handleSubmit = async () => {
+        setError(null);
+        if (!store.entityId) {
+            setError("Please select a client to proceed.");
+            return;
+        }
+        if (store.items.length === 0) {
+            setError("Add at least one item to the document.");
+            return;
+        }
+
+        setIsPending(true);
+        try {
+            const payload = {
+                clientId: store.entityId,
+                date: store.date,
+                gstType: store.gstType,
+                subTotal: totals.subTotal,
+                taxTotal: totals.taxTotal,
+                grandTotal: totals.grandTotal,
+                invoiceNo: store.invoiceNo || undefined,
+                notes: store.notes || undefined,
+                items: store.items,
+                billingAddress: store.billingAddress,
+                shippingAddress: store.shippingSameAsBilling ? store.billingAddress : store.shippingAddress,
+                shippingSameAsBilling: store.shippingSameAsBilling,
+                ...(mode === "INVOICE" && {
+                    ewayBill: store.ewayBill || undefined,
+                    vehicleNo: store.vehicleNo || undefined,
+                }),
+                ...(mode === "QUOTATION" && {
+                    validUntil: store.validUntil || undefined,
+                }),
+            };
+
+            const res = initialData?.id 
+                ? await updateInvoiceAction(initialData.id, payload)
+                : (mode === "INVOICE" ? await createInvoiceAction(payload) : await createQuotationAction(payload));
+
+            if ("error" in res) {
+                setError(res.error as string);
+            } else if (res.success) {
+                const id = mode === "INVOICE" ? (res as any).invoiceId : (res as any).quotationId;
+                const path = mode === "INVOICE" ? "/invoices" : "/quotations";
+                router.push(`${path}/${id}`);
+            }
+        } catch (err: any) {
+            setError(err.message || "An unexpected error occurred.");
+        } finally {
+            setIsPending(false);
+        }
+    };
 
     return (
-        <div className="space-y-10 max-w-7xl mx-auto pb-24 animate-fade-up">
+        <div className="space-y-12 max-w-7xl mx-auto pb-32">
             {/* Error Notifications */}
             {error && (
-                <div className="flex items-start gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700 border border-red-200 shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                    <div>
-                        <p className="font-bold uppercase tracking-tight text-[10px]">Processing Error</p>
-                        <p className="font-medium">{error}</p>
+                <div className="flex items-start gap-3 rounded-[2rem] bg-red-50 p-6 text-sm text-red-700 border border-red-100 shadow-xl shadow-red-500/5 animate-in fade-in slide-in-from-top-4">
+                    <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
+                    <div className="space-y-1">
+                        <p className="font-black uppercase tracking-[0.2em] text-[10px] text-red-400">System Validation Error</p>
+                        <p className="font-bold opacity-80">{error}</p>
                     </div>
                 </div>
             )}
 
             {/* Step 1: Core Details */}
-            <InvoiceDetailsCard
-                clients={clients}
-                state={state}
-                mode={mode}
-                setClientId={setClientId}
-                setDate={setDate}
-                setValidUntil={setValidUntil}
-                setGstType={setGstType}
-                setInvoiceNo={setInvoiceNo}
-                setEwayBill={setEwayBill}
-                setVehicleNo={setVehicleNo}
-                setNotes={setNotes}
-                setBillingAddress={setBillingAddress}
-                setShippingAddress={setShippingAddress}
-                setShippingSameAsBilling={setShippingSameAsBilling}
-            />
-
+            <InvoiceDetailsCard clients={clients} />
 
             {/* Step 2: Line Items */}
-            <LineItemsTable
-                items={calculations.items}
-                products={products}
-                handleAddItem={handleAddItem}
-                updateItem={updateItem}
-                removeItem={removeItem}
-                handleProductSelect={handleProductSelect}
-            />
+            <TransactionTable products={products} />
 
             {/* Summaries & Global Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-6 border-t border-slate-200">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pt-10 border-t border-slate-100">
                 {/* Guidance & Meta */}
-                <div className="lg:col-span-12 xl:col-span-7 space-y-6">
-                    <Card className="bg-slate-900 border-0 p-8 shadow-xl relative overflow-hidden group">
-                        <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-1000">
-                            <Zap size={240} className="text-white" />
+                <div className="lg:col-span-12 xl:col-span-7 space-y-8">
+                    <Card className="bg-slate-900 border-0 p-10 shadow-2xl relative overflow-hidden group rounded-[3rem]">
+                        <div className="absolute -right-20 -bottom-20 opacity-10 pointer-events-none group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000">
+                            <Zap size={320} className="text-white" />
                         </div>
-                        <div className="relative z-10 flex gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-accent-500 flex items-center justify-center shadow-lg shadow-accent-500/20 shrink-0">
-                                <Info className="w-6 h-6 text-white" />
+                        <div className="relative z-10 flex gap-8">
+                            <div className="w-16 h-16 rounded-[1.5rem] bg-accent-500 flex items-center justify-center shadow-2xl shadow-accent-500/40 shrink-0">
+                                <Info className="w-8 h-8 text-white" />
                             </div>
-                            <div className="space-y-3">
-                                <h4 className="font-black text-white text-xl italic uppercase tracking-tight">Compliance & Accuracy</h4>
-                                <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                            <div className="space-y-4">
+                                <h4 className="font-black text-white text-2xl italic uppercase tracking-tight font-display">Compliance Guidance</h4>
+                                <p className="text-sm text-slate-400 leading-relaxed font-medium">
                                     {mode === 'INVOICE'
-                                        ? "GST will be calculated precisely based on your selection. Intra-state (CGST/SGST) applies to customers within the same state. Inter-state (IGST) applies across state borders. Ensure the Vehicle Number matches the E-Way bill if applicable."
-                                        : "Quotations are price estimates valid only for the duration specified. You can easily convert an approved quotation into a Tax Invoice later with a single click."
+                                        ? "This electronic document follows GST Law Rule 46. Ensure 'Intra-state' is selected if the customer shares your state code. In inter-state transactions, IGST is applied automatically. All decimals are rounded to the nearest integer for accounting precision."
+                                        : "Pro-forma quotations do not carry financial liability until converted into an invoice. Use the 'Draft' state for internal reviews. Quotations auto-expire after the validity period to protect against price fluctuations."
                                     }
                                 </p>
+                                <div className="flex gap-4 pt-2">
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                                        <GraduationCap size={12} />
+                                        Audit Ready
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                                        <CheckCircle2 size={12} className="text-emerald-500" />
+                                        Certified
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -159,63 +183,64 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
 
                 {/* Totals & Submit */}
                 <div className="lg:col-span-12 xl:col-span-5 w-full">
-                    <Card className="border-0 shadow-2xl ring-1 ring-slate-900/5 bg-white p-8 overflow-hidden rounded-3xl">
-                        <div className="flex items-center justify-between mb-8">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Financial Summary</h4>
-                            <div className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                    <Card className="border-0 shadow-3xl ring-1 ring-slate-900/5 bg-white p-10 overflow-hidden rounded-[3rem]">
+                        <div className="flex items-center justify-between mb-10">
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300 italic">Financial Summary</h4>
+                            <div className="flex h-3 w-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
                         </div>
 
-                        <div className="space-y-5">
-                            <div className="flex justify-between items-center text-sm font-bold text-slate-600">
-                                <span className="uppercase tracking-widest text-[10px]">Taxable Amount</span>
-                                <span className="tabular-nums text-slate-900">{formatCurrency(calculations.subTotal)}</span>
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center text-sm font-black text-slate-400">
+                                <span className="uppercase tracking-[0.2em] text-[10px]">Net Taxable Value</span>
+                                <span className="tabular-nums text-slate-900 italic transform transition-all group-hover:scale-110">{formatCurrency(totals.subTotal)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm font-bold text-slate-600">
-                                <span className="uppercase tracking-widest text-[10px]">Tax Estimate (GST)</span>
-                                <span className="tabular-nums text-slate-900">{formatCurrency(calculations.taxTotal)}</span>
+                            <div className="flex justify-between items-center text-sm font-black text-slate-400">
+                                <span className="uppercase tracking-[0.2em] text-[10px]">Tax Contribution (GST)</span>
+                                <span className="tabular-nums text-primary-600 italic">{formatCurrency(totals.taxTotal)}</span>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100 mt-4">
-                                <div className="flex justify-between items-end mb-10">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-600">Total Payable</p>
-                                        <p className="text-xs text-slate-400 italic font-semibold">INR (₹) Net Amount</p>
+                            <div className="pt-10 border-t border-slate-50 mt-6 relative">
+                                <div className="flex justify-between items-end mb-12">
+                                    <div className="space-y-2">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary-600 italic">Total Payable</p>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter italic opacity-60 italic">INR (₹) Final Value</p>
                                     </div>
-                                    <p className="text-5xl font-black tracking-tight text-slate-900 italic">
-                                        {formatCurrency(calculations.grandTotal)}
+                                    <p className="text-6xl font-black tracking-tighter text-slate-900 italic animate-reveal">
+                                        {formatCurrency(totals.grandTotal)}
                                     </p>
                                 </div>
 
                                 <div className="flex gap-4">
                                     <Button
                                         type="button"
-                                        variant="outline"
-                                        className="h-16 flex-1 text-slate-500 font-bold rounded-2xl border-slate-200"
+                                        variant="ghost"
+                                        className="h-20 w-20 flex-none rounded-[1.5rem] bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all group"
                                         onClick={() => router.back()}
                                         disabled={isPending}
                                     >
-                                        Discard
+                                        <Zap className="w-6 h-6 rotate-180 group-hover:scale-125 transition-transform" />
                                     </Button>
                                     <Button
-                                        className="flex-[2] h-16 text-xl font-black gap-3 rounded-2xl shadow-2xl transition-all uppercase italic tracking-widest"
+                                        className="flex-1 h-20 text-2xl font-black gap-4 rounded-[2rem] shadow-3xl transition-all uppercase italic tracking-widest bg-primary-600 text-white hover:bg-primary-700 active:scale-95 group/submit overflow-hidden"
                                         onClick={handleSubmit}
                                         loading={isPending}
                                         variant="primary"
-                                        disabled={isPending || state.items.length === 0 || !state.clientId}
+                                        disabled={isPending || store.items.length === 0 || !store.entityId}
                                     >
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/submit:translate-x-[100%] transition-transform duration-1000" />
                                         {initialData?.id ? (
-                                            <><CheckCircle2 className="w-6 h-6" /> Update {mode === "QUOTATION" ? "Quotation" : "Invoice"}</>
+                                            <><CheckCircle2 className="w-8 h-8" /> Update</>
                                         ) : mode === "QUOTATION" ? (
-                                            <><ClipboardList className="w-6 h-6" /> Save Quotation</>
+                                            <><ClipboardList className="w-8 h-8" /> Commit</>
                                         ) : (
-                                            <><CheckCircle2 className="w-6 h-6" /> Deploy Invoice</>
+                                            <><CheckCircle2 className="w-8 h-8" /> Deploy</>
                                         )}
-                                        <ArrowRight size={20} className="ml-1 opacity-50" />
+                                        <ArrowRight size={24} className="ml-2 group-hover/submit:translate-x-2 transition-transform" />
                                     </Button>
                                 </div>
 
-                                <p className="text-center text-[10px] text-slate-400 mt-6 leading-relaxed font-bold uppercase tracking-widest italic">
-                                    Authoritative Document Submission Engine v4
+                                <p className="text-center text-[9px] text-slate-300 mt-8 leading-relaxed font-black uppercase tracking-[0.5em] italic">
+                                    Transaction Engine Secure Node v5
                                 </p>
                             </div>
                         </div>

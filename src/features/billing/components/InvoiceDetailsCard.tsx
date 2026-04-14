@@ -14,46 +14,30 @@ import { Address } from "@/types/invoice";
 import BillingForm from "./BillingForm";
 import ShippingForm from "./ShippingForm";
 
+import { useTransactionStore } from "@/lib/store/transactionStore";
+
 interface InvoiceDetailsCardProps {
     clients: Client[];
-    state: {
-        clientId: string;
-        date: string;
-        validUntil: string;
-        gstType: string;
-        ewayBill: string;
-        vehicleNo: string;
-        notes: string;
-        billingAddress: Address;
-        shippingAddress: Address;
-        shippingSameAsBilling: boolean;
-        invoiceNo: string;
-    };
-    mode?: "INVOICE" | "QUOTATION";
-    setClientId: (val: string) => void;
-    setDate: (val: string) => void;
-    setValidUntil: (val: string) => void;
-    setGstType: (val: any) => void;
-    setInvoiceNo: (val: string) => void;
-    setEwayBill: (val: string) => void;
-    setVehicleNo: (val: string) => void;
-    setNotes: (val: string) => void;
-    setBillingAddress: (val: Address) => void;
-    setShippingAddress: (val: Address) => void;
-    setShippingSameAsBilling: (val: boolean) => void;
 }
 
 export function InvoiceDetailsCard({
-    clients, state, mode = "INVOICE",
-    setClientId, setDate, setValidUntil,
-    setGstType, setInvoiceNo, setEwayBill, setVehicleNo, setNotes,
-    setBillingAddress, setShippingAddress, setShippingSameAsBilling
+    clients
 }: InvoiceDetailsCardProps) {
-    const { 
-        clientId, date, validUntil, gstType, 
-        invoiceNo, ewayBill, vehicleNo, notes,
-        billingAddress, shippingAddress, shippingSameAsBilling
-    } = state;
+    const mode = useTransactionStore(s => s.mode);
+    const clientId = useTransactionStore(s => s.entityId);
+    const date = useTransactionStore(s => s.date);
+    const validUntil = useTransactionStore(s => s.validUntil);
+    const gstType = useTransactionStore(s => s.gstType);
+    const invoiceNo = useTransactionStore(s => s.invoiceNo);
+    const ewayBill = useTransactionStore(s => s.ewayBill);
+    const vehicleNo = useTransactionStore(s => s.vehicleNo);
+    const notes = useTransactionStore(s => s.notes);
+    const billingAddress = useTransactionStore(s => s.billingAddress);
+    const shippingAddress = useTransactionStore(s => s.shippingAddress);
+    const shippingSameAsBilling = useTransactionStore(s => s.shippingSameAsBilling);
+
+    const setField = useTransactionStore(s => s.setField);
+    const setEntityId = useTransactionStore(s => s.setEntityId);
 
     const [showAddresses, setShowAddresses] = useState(false);
 
@@ -89,7 +73,7 @@ export function InvoiceDetailsCard({
                         <select
                             className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none h-[46px]"
                             value={clientId}
-                            onChange={e => setClientId(e.target.value)}
+                            onChange={e => setEntityId(e.target.value)}
                         >
                             <option value="">Select a Client...</option>
                             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -107,7 +91,7 @@ export function InvoiceDetailsCard({
                                 label="Document Date"
                                 type="date"
                                 value={date}
-                                onChange={e => setDate(e.target.value)}
+                                onChange={e => setField("date", e.target.value)}
                                 icon={<Calendar size={16} />}
                                 required
                             />
@@ -116,7 +100,7 @@ export function InvoiceDetailsCard({
                                     label="Valid Until"
                                     type="date"
                                     value={validUntil}
-                                    onChange={e => setValidUntil(e.target.value)}
+                                    onChange={e => setField("validUntil", e.target.value)}
                                     className="border-amber-100"
                                     icon={<Calendar size={16} className="text-amber-500" />}
                                 />
@@ -125,7 +109,7 @@ export function InvoiceDetailsCard({
                                 <Input
                                     label="Invoice Number"
                                     value={invoiceNo}
-                                    onChange={e => setInvoiceNo(e.target.value)}
+                                    onChange={e => setField("invoiceNo", e.target.value)}
                                     placeholder="Leave blank for auto-gen"
                                     icon={<Info size={14} className="text-primary-400" />}
                                 />
@@ -145,7 +129,7 @@ export function InvoiceDetailsCard({
                         <select
                             className="flex w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none h-[46px] font-bold"
                             value={gstType}
-                            onChange={e => setGstType(e.target.value)}
+                            onChange={e => setField("gstType", e.target.value as any)}
                         >
                             <option value="CGST_SGST">Intra-state (9+9)</option>
                             <option value="IGST">Inter-state (18%)</option>
@@ -203,7 +187,7 @@ export function InvoiceDetailsCard({
                                     </div>
                                     <BillingForm 
                                         billing={billingAddress} 
-                                        setBilling={setBillingAddress} 
+                                        setBilling={(addr) => setField("billingAddress", addr)} 
                                     />
                                 </div>
 
@@ -214,7 +198,7 @@ export function InvoiceDetailsCard({
                                         </h4>
                                         <button
                                             type="button"
-                                            onClick={() => setShippingSameAsBilling(!shippingSameAsBilling)}
+                                            onClick={() => setField("shippingSameAsBilling", !shippingSameAsBilling)}
                                             className="flex items-center gap-1.5 transition-all"
                                         >
                                             {shippingSameAsBilling ? <CheckSquare size={14} className="text-primary-600" /> : <Square size={14} className="text-slate-300" />}
@@ -226,7 +210,7 @@ export function InvoiceDetailsCard({
                                         <div className="animate-in zoom-in-95 duration-300">
                                             <ShippingForm 
                                                 shipping={shippingAddress} 
-                                                setShipping={setShippingAddress} 
+                                                setShipping={(addr) => setField("shippingAddress", addr)} 
                                             />
                                         </div>
                                     )}
@@ -250,14 +234,14 @@ export function InvoiceDetailsCard({
                                 <Input
                                     label="E-Way Bill Number"
                                     value={ewayBill}
-                                    onChange={e => setEwayBill(e.target.value)}
+                                    onChange={e => setField("ewayBill", e.target.value)}
                                     placeholder="Optional"
                                     icon={<Truck size={16} />}
                                 />
                                 <Input
                                     label="Vehicle Registration"
                                     value={vehicleNo}
-                                    onChange={e => setVehicleNo(e.target.value)}
+                                    onChange={e => setField("vehicleNo", e.target.value)}
                                     placeholder="e.g. AS-01-XX-1234"
                                     icon={<Truck size={16} />}
                                 />
@@ -268,7 +252,7 @@ export function InvoiceDetailsCard({
                             <textarea
                                 className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 resize-none h-[46px]"
                                 value={notes}
-                                onChange={e => setNotes(e.target.value)}
+                                onChange={e => setField("notes", e.target.value)}
                                 placeholder="Ref tags, PO number, etc."
                             />
                         </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Inter } from "next/font/google";
 import { ToastProvider } from "@/context/ToastContext";
+import { TransitionProvider } from "@/components/providers/TransitionProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${outfit.variable} ${inter.variable} font-sans antialiased selection:bg-primary-100 selection:text-primary-900`}
       >
         <ToastProvider>
-          {children}
+          <TransitionProvider>
+            {children}
+          </TransitionProvider>
         </ToastProvider>
       </body>
     </html>
