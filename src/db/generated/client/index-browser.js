@@ -264,6 +264,8 @@ exports.Prisma.QuotationLineItemScalarFieldEnum = {
   taxPercent: 'taxPercent',
   taxAmount: 'taxAmount',
   unit: 'unit',
+  pkgCount: 'pkgCount',
+  pkgType: 'pkgType',
   totalAmount: 'totalAmount'
 };
 
@@ -484,7 +486,8 @@ exports.Prisma.QuotationLineItemOrderByRelevanceFieldEnum = {
   productId: 'productId',
   description: 'description',
   hsn: 'hsn',
-  unit: 'unit'
+  unit: 'unit',
+  pkgType: 'pkgType'
 };
 
 exports.Prisma.CompanySettingOrderByRelevanceFieldEnum = {

@@ -65,7 +65,9 @@ model Product {
   active       Boolean           @default(true)
   purchaseRate Decimal           @default(0.00) @db.Decimal(10, 2)
   sellingRate  Decimal           @default(0.00) @db.Decimal(10, 2)
-  invoiceLines InvoiceLineItem[]
+  invoiceLines  InvoiceLineItem[]
+  quotationLines QuotationLineItem[]
+  purchaseLines  PurchaseLineItem[]
 
   @@index([deletedAt])
   @@index([active])
@@ -185,10 +187,14 @@ model QuotationLineItem {
   taxPercent  Decimal   @db.Decimal(5, 2)
   taxAmount   Decimal   @db.Decimal(10, 2)
   unit        String    @default("NOS")
+  pkgCount    Int?      @default(0)
+  pkgType     String?   @default("BOX")
   totalAmount Decimal   @db.Decimal(12, 2)
   quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product     Product?  @relation(fields: [productId], references: [id])
 
   @@index([quotationId])
+  @@index([productId])
   @@map("quotation_line_items")
 }
 
@@ -325,9 +331,11 @@ model PurchaseLineItem {
   unit        String   @default("NOS")
   pkgCount    Int?     @default(0)
   pkgType     String?  @default("BOX")
-  totalAmount Decimal  @db.Decimal(12, 2)
-  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  totalAmount Decimal   @db.Decimal(12, 2)
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product     Product?  @relation(fields: [productId], references: [id])
 
   @@index([purchaseId])
+  @@index([productId])
   @@map("purchase_line_items")
 }
