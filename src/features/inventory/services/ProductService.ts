@@ -47,9 +47,10 @@ export class ProductService {
     return await productRepo.softDelete(productId, userId);
   }
 
-  static async getAllActive() {
+  static async getAllActive(select?: any) {
     const products = await productRepo.findAll({
       where: { deletedAt: null },
+      select,
       orderBy: { description: 'asc' }
     });
 

@@ -1,21 +1,34 @@
-import { Loader2 } from "lucide-react";
+import { KpiSkeleton, ChartSkeleton } from "@/ui/core/Skeleton";
 
-export default function Loading() {
+export default function DashboardLoading() {
     return (
-        <div className="w-full h-full min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
-            <div className="text-slate-500 font-medium animate-pulse">
-                Loading dashboard data...
+        <div className="space-y-8">
+            <div className="flex flex-col gap-2">
+                <div className="h-3 w-32 bg-slate-200 animate-pulse rounded" />
+                <div className="h-10 w-64 bg-slate-200 animate-pulse rounded" />
             </div>
             
-            {/* Optional Skeleton structure for deeper visual feedback */}
-            <div className="w-full max-w-4xl space-y-6 mt-8 opacity-50">
-                <div className="h-8 bg-slate-200 rounded w-1/4 animate-pulse"></div>
-                <div className="h-64 bg-slate-200 rounded-xl w-full animate-pulse"></div>
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
-                    <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
-                    <div className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
+            <KpiSkeleton />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                    <ChartSkeleton />
+                </div>
+                <div className="lg:col-span-1">
+                    <div className="glass clay-card p-8 border-0 min-h-[400px]">
+                        <div className="h-6 w-40 bg-slate-200 animate-pulse rounded mb-6" />
+                        <div className="space-y-4">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div key={i} className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-200 animate-pulse" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 w-full bg-slate-200 animate-pulse rounded" />
+                                        <div className="h-3 w-2/3 bg-slate-200 animate-pulse rounded" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

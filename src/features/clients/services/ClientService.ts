@@ -50,7 +50,7 @@ export class ClientService {
     return await clientRepo.softDelete(clientId, userId);
   }
 
-  static async getAllActive(search?: string) {
+  static async getAllActive(search?: string, select?: any) {
     const clients = await clientRepo.findAll({
       where: {
         deletedAt: null,
@@ -62,6 +62,7 @@ export class ClientService {
             ]
         } : {})
       },
+      select,
       orderBy: { createdAt: 'desc' }
     });
 

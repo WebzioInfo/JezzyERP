@@ -17,7 +17,7 @@ export abstract class BaseRepository<T extends { id: string; deletedAt?: Date | 
     });
   }
 
-  async findAll(options: { where?: any; take?: number; skip?: number; include?: any; orderBy?: any } = {}): Promise<T[]> {
+  async findAll(options: { where?: any; take?: number; skip?: number; include?: any; select?: any; orderBy?: any } = {}): Promise<T[]> {
     const { where, take = 50, skip, ...rest } = options;
     return await this.model.findMany({
       where: { 
@@ -41,7 +41,6 @@ export abstract class BaseRepository<T extends { id: string; deletedAt?: Date | 
       where: { id },
       data: { 
         deletedAt: new Date(),
-        updatedById: userId 
       },
     });
   }

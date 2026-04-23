@@ -1,25 +1,59 @@
-import axios from "axios";
-
 /**
- * Standard API Client with Axios
- * This ensures consistency across the app, 
- * including authorization headers if needed.
+ * Standard API Client with Native Fetch
+ * This ensures consistency across the app while using native web APIs
+ * to reduce bundle size and leverage Next.js caching.
  */
-const apiClient = axios.create({
-    baseURL: "/",
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
+class ApiClient {
+    async post(url: string, data: any, options: any = {}) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+            body: JSON.stringify(data),
+        });
 
-// Response Interceptor for handling errors globally
-apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        const message = error.response?.data?.error || error.message || "An unexpected error occurred.";
-        console.error("[API_ERROR]", message);
-        return Promise.reject(error);
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            const error = new Error(errorData.error || `HTTP error! status: ${res.status}`);
+            (error as any).response = { data: errorData };
+            throw error;
+        }
+
+        if (options.responseType === 'blob') {
+            const blob = await res.blob();
+            return {
+                data: blob,
+                headers: {
+                    'content-disposition': res.headers.get('content-disposition'),
+                },
+            };
+        }
+
+        return { data: await res.json(), headers: res.headers };
     }
-);
 
+    async get(url: string, options: any = {}) {
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            const error = new Error(errorData.error || `HTTP error! status: ${res.status}`);
+            (error as any).response = { data: errorData };
+            throw error;
+        }
+
+        return { data: await res.json(), headers: res.headers };
+    }
+}
+
+const apiClient = new ApiClient();
 export default apiClient;
+

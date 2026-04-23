@@ -56,18 +56,31 @@ export interface BillingTotals {
 }
 
 /**
- * Aggregates a list of line items into final billing totals.
+ * Aggregates a list of line items and optional freight into final billing totals.
  */
-export function calculateBillingTotals(items: { qty: number; rate: number; taxPercent: number }[]): BillingTotals {
-    return items.reduce((acc, item) => {
+export function calculateBillingTotals(
+    items: { qty: number; rate: number; taxPercent: number }[],
+    freightAmount: number = 0,
+    freightTaxPercent: number = 0
+): BillingTotals {
+    const totals = items.reduce((acc, item) => {
         const { amount, taxAmount } = calculateItemTotals(item.qty, item.rate, item.taxPercent);
         
         acc.subTotal = roundTo2(acc.subTotal + amount);
         acc.taxTotal = roundTo2(acc.taxTotal + taxAmount);
-        acc.grandTotal = roundTo2(acc.subTotal + acc.taxTotal);
         
         return acc;
     }, { subTotal: 0, taxTotal: 0, grandTotal: 0 });
+
+    // Add Freight
+    const fAmount = roundTo2(freightAmount);
+    const fTax = roundTo2((fAmount * freightTaxPercent) / 100);
+
+    totals.subTotal = roundTo2(totals.subTotal + fAmount);
+    totals.taxTotal = roundTo2(totals.taxTotal + fTax);
+    totals.grandTotal = roundTo2(totals.subTotal + totals.taxTotal);
+
+    return totals;
 }
 
 /**

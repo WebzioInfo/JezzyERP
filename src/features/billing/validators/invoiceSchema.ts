@@ -11,6 +11,7 @@ export const invoiceLineItemSchema = z.object({
     unit: z.string().optional().default("NOS"),
     pkgCount: z.number().int().min(0).optional().default(0),
     pkgType: z.string().optional().default("BOX"),
+    qtyPerBox: z.number().min(0).optional().default(0),
     totalAmount: z.number().positive(),
 });
 
@@ -29,6 +30,9 @@ export const invoiceSchema = z.object({
     ewayBill: z.string().optional(),
     vehicleNo: z.string().optional(),
     dispatchedThrough: z.string().optional(),
+    isFreightCollect: z.boolean().default(false),
+    freightAmount: z.number().min(0).optional().default(0),
+    freightTaxPercent: z.number().min(0).max(100).optional().default(0),
 
     // Address Snapshots
     billingAddress: z.object({

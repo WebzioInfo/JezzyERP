@@ -1,5 +1,5 @@
 import { db } from "@/db/prisma/client";
-import { Prisma } from "../db/generated/client";
+import { Prisma } from "@prisma/client";
 
 /**
  * Resilient Audit Logging

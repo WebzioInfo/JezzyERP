@@ -6,3 +6,13 @@ export const formatDateDMY = (date: string | Date) => {
   const year = dObj.getFullYear();
   return `${day}/${month}/${year}`;
 };
+
+export function formatDate(date: Date | string) {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    }).format(d);
+}
+

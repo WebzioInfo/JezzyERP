@@ -38,6 +38,9 @@ export type Invoice = {
   billingAddress?: Address;
   shippingAddress?: Address;
   shippingSameAsBilling?: boolean;
+  isFreightCollect?: boolean;
+  freightAmount?: number;
+  freightTaxPercent?: number;
 };
 
 export type Quotation = {
@@ -60,4 +63,7 @@ export type Quotation = {
   billingAddress?: Address;
   shippingAddress?: Address;
   shippingSameAsBilling?: boolean;
+  isFreightCollect?: boolean;
+  freightAmount?: number;
+  freightTaxPercent?: number;
 };

@@ -13,7 +13,25 @@ export class QuotationService {
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastQuo?.sequenceNumber || 0) + 1;
-      const quoNo = `QUO-2026-${nextSeq.toString().padStart(3, "0")}`;
+      // Indian FY runs April 1 -> March 31
+      const docDate = new Date(data.date);
+      const year = docDate.getFullYear();
+      const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
+      const fyStartYear = month >= 3 ? year : year - 1;
+      const fyEndYear = fyStartYear + 1;
+      const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
+      const fyStart = new Date(fyStartYear, 3, 1);
+      const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
+
+      // Count quotations in this FY to get next sequence
+      const countThisFY = await tx.quotation.count({
+          where: {
+              date: { gte: fyStart, lte: fyEnd }
+          }
+      });
+
+      const seq = String(countThisFY + 1).padStart(2, '0');
+      const quoNo = `JE/QUO/${seq}/${fy}`;
 
       // 2. Create the quotation
       const quotation = await tx.quotation.create({
@@ -28,6 +46,9 @@ export class QuotationService {
           taxTotal: data.taxTotal,
           grandTotal: data.grandTotal,
           notes: data.notes,
+          isFreightCollect: data.isFreightCollect || false,
+          freightAmount: data.freightAmount || 0,
+          freightTaxPercent: data.freightTaxPercent || 0,
           createdById: userId,
 
           // Address snapshots
@@ -47,13 +68,15 @@ export class QuotationService {
 
           lineItems: {
             create: data.items.map((item: any) => ({
-              productId: item.productId,
+              product: item.productId ? { connect: { id: item.productId } } : undefined,
               description: item.description,
               hsn: item.hsn,
               qty: parseFloat(item.qty),
               rate: item.rate,
               taxPercent: item.taxPercent,
               taxAmount: item.taxAmount,
+              pkgCount: item.pkgCount || 0,
+              pkgType: item.pkgType || "BOX",
               totalAmount: item.totalAmount,
             })),
           },
@@ -105,7 +128,27 @@ export class QuotationService {
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastInv?.sequenceNumber || 0) + 1;
-      const invNo = `INV-2026-${nextSeq.toString().padStart(3, "0")}`;
+      // Indian FY runs April 1 -> March 31
+      const docDate = new Date(); // Use current date for converted invoice
+      const year = docDate.getFullYear();
+      const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
+      const fyStartYear = month >= 3 ? year : year - 1;
+      const fyEndYear = fyStartYear + 1;
+      const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
+      const fyStart = new Date(fyStartYear, 3, 1);
+      const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
+
+      // Count invoices in this FY to get next sequence
+      const countThisFY = await tx.invoice.count({
+          where: {
+              date: { gte: fyStart, lte: fyEnd }
+          }
+      });
+
+      const seq = String(countThisFY + 1).padStart(2, '0');
+      const settings = await tx.companySetting.findFirst();
+      const prefix = settings?.invoicePrefix || "B2B";
+      const invNo = `JE/${prefix}/${seq}/${fy}`;
 
       // 2. Create the Invoice
       const invoice = await tx.invoice.create({
@@ -135,18 +178,23 @@ export class QuotationService {
           shippingAddress2: quotation.shippingAddress2,
           shippingState: quotation.shippingState,
           shippingPinCode: quotation.shippingPinCode,
+          isFreightCollect: quotation.isFreightCollect,
+          freightAmount: quotation.freightAmount,
+          freightTaxPercent: quotation.freightTaxPercent,
 
           lineItems: {
-            create: quotation.lineItems.map((item) => ({
-              productId: item.productId,
+            create: quotation.lineItems.map((item: any) => ({
+              product: item.productId ? { connect: { id: item.productId } } : undefined,
               description: item.description,
-              hsn: item.hsn,
               qty: item.qty,
               rate: item.rate,
               taxPercent: item.taxPercent,
               taxAmount: item.taxAmount,
               totalAmount: item.totalAmount,
-            })),
+              hsn: item.hsn,
+              pkgCount: item.pkgCount || 0,
+              pkgType: item.pkgType || "BOX",
+            }))
           },
         },
       });

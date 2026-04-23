@@ -15,6 +15,7 @@ export const productSchema = z.object({
   unit: z.string().optional().default("NOS"),
   notes: z.string().optional().nullable(),
   pkgType: z.string().optional().default("BOX"),
+  qtyPerBox: z.coerce.number().min(0).default(0),
   active: z.boolean().optional().default(true),
 });
 

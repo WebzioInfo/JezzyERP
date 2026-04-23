@@ -9,7 +9,7 @@ async function main() {
     await prisma.companySetting.update({
       where: { id: settings.id },
       data: {
-        invoicePrefix: 'JE-B2B'
+        invoicePrefix: 'B2B'
       }
     })
   } else {

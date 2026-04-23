@@ -4,6 +4,8 @@ import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/lib/store/uiStore";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { SidebarSkeleton, ChartSkeleton } from "@/ui/core/Skeleton";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -180,7 +182,9 @@ export default function AuthenticatedLayout({
         )}
       >
         <div className="glass clay-card h-full flex flex-col overflow-hidden border-0 shadow-2xl shadow-primary-900/5">
-          <SidebarContent isCollapsed={sidebarCollapsed} pathname={pathname} />
+          <React.Suspense fallback={<SidebarSkeleton />}>
+            <SidebarContent isCollapsed={sidebarCollapsed} pathname={pathname} />
+          </React.Suspense>
         </div>
 
         {/* Toggle Button */}
@@ -215,7 +219,7 @@ export default function AuthenticatedLayout({
         <div className="glass clay-card h-full flex flex-col overflow-hidden border-0">
           <div className="flex items-center justify-between p-6 border-b border-primary-100/10 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-primary-900 flex items-center justify-center shadow-lg border border-white/20">
+              <div className="relative w-10 h-10 rounded-xl bg-linear-to-br from-primary-600 to-primary-900 flex items-center justify-center shadow-lg border border-white/20">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <span className="font-black tracking-tighter text-2xl font-display text-primary-600 uppercase">JEZZY</span>
@@ -224,7 +228,7 @@ export default function AuthenticatedLayout({
               <X size={18} />
             </button>
           </div>
-          <div className="overflow-y-auto flex-1 custom-scrollbar">
+          <div className="overflow-y-auto flex-1 custom-scrollbar" data-lenis-prevent>
             <SidebarContent pathname={pathname} isMobile />
           </div>
         </div>
@@ -235,7 +239,7 @@ export default function AuthenticatedLayout({
         <Header
           onMenuClick={() => setMobileMenuOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 scroll-smooth">
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 scroll-smooth" data-lenis-prevent>
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
@@ -267,9 +271,9 @@ function SidebarContent({
     <div className="flex-1 flex flex-col py-8 overflow-hidden">
       {!isMobile && !isCollapsed && (
         <div className="px-8 mb-10 flex items-center gap-4 animate-reveal">
-          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-2xl border border-white/20 overflow-hidden shrink-0">
-             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-             <Building2 className="w-6 h-6 text-white" />
+          <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-2xl border border-white/20 overflow-hidden shrink-0">
+            <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <Building2 className="w-6 h-6 text-white" />
           </div>
           <div className="min-w-0">
             <p className="font-black text-slate-900 text-2xl leading-none tracking-tighter font-display uppercase italic">JEZZY <span className="text-primary-600">ERP</span></p>
@@ -280,13 +284,13 @@ function SidebarContent({
 
       {!isMobile && isCollapsed && (
         <div className="flex justify-center mb-10 animate-reveal">
-          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-xl border border-white/20 overflow-hidden">
-             <Building2 className="w-6 h-6 text-white" />
+          <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-xl border border-white/20 overflow-hidden">
+            <Building2 className="w-6 h-6 text-white" />
           </div>
         </div>
       )}
 
-      <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10">
+      <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10" data-lenis-prevent>
         {NAV_SECTIONS.map((section) => (
           <div key={section.label} className="animate-reveal">
             {!isCollapsed && (
@@ -315,7 +319,7 @@ function SidebarContent({
                       title={isCollapsed ? item.name : ""}
                     >
                       {active && (
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]" />
+                        <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                       )}
                       <item.icon
                         className={cn(
@@ -337,7 +341,7 @@ function SidebarContent({
       <div className="px-4 pt-6 mt-auto shrink-0 space-y-4">
         {!isCollapsed ? (
           <div className="glass p-4 flex items-center gap-4 border border-white/50 rounded-2xl shadow-xl shadow-primary-900/5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
             <div className="min-w-0">
               <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tight">JEZZY Admin</p>
               <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Master Node</p>
@@ -423,9 +427,9 @@ function Header({
           </button>
 
           <Link href="/settings" className="w-12 h-12 glass clay-card flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all overflow-hidden group border-white/50 shadow-xl shadow-primary-900/5">
-             <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
-               <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500" />
-             </div>
+            <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
+              <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500" />
+            </div>
           </Link>
         </div>
       </div>

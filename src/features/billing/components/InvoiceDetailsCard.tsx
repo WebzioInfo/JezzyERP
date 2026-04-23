@@ -228,7 +228,7 @@ export function InvoiceDetailsCard({
                     </div>
 
                     {/* Logistics & Notes */}
-                    <div className="md:col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+                    <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
                         {mode === "INVOICE" && (
                             <>
                                 <Input
@@ -247,14 +247,34 @@ export function InvoiceDetailsCard({
                                 />
                             </>
                         )}
-                        <div className={cn("space-y-2", mode === "QUOTATION" ? "lg:col-span-3" : "lg:col-span-1")}>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Internal Notes</label>
-                            <textarea
-                                className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 resize-none h-[46px]"
-                                value={notes}
-                                onChange={e => setField("notes", e.target.value)}
-                                placeholder="Ref tags, PO number, etc."
-                            />
+                        <div className={cn("space-y-4 col-span-1 sm:col-span-2 lg:col-span-2", mode === "QUOTATION" ? "lg:col-span-3" : "")}>
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Internal Notes</label>
+                                <textarea
+                                    className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 resize-none h-[46px]"
+                                    value={notes}
+                                    onChange={e => setField("notes", e.target.value)}
+                                    placeholder="Ref tags, PO number, etc."
+                                />
+                            </div>
+                        </div>
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-end">
+                            <button
+                                type="button"
+                                onClick={() => setField("isFreightCollect", !useTransactionStore.getState().isFreightCollect)}
+                                className={cn(
+                                    "flex items-center gap-3 px-6 w-full h-[46px] rounded-2xl border-2 transition-all group",
+                                    useTransactionStore(s => s.isFreightCollect) 
+                                        ? "bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-900/20" 
+                                        : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                                )}
+                            >
+                                {useTransactionStore(s => s.isFreightCollect) ? <CheckSquare className="w-5 h-5 text-primary-400" /> : <Square className="w-5 h-5 opacity-20" />}
+                                <div className="text-left">
+                                    <p className="text-[9px] font-black uppercase tracking-widest leading-none mb-1 opacity-60">Logistics Term</p>
+                                    <p className="text-xs font-black uppercase italic tracking-tighter leading-none">Freight Collect</p>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import { Address } from "@/types/invoice";
 import { Input } from "@/ui/core/Input";
-import { User, MapPin, Phone, Hash } from "lucide-react";
+import { User, MapPin, Phone, Hash, ShieldCheck } from "lucide-react";
 
 export default function BillingForm({ billing, setBilling }: { 
   billing: Address; 
@@ -79,6 +79,4 @@ export default function BillingForm({ billing, setBilling }: {
     </div>
   );
 }
-
-import { ShieldCheck } from "lucide-react";
 

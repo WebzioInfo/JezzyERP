@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { calculateBillingTotals, calculateItemTotals } from '@/utils/financials';
 import { Address } from '@/types/invoice';
 import { nanoid } from 'nanoid';
@@ -13,6 +14,7 @@ export type TransactionItem = {
     unit: string;
     pkgCount?: number;
     pkgType?: string;
+    qtyPerBox?: number;
     taxPercent: number;
     taxAmount?: number;
     totalAmount?: number;
@@ -33,6 +35,9 @@ interface TransactionState {
     billingAddress: Address;
     shippingAddress: Address;
     shippingSameAsBilling: boolean;
+    isFreightCollect: boolean;
+    freightAmount: number;
+    freightTaxPercent: number;
 
     // Actions
     setMode: (mode: "INVOICE" | "QUOTATION" | "PURCHASE") => void;
@@ -71,6 +76,9 @@ const initialState = {
     billingAddress: { ...emptyAddress },
     shippingAddress: { ...emptyAddress },
     shippingSameAsBilling: true,
+    isFreightCollect: false,
+    freightAmount: 0,
+    freightTaxPercent: 0,
 };
 
 export const useTransactionStore = create<TransactionState>((set, get) => ({
@@ -113,6 +121,16 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             const items = state.items.map((item) => {
                 if (item.id === id) {
                     const updated = { ...item, ...updates };
+
+                    // Auto-calculate pkgCount if qty or qtyPerBox changes
+                    if ('qty' in updates || 'qtyPerBox' in updates) {
+                        const q = Number(updated.qty || 0);
+                        const qpb = Number(updated.qtyPerBox || 0);
+                        if (qpb > 0) {
+                            updated.pkgCount = Math.ceil(q / qpb);
+                        }
+                    }
+
                     // Recalculate item totals if qty, rate, or tax changes
                     if ('qty' in updates || 'rate' in updates || 'taxPercent' in updates) {
                         const calculated = calculateItemTotals(updated.qty, updated.rate, updated.taxPercent);
@@ -146,6 +164,10 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             return {
                 ...rest,
                 id: nanoid(),
+                qty,
+                rate,
+                taxPercent,
+                qtyPerBox: Number(item.qtyPerBox || 0),
                 ...totals
             };
         });
@@ -180,13 +202,15 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
                 phone: data.shippingPhone || data.shippingAddress?.phone || ""
             },
             shippingSameAsBilling: data.shippingSameAsBilling !== undefined ? data.shippingSameAsBilling : true,
+            isFreightCollect: data.isFreightCollect || false,
+            freightAmount: Number(data.freightAmount || 0),
+            freightTaxPercent: Number(data.freightTaxPercent || 0),
         });
     }
 }));
 
 // Selectors for performance
 export const useTransactionItems = () => useTransactionStore((state) => state.items);
-export const useTransactionTotals = () => useTransactionStore((state) => {
-    const totals = calculateBillingTotals(state.items);
-    return totals;
-});
+export const useTransactionTotals = () => useTransactionStore(useShallow((state) => {
+    return calculateBillingTotals(state.items, state.freightAmount, state.freightTaxPercent);
+}));

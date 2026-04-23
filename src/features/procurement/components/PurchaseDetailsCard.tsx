@@ -163,14 +163,28 @@ export function PurchaseDetailsCard({
                         </div>
                     </div>
 
-                    <div className="pt-4">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 italic mb-2 block">Notes / Annotations</label>
-                        <textarea
-                            className="w-full bg-slate-50/50 rounded-2xl p-4 text-[13px] font-semibold text-slate-900 clay-inner min-h-[100px] focus:ring-4 focus:ring-primary-500/10 focus:bg-white transition-all border-none resize-none"
-                            placeholder="Internal procurement notes..."
-                            value={store.notes}
-                            onChange={(e) => setField("notes", e.target.value)}
-                        />
+                    <div className="pt-4 space-y-6">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 italic mb-1 block">Notes / Annotations</label>
+                            <textarea
+                                className="w-full bg-slate-50/50 rounded-2xl p-4 text-[13px] font-semibold text-slate-900 clay-inner min-h-[80px] focus:ring-4 focus:ring-primary-500/10 focus:bg-white transition-all border-none resize-none"
+                                placeholder="Internal procurement notes..."
+                                value={store.notes}
+                                onChange={(e) => setField("notes", e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setField("isFreightCollect", !store.isFreightCollect)}
+                            className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all group ${store.isFreightCollect ? 'bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-900/20' : 'bg-slate-50/50 border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                        >
+                            {store.isFreightCollect ? <ShieldCheck className="w-6 h-6 text-primary-400" /> : <div className="w-6 h-6 border-2 border-slate-200 rounded-lg opacity-20" />}
+                            <div className="text-left">
+                                <p className="text-[9px] font-black uppercase tracking-widest leading-none mb-1 opacity-60">Procurement Term</p>
+                                <p className="text-xs font-black uppercase italic tracking-tighter leading-none">Freight Collect</p>
+                            </div>
+                        </button>
                     </div>
                 </CardContent>
             </Card>

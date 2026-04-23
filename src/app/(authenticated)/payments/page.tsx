@@ -1,7 +1,7 @@
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { formatCurrency } from "@/utils";
+import { formatCurrency } from "@/utils/financials";
 import { PaymentService } from "@/features/billing/services/PaymentService";
 import {
   CreditCard,

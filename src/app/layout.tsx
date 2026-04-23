@@ -1,24 +1,14 @@
 import type { Metadata } from "next";
-import { Outfit, Inter } from "next/font/google";
 import { ToastProvider } from "@/context/ToastContext";
 import { TransitionProvider } from "@/components/providers/TransitionProvider";
 import "./globals.css";
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "JEZZY Enterprises | ERP Command Center",
   description: "Internal Business Operations & Billing for JEZZY Enterprises",
 };
+
+import { ConfirmDialog } from "@/ui/core/ConfirmDialog";
 
 export default function RootLayout({
   children,
@@ -27,12 +17,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
       <body
-        className={`${outfit.variable} ${inter.variable} font-sans antialiased selection:bg-primary-100 selection:text-primary-900`}
+        className="font-sans antialiased selection:bg-primary-100 selection:text-primary-900"
       >
         <ToastProvider>
           <TransitionProvider>
             {children}
+            <ConfirmDialog />
           </TransitionProvider>
         </ToastProvider>
       </body>

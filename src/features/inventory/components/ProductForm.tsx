@@ -192,6 +192,17 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                         <option value="BDL">BUNDLE</option>
                                     </select>
                                 </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        label="QTY Per Box (Default)"
+                                        name="qtyPerBox"
+                                        type="number"
+                                        step="0.001"
+                                        defaultValue={product?.qtyPerBox}
+                                        placeholder="0"
+                                        icon={<Layers size={20} />}
+                                    />
+                                </div>
                             </div>
 
                             <div className="md:col-span-1 space-y-2">

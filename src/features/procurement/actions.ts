@@ -71,6 +71,9 @@ export async function createPurchaseAction(formData: FormData) {
         subTotal: Number(formData.get("subTotal")),
         taxTotal: Number(formData.get("taxTotal")),
         grandTotal: Number(formData.get("grandTotal")),
+        isFreightCollect: formData.get("isFreightCollect") === "true",
+        freightAmount: Number(formData.get("freightAmount") || 0),
+        freightTaxPercent: Number(formData.get("freightTaxPercent") || 0),
     };
 
     await purchaseService.createPurchase(session.userId, data);

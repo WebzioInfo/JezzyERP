@@ -19,6 +19,7 @@ export async function createProductAction(formData: FormData) {
         unit: (formData.get("unit") as string) || "NOS",
         notes: (formData.get("notes") as string) || undefined,
         pkgType: (formData.get("pkgType") as string) || "BOX",
+        qtyPerBox: formData.get("qtyPerBox") as string,
     };
 
     try {
@@ -45,6 +46,7 @@ export async function updateProductAction(productId: string, formData: FormData)
         unit: (formData.get("unit") as string) || "NOS",
         notes: (formData.get("notes") as string) || undefined,
         pkgType: (formData.get("pkgType") as string) || "BOX",
+        qtyPerBox: formData.get("qtyPerBox") as string,
     };
 
     try {

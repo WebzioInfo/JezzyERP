@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { BillingEngine } from "@/features/billing/components/BillingEngine";
@@ -11,9 +12,16 @@ export default async function NewInvoicePage() {
     if (!session) redirect("/login");
 
     // Parallel fetch relations needed for the invoice dropdowns via services
+    // Parallel fetch relations needed for the invoice dropdowns via services (Optimized Selection)
     const [clients, products] = await Promise.all([
-        ClientService.getAllActive(),
-        ProductService.getAllActive()
+        ClientService.getAllActive(undefined, {
+            id: true, name: true, gst: true, email: true, phone: true, 
+            address1: true, address2: true, state: true, pinCode: true
+        }),
+        ProductService.getAllActive({
+            id: true, sku: true, description: true, hsn: true, 
+            gstRate: true, unit: true, sellingRate: true, qtyPerBox: true
+        })
     ]);
 
     if (clients.length === 0) {
@@ -44,7 +52,9 @@ export default async function NewInvoicePage() {
                 </div>
             </div>
 
-            <BillingEngine clients={clients} products={products} />
+            <Suspense fallback={<div className="h-96 w-full animate-pulse bg-slate-50 rounded-3xl" />}>
+                <BillingEngine clients={clients as any} products={products as any} />
+            </Suspense>
         </div>
     );
 }

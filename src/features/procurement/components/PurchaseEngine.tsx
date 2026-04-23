@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/ui/core/Button";
-import { formatCurrency } from "@/utils/index";
+import { formatCurrency } from "@/utils/financials";
 import { CheckCircle2, AlertCircle, ShoppingCart, Info, ArrowRight, Zap, Target } from "lucide-react";
 import { useTransactionStore, useTransactionTotals } from "@/lib/store/transactionStore";
 import { PurchaseDetailsCard } from "./PurchaseDetailsCard";
@@ -84,7 +84,7 @@ export function PurchaseEngine({ vendors, products, initialData }: PurchaseEngin
         <div className="space-y-12 max-w-7xl mx-auto pb-32">
             {/* Error Notifications */}
             {error && (
-                <div className="flex items-start gap-4 rounded-[2rem] bg-red-50 p-6 text-sm text-red-700 border border-red-100 shadow-xl shadow-red-500/5 animate-in fade-in slide-in-from-top-4">
+                <div className="flex items-start gap-4 rounded-4xl bg-red-50 p-6 text-sm text-red-700 border border-red-100 shadow-xl shadow-red-500/5 animate-in fade-in slide-in-from-top-4">
                     <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
                     <div className="space-y-1">
                         <p className="font-black uppercase tracking-[0.2em] text-[10px] text-red-400">Ledger Error</p>
@@ -108,14 +108,14 @@ export function PurchaseEngine({ vendors, products, initialData }: PurchaseEngin
                             <Target size={320} className="text-white" />
                         </div>
                         <div className="relative z-10 flex gap-8">
-                            <div className="w-16 h-16 rounded-[1.5rem] bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-600/40 shrink-0">
+                            <div className="w-16 h-16 rounded-3xl bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-600/40 shrink-0">
                                 <Info className="w-8 h-8 text-white" />
                             </div>
                             <div className="space-y-4">
-                                <h4 className="font-black text-white text-2xl italic uppercase tracking-tight font-display text-primary-500">Inward Supply Logic</h4>
+                                <h4 className="font-black text-2xl italic uppercase tracking-tight font-display text-primary-500">Inward Supply Logic</h4>
                                 <p className="text-sm text-slate-400 leading-relaxed font-medium">
-                                    Accurate procurement records are the foundation of your Input Tax Credit (ITC). 
-                                    Ensure the Supplier GSTIN and Taxable Value match the physical invoice perfectly. 
+                                    Accurate procurement records are the foundation of your Input Tax Credit (ITC).
+                                    Ensure the Supplier GSTIN and Taxable Value match the physical invoice perfectly.
                                     Staging the digital E-Way Bill here links logistics to accounting permanently for audit readiness.
                                 </p>
                                 <div className="flex gap-4 pt-2">
@@ -162,13 +162,13 @@ export function PurchaseEngine({ vendors, products, initialData }: PurchaseEngin
                                 </div>
 
                                 <Button
-                                    className="w-full h-20 text-2xl font-black gap-4 rounded-[2rem] shadow-3xl transition-all uppercase italic tracking-widest bg-slate-900 text-white hover:bg-slate-800 active:scale-95 group/submit overflow-hidden"
+                                    className="w-full h-20 text-2xl font-black gap-4 rounded-4xl shadow-3xl transition-all uppercase italic tracking-widest bg-slate-900 text-white hover:bg-slate-800 active:scale-95 group/submit overflow-hidden"
                                     onClick={handleSubmit}
                                     loading={isPending}
                                     disabled={isPending || store.items.length === 0 || !store.entityId}
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/submit:translate-x-[100%] transition-transform duration-1000" />
-                                    <CheckCircle2 className="w-8 h-8 text-primary-500" /> 
+                                    <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/submit:translate-x-full transition-transform duration-1000" />
+                                    <CheckCircle2 className="w-8 h-8 text-primary-500" />
                                     <span>{initialData?.id ? 'Update Record' : 'Commit Supply'}</span>
                                     <ArrowRight size={24} className="ml-2 group-hover/submit:translate-x-2 transition-transform" />
                                 </Button>

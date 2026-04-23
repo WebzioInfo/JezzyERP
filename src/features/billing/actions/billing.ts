@@ -140,3 +140,45 @@ export async function updateInvoiceAction(invoiceId: string, data: any) {
         return handleActionError(error);
     }
 }
+
+export async function deleteInvoiceAction(invoiceId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await invoiceService.softDeleteInvoice(invoiceId, session.userId);
+        revalidatePath("/dashboard");
+        revalidatePath("/invoices");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}
+
+export async function restoreInvoiceAction(invoiceId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await invoiceService.restoreInvoice(invoiceId, session.userId);
+        revalidatePath("/dashboard");
+        revalidatePath("/invoices");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}
+
+export async function permanentlyDeleteInvoiceAction(invoiceId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await invoiceService.permanentlyDeleteInvoice(invoiceId, session.userId);
+        revalidatePath("/dashboard");
+        revalidatePath("/invoices");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}

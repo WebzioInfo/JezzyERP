@@ -27,19 +27,24 @@ export class InvoiceService {
         const settings = await tx.companySetting.findFirst();
         const prefix = settings?.invoicePrefix || "B2B";
         
-        // JE/B2B/01/24-25 Format
+        // Indian FY runs April 1 -> March 31
         const docDate = new Date(validatedData.date);
         const year = docDate.getFullYear();
-        const month = docDate.getMonth(); // 0-11
-        
-        let fy = "";
-        if (month >= 3) { // April is index 3
-            fy = `${String(year).slice(-2)}-${String(year+1).slice(-2)}`;
-        } else {
-            fy = `${String(year-1).slice(-2)}-${String(year).slice(-2)}`;
-        }
-        
-        const seq = String(nextSequence).padStart(2, '0');
+        const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
+        const fyStartYear = month >= 3 ? year : year - 1;
+        const fyEndYear = fyStartYear + 1;
+        const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
+        const fyStart = new Date(fyStartYear, 3, 1);
+        const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
+
+        // Count invoices in this FY to get next sequence
+        const countThisFY = await tx.invoice.count({
+            where: {
+                date: { gte: fyStart, lte: fyEnd }
+            }
+        });
+
+        const seq = String(countThisFY + 1).padStart(2, '0');
         invoiceNo = `JE/${prefix}/${seq}/${fy}`;
       }
 
@@ -58,6 +63,9 @@ export class InvoiceService {
           ewayBill: validatedData.ewayBill,
           vehicleNo: validatedData.vehicleNo,
           dispatchedThrough: validatedData.dispatchedThrough,
+          isFreightCollect: validatedData.isFreightCollect,
+          freightAmount: validatedData.freightAmount ?? 0,
+          freightTaxPercent: validatedData.freightTaxPercent ?? 0,
 
           // Address snapshots
           billingName: validatedData.billingAddress?.name,
@@ -76,7 +84,7 @@ export class InvoiceService {
 
           lineItems: {
             create: validatedData.items.map((item: any) => ({
-              productId: item.productId,
+              product: item.productId ? { connect: { id: item.productId } } : undefined,
               description: item.description,
               hsn: item.hsn,
               qty: item.qty,
@@ -117,7 +125,6 @@ export class InvoiceService {
     const validatedData = await validateData(invoiceSchema, rawData);
     
     const invoice = await invoiceRepo.updateWithItems(invoiceId, {
-      clientId: validatedData.clientId,
       date: new Date(validatedData.date),
       gstType: validatedData.gstType,
       subTotal: validatedData.subTotal,
@@ -127,6 +134,12 @@ export class InvoiceService {
       vehicleNo: validatedData.vehicleNo,
       invoiceNo: validatedData.invoiceNo,
       dispatchedThrough: validatedData.dispatchedThrough,
+      isFreightCollect: validatedData.isFreightCollect,
+      freightAmount: validatedData.freightAmount ?? 0,
+      freightTaxPercent: validatedData.freightTaxPercent ?? 0,
+
+      // Use Prisma relation syntax for client
+      client: { connect: { id: validatedData.clientId } },
 
       // Address snapshots
       billingName: validatedData.billingAddress?.name,
@@ -144,7 +157,7 @@ export class InvoiceService {
       shippingPinCode: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.pinCode : validatedData.shippingAddress?.pinCode,
 
       lineItems: validatedData.items.map((item: any) => ({
-        productId: item.productId,
+        product: item.productId ? { connect: { id: item.productId } } : undefined,
         description: item.description,
         hsn: item.hsn,
         qty: item.qty,
@@ -168,5 +181,54 @@ export class InvoiceService {
     });
 
     return serializePrisma(invoice);
+  }
+
+  async softDeleteInvoice(invoiceId: string, userId: string) {
+    const invoice = await invoiceRepo.softDelete(invoiceId, userId);
+    
+    await recordAuditLog(db, {
+      userId,
+      action: "INVOICE_TRASHED",
+      entityType: "Invoice",
+      entityId: invoiceId,
+      details: { invoiceNo: invoice.invoiceNo }
+    });
+
+    return serializePrisma(invoice);
+  }
+
+  async restoreInvoice(invoiceId: string, userId: string) {
+    const invoice = await invoiceRepo.model.update({
+      where: { id: invoiceId },
+      data: { deletedAt: null } as any
+    });
+
+    await recordAuditLog(db, {
+      userId,
+      action: "INVOICE_RESTORED",
+      entityType: "Invoice",
+      entityId: invoiceId,
+      details: { invoiceNo: invoice.invoiceNo }
+    });
+
+    return serializePrisma(invoice);
+  }
+
+  async permanentlyDeleteInvoice(invoiceId: string, userId: string) {
+    // Audit before deletion
+    const invoice = await invoiceRepo.model.findUnique({ where: { id: invoiceId } });
+    if (invoice) {
+        await recordAuditLog(db, {
+            userId,
+            action: "INVOICE_PERMANENTLY_DELETED",
+            entityType: "Invoice",
+            entityId: invoiceId,
+            details: { invoiceNo: invoice.invoiceNo }
+        });
+    }
+
+    return await invoiceRepo.model.delete({
+      where: { id: invoiceId }
+    });
   }
 }

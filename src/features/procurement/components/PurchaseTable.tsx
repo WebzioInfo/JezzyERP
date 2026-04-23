@@ -64,8 +64,8 @@ export function PurchaseTable({ purchases }: PurchaseTableProps) {
             </div>
 
             {/* Table Listing */}
-            <div className="bg-white/40 rounded-[2.5rem] border border-white/50 backdrop-blur-xl overflow-hidden shadow-2xl">
-                <table className="w-full text-left">
+            <div className="bg-white/40 rounded-[2.5rem] border border-white/50 backdrop-blur-xl overflow-x-auto custom-scrollbar shadow-2xl">
+                <table className="w-full text-left min-w-[1000px]">
                     <thead>
                         <tr className="bg-slate-900/5">
                             <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Inventory Node</th>
@@ -85,7 +85,15 @@ export function PurchaseTable({ purchases }: PurchaseTableProps) {
                                             {purchase.purchaseNo.split('-').pop()}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-black text-slate-900 uppercase italic tracking-tight">{purchase.purchaseNo}</p>
+                                            <div className="flex items-center gap-3">
+                                                <p className="text-sm font-black text-slate-900 uppercase italic tracking-tight">{purchase.purchaseNo}</p>
+                                                {purchase.isFreightCollect && (
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900 text-[8px] font-black text-white uppercase italic tracking-tighter">
+                                                        <ShieldCheck className="w-2.5 h-2.5 text-primary-400" />
+                                                        FC
+                                                    </div>
+                                                )}
+                                            </div>
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">{purchase.status}</p>
                                         </div>
                                     </div>

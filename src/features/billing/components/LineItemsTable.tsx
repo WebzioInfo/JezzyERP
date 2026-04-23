@@ -6,7 +6,8 @@ import { Product } from "@/features/inventory/types";
 import { Button } from "@/ui/core/Button";
 import { Input } from "@/ui/core/Input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/core/Card";
-import { formatCurrency, cn } from "@/utils";
+import { cn } from "@/utils";
+import { formatCurrency } from "@/utils/financials";
 import { InvoiceItem } from "@/hooks/useBillingEngine";
 import { CalculatedItem } from "@/utils/financials";
 
@@ -48,8 +49,7 @@ const LineItemRow = React.memo(({
                 {index + 1}
             </div>
 
-            {/* Product & Description */}
-            <div className="col-span-1 lg:col-span-4 space-y-3">
+            <div className="col-span-1 lg:col-span-3 space-y-3">
                 <div className="relative">
                     <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
                     <select
@@ -60,7 +60,7 @@ const LineItemRow = React.memo(({
                         <option value="">-- Load from Catalog --</option>
                         {products.map(p => (
                             <option key={p.id} value={p.id}>
-                                {p.description} (₹{Number(p.sellingRate || 0).toLocaleString()})
+                                {p.description}
                             </option>
                         ))}
                     </select>
@@ -72,23 +72,17 @@ const LineItemRow = React.memo(({
                     className="h-10 text-sm italic"
                     icon={<Tag size={14} />}
                 />
-                {/* Product Detail/Notes hint */}
-                {products.map(p => p as any).find(p => p.id === item.productId)?.notes && (
-                    <p className="text-[10px] text-slate-400 italic px-1 line-clamp-1">
-                        Note: {(products as any).find((p: any) => p.id === item.productId)?.notes}
-                    </p>
-                )}
             </div>
 
             {/* HSN */}
-            <div className="col-span-2">
+            <div className="col-span-1">
                 <Input
                     label="HSN"
                     placeholder="99XX"
                     value={item.hsn}
                     onChange={e => updateItem(index, "hsn", e.target.value)}
-                    className="h-10 text-xs  font-mono uppercase text-center"
-                    icon={<Hash size={12} />}
+                    className="h-10 text-[10px] font-mono uppercase text-center"
+                    icon={<Hash size={10} />}
                 />
             </div>
 
@@ -116,15 +110,15 @@ const LineItemRow = React.memo(({
             </div>
 
             {/* Rate */}
-            <div className="col-span-2">
+            <div className="col-span-1">
                 <Input
-                    label="Unit Rate (₹)"
+                    label="Rate"
                     type="number"
                     min="0"
                     step="0.01"
                     value={item.rate}
                     onChange={e => updateItem(index, "rate", parseFloat(e.target.value) || 0)}
-                    className="text-right h-10 font-black text-slate-900"
+                    className="text-right h-10 font-black text-slate-900 px-1"
                 />
             </div>
 
@@ -144,6 +138,18 @@ const LineItemRow = React.memo(({
                         <option value="28">28%</option>
                     </select>
                 </div>
+            </div>
+
+            {/* Per Box Qty */}
+            <div className="col-span-1">
+                <Input
+                    label="Per Box"
+                    type="number"
+                    min="0"
+                    value={item.qtyPerBox || 0}
+                    onChange={e => updateItem(index, "qtyPerBox", parseFloat(e.target.value) || 0)}
+                    className="text-center h-10 font-bold"
+                />
             </div>
 
             {/* Package Details */}

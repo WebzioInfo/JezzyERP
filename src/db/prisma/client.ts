@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/client'
+import { PrismaClient } from '@prisma/client'
 import { env } from '@/lib/env'
 
 // PrismaClient is attached to the `globalThis` object in development to prevent

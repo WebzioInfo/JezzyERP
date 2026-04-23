@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { markInvoiceSentAction } from "@/features/billing/actions/billing";
+import { markInvoiceSentAction, deleteInvoiceAction } from "@/features/billing/actions/billing";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/ui/core/Button";
-import { Send, FileDown, CheckCircle2, Edit, Loader2 } from "lucide-react";
+import { Send, FileDown, CheckCircle2, Edit, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/lib/apiClient";
+import { useConfirmStore } from "@/hooks/useConfirmStore";
+import { useRouter } from "next/navigation";
 
 interface InvoiceActionsProps {
     invoiceId: string;
@@ -17,6 +19,8 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
     const [isPending, startTransition] = useTransition();
     const [isDownloading, setIsDownloading] = useState(false);
     const { success, error } = useToast();
+    const { confirm } = useConfirmStore();
+    const router = useRouter();
 
     const handleMarkSent = () => {
         startTransition(async () => {
@@ -31,6 +35,29 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
         });
     };
 
+    const handleTrash = async () => {
+        const confirmed = await confirm({
+            title: "Move to Trash",
+            message: "Are you sure you want to move this invoice to trash? You can restore it later if needed.",
+            type: "warning",
+            confirmText: "Trash It"
+        });
+        
+        if (!confirmed) return;
+
+        startTransition(async () => {
+            const res = await deleteInvoiceAction(invoiceId);
+            if (res && 'success' in res) {
+                success("Invoice moved to trash.");
+                router.push("/invoices");
+            } else if (res && 'error' in res) {
+                error(res.error || "Failed to trash invoice.");
+            } else {
+                error("Failed to trash invoice.");
+            }
+        });
+    };
+
     const handleDownload = async () => {
         setIsDownloading(true);
         try {
@@ -39,7 +66,7 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
             });
 
             // Derive filename from Content-Disposition header or fallback
-            const disposition = res.headers["content-disposition"] || "";
+            const disposition = (res.headers as any)["content-disposition"] || "";
             const fileNameMatch = disposition.match(/filename="?([^"]+)"?/);
             const fileName = fileNameMatch ? fileNameMatch[1] : `invoice-${invoiceId}.pdf`;
 
@@ -106,6 +133,16 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
                     : <FileDown className="w-4 h-4" />
                 }
                 {isDownloading ? "Generating PDF…" : "Download PDF"}
+            </Button>
+
+            <Button 
+                onClick={handleTrash}
+                disabled={isPending}
+                variant="ghost"
+                className="h-10 px-4 gap-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all ml-auto group"
+                title="Move to Trash"
+            >
+                <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </Button>
         </div>
     );

@@ -58,6 +58,9 @@ export async function POST(req: NextRequest) {
                 shippingAddress2: true,
                 shippingState: true,
                 shippingPinCode: true,
+                isFreightCollect: true,
+                freightAmount: true,
+                freightTaxPercent: true,
                 client: true,
                 lineItems: {
                     orderBy: { id: "asc" }
@@ -234,6 +237,15 @@ export async function POST(req: NextRequest) {
             existing.taxableValue += taxableValue;
             existing.taxAmount += taxAmount;
         });
+        
+        const freightVal = invoice.freightAmount?.toNumber() || 0;
+        const fTaxPercent = invoice.freightTaxPercent?.toNumber() || 0;
+        
+        if (freightVal > 0) {
+            const fTax = (freightVal * fTaxPercent) / 100;
+            hsnSummaryMap.set("FREIGHT", { hsn: "Freight Charges", taxableValue: freightVal, taxAmount: fTax, taxPercent: fTaxPercent });
+        }
+
 
         // --- LINE ITEMS TABLE ---
         const showPkg = !!(settings as any).showPkgDetails;
@@ -251,11 +263,19 @@ export async function POST(req: NextRequest) {
                 : (prod?.notes ? `\n${prod.notes}` : "");
 
             const pkgCountStr = Number(item.pkgCount || 0);
-            const pkgValue = (pkgCountStr > 0) ? `${pkgCountStr} ${item.pkgType || "BOX"}` : "-";
+            const rawPerBox = item.qtyPerBox || prod?.qtyPerBox || 0;
+            const perBox = (rawPerBox && typeof rawPerBox === 'object' && 'toNumber' in rawPerBox)
+                ? (rawPerBox as any).toNumber()
+                : Number(rawPerBox || 0);
+            
+            const pkgSuffix = (perBox > 0) ? `\n(${perBox} ${item.unit || 'NOS'}/${item.pkgType || 'BOX'})` : "";
+            const pkgValue = (pkgCountStr > 0 && perBox > 0)
+                ? `${pkgCountStr} X ${perBox}${item.unit || "NOS"}`
+                : (pkgCountStr > 0 ? `${pkgCountStr} ${item.pkgType || "BOX"}` : "-");
             
             // If showing pkg in separate column, don't put it in description
             const pkgInDesc = (!showPkg && pkgCountStr > 0)
-                ? `\nNo. & Kind of Pkgs: ${pkgCountStr} ${item.pkgType || "BOX"}`
+                ? `\nNo. & Kind of Pkgs: ${pkgCountStr} ${item.pkgType || "BOX"}${pkgSuffix}`
                 : "";
 
             const row = [
@@ -373,7 +393,13 @@ export async function POST(req: NextRequest) {
             y += 6;
         };
 
-        drawTotalRow("Taxable Amount:", fmt(subTotal));
+        const itemsSubTotal = subTotal - freightVal;
+
+        drawTotalRow("Taxable Amount (Items):", fmt(itemsSubTotal));
+        if (freightVal > 0) {
+            drawTotalRow(`Freight Amount ${invoice.isFreightCollect ? '(Collect)' : ''}:`, fmt(freightVal));
+        }
+
         if (cgst > 0) drawTotalRow("Output CGST @ " + (lineItems[0]?.taxPercent.toNumber() / 2) + "%:", fmt(cgst));
         if (sgst > 0) drawTotalRow("Output SGST @ " + (lineItems[0]?.taxPercent.toNumber() / 2) + "%:", fmt(sgst));
         if (igst > 0) drawTotalRow("Output IGST @ " + (lineItems[0]?.taxPercent.toNumber()) + "%:", fmt(igst));

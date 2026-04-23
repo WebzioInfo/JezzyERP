@@ -2,12 +2,14 @@ import { db } from "@/db/prisma/client";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { formatCurrency, cn } from "@/utils";
+import { cn } from "@/utils/index";
+import { formatCurrency } from "@/utils/financials";
 import {
   FileText, Plus, Search, Filter,
   ChevronRight, Calendar, ArrowUpRight,
 } from "lucide-react";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
+import { InvoiceListActions } from "@/features/billing/components/InvoiceListActions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
 import { Input } from "@/ui/core/Input";
@@ -194,11 +196,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <Link href={`/invoices/${inv.id}`}>
-                        <Button variant="ghost" size="sm" className="rounded-xl group-hover:bg-primary-50 group-hover:text-primary-600">
-                          View Details <ArrowUpRight className="ml-2 w-4 h-4 opacity-50" />
-                        </Button>
-                      </Link>
+                      <InvoiceListActions invoiceId={inv.id} />
                     </td>
                   </tr>
                 ))}

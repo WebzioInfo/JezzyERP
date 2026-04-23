@@ -8,6 +8,8 @@ export interface Product {
     gstRate: number;
     unit?: string;
     notes?: string | null;
+    pkgType?: string;
+    qtyPerBox: number | any;
     active?: boolean;
     createdAt?: Date;
     updatedAt?: Date;

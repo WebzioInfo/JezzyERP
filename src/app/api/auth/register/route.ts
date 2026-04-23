@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from "jose";
 import prisma from '@/db/prisma/client';
 import { registerSchema } from '@/lib/schemas/authSchema';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret');
 
 export async function POST(req: NextRequest) {
     try {
@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        const token = jwt.sign(
-            { userId: user.id, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '1d' }
-        );
+        const token = await new SignJWT({ userId: user.id, role: user.role })
+            .setProtectedHeader({ alg: "HS256" })
+            .setExpirationTime("1d")
+            .setIssuedAt()
+            .sign(JWT_SECRET);
 
         return NextResponse.json({ token, role: user.role }, { status: 201 });
     } catch (error: any) {

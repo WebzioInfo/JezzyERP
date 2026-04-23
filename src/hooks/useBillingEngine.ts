@@ -13,6 +13,7 @@ export type InvoiceItem = {
     qty: number;
     rate: number;
     unit: string;
+    qtyPerBox?: number;
     pkgCount?: number;
     pkgType?: string;
     taxPercent: number;
@@ -90,18 +91,28 @@ function billingReducer(state: BillingState, action: BillingAction): BillingStat
             };
         case "UPDATE_ITEM":
             const updatedItems = [...state.items];
-            updatedItems[action.index] = { ...updatedItems[action.index], [action.field]: action.value };
+            const item = { ...updatedItems[action.index], [action.field]: action.value };
+            
+            // Auto-calculate pkgCount if qty or qtyPerBox changes
+            if ((action.field === "qty" || action.field === "qtyPerBox") && item.qtyPerBox && item.qtyPerBox > 0) {
+                item.pkgCount = Math.ceil(item.qty / item.qtyPerBox);
+            }
+            
+            updatedItems[action.index] = item;
             return { ...state, items: updatedItems };
         case "SELECT_PRODUCT":
             const itemsWithProduct = [...state.items];
             itemsWithProduct[action.index] = {
                 ...itemsWithProduct[action.index],
                 productId: action.product.id,
-                description: action.product.description, // Fix: Ensure description is populated
+                description: action.product.description,
                 hsn: action.product.hsn || "",
                 rate: Number(action.product.sellingRate),
                 unit: (action.product as any).unit || "NOS",
-                pkgCount: (action.product as any).pkgCount || 1, // Fix: Using pkgCount from product instead of qty
+                qtyPerBox: Number((action.product as any).qtyPerBox || 0),
+                pkgCount: (action.product as any).qtyPerBox && (action.product as any).qtyPerBox > 0 
+                    ? Math.ceil(itemsWithProduct[action.index].qty / (action.product as any).qtyPerBox)
+                    : (itemsWithProduct[action.index].pkgCount || 1),
                 pkgType: (action.product as any).pkgType || "BOX",
                 taxPercent: Number(action.product.gstRate)
             };
