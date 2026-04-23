@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { markInvoiceSentAction, deleteInvoiceAction } from "@/features/billing/actions/billing";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/ui/core/Button";
-import { Send, FileDown, CheckCircle2, Edit, Loader2, Trash2 } from "lucide-react";
+import { Send, FileDown, CheckCircle2, Edit, Loader2, Trash2, Printer } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/lib/apiClient";
 import { useConfirmStore } from "@/hooks/useConfirmStore";
@@ -121,6 +121,15 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
                     </Button>
                 </Link>
             )}
+
+            <Button
+                onClick={() => window.print()}
+                variant="outline"
+                className="h-10 px-6 gap-2 border-slate-200"
+            >
+                <Printer className="w-4 h-4" />
+                Print
+            </Button>
 
             <Button
                 onClick={handleDownload}

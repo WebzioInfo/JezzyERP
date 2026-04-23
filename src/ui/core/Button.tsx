@@ -41,7 +41,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {loading ? (
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                 ) : null}
-                <span className="relative z-10">{children}</span>
+                <span className="relative z-10 flex items-center justify-center gap-[inherit]">{children}</span>
             </button>
         )
     }

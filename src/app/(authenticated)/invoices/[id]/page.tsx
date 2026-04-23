@@ -68,7 +68,10 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
       shippingPinCode: true,
       shippingSameAsBilling: true,
       client: true,
-      lineItems: { orderBy: { id: "asc" } },
+      lineItems: { 
+        orderBy: { id: "asc" },
+        include: { product: true }
+      },
       payments: { orderBy: { paidAt: "desc" } },
     },
   });

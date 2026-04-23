@@ -49,7 +49,7 @@ const LineItemRow = React.memo(({
                 {index + 1}
             </div>
 
-            <div className="col-span-1 lg:col-span-3 space-y-3">
+            <div className="col-span-1 lg:col-span-4 space-y-3">
                 <div className="relative">
                     <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
                     <select
@@ -140,17 +140,7 @@ const LineItemRow = React.memo(({
                 </div>
             </div>
 
-            {/* Per Box Qty */}
-            <div className="col-span-1">
-                <Input
-                    label="Per Box"
-                    type="number"
-                    min="0"
-                    value={item.qtyPerBox || 0}
-                    onChange={e => updateItem(index, "qtyPerBox", parseFloat(e.target.value) || 0)}
-                    className="text-center h-10 font-bold"
-                />
-            </div>
+
 
             {/* Package Details */}
             <div className="col-span-1">

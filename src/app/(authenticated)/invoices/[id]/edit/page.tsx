@@ -45,7 +45,9 @@ export default async function EditInvoicePage({ params }: PageProps) {
             shippingState: true,
             shippingPinCode: true,
             shippingSameAsBilling: true,
-            lineItems: true
+            lineItems: {
+                include: { product: true }
+            }
         }
     });
 

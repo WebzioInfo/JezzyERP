@@ -77,6 +77,7 @@ export class QuotationService {
               taxAmount: item.taxAmount,
               pkgCount: item.pkgCount || 0,
               pkgType: item.pkgType || "BOX",
+              qtyPerBox: item.qtyPerBox || 0,
               totalAmount: item.totalAmount,
             })),
           },
@@ -194,6 +195,7 @@ export class QuotationService {
               hsn: item.hsn,
               pkgCount: item.pkgCount || 0,
               pkgType: item.pkgType || "BOX",
+              qtyPerBox: item.qtyPerBox || 0,
             }))
           },
         },

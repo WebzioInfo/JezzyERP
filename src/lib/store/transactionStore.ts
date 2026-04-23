@@ -164,9 +164,6 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             return {
                 ...rest,
                 id: nanoid(),
-                qty,
-                rate,
-                taxPercent,
                 qtyPerBox: Number(item.qtyPerBox || 0),
                 ...totals
             };

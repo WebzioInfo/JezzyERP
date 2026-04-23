@@ -94,6 +94,7 @@ export class InvoiceService {
               unit: item.unit || "NOS",
               pkgCount: item.pkgCount || 0,
               pkgType: item.pkgType || "BOX",
+              qtyPerBox: item.qtyPerBox || 0,
               totalAmount: item.totalAmount
             }))
           }
@@ -167,6 +168,7 @@ export class InvoiceService {
         unit: item.unit || "NOS",
         pkgCount: item.pkgCount || 0,
         pkgType: item.pkgType || "BOX",
+        qtyPerBox: item.qtyPerBox || 0,
         totalAmount: item.totalAmount
       }))
     });

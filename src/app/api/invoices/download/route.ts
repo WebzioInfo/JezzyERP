@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
                 freightTaxPercent: true,
                 client: true,
                 lineItems: {
-                    orderBy: { id: "asc" }
+                    orderBy: { id: "asc" },
+                    include: { product: true }
                 },
             },
         });
@@ -237,10 +238,10 @@ export async function POST(req: NextRequest) {
             existing.taxableValue += taxableValue;
             existing.taxAmount += taxAmount;
         });
-        
+
         const freightVal = invoice.freightAmount?.toNumber() || 0;
         const fTaxPercent = invoice.freightTaxPercent?.toNumber() || 0;
-        
+
         if (freightVal > 0) {
             const fTax = (freightVal * fTaxPercent) / 100;
             hsnSummaryMap.set("FREIGHT", { hsn: "Freight Charges", taxableValue: freightVal, taxAmount: fTax, taxPercent: fTaxPercent });
@@ -249,8 +250,8 @@ export async function POST(req: NextRequest) {
 
         // --- LINE ITEMS TABLE ---
         const showPkg = !!(settings as any).showPkgDetails;
-        const tableHead = showPkg 
-            ? [["Sl No", "No. & Kind of Pkgs", "Description of Goods", "HSN/SAC", "Quantity", "Rate", "per", "Amount"]]
+        const tableHead = showPkg
+            ? [["Sl No", "No. & Kind\nof Pkgs", "Description of Goods", "HSN/SAC", "Quantity", "Rate", "per", "Amount"]]
             : [["Sl No", "Description of Goods", "HSN/SAC", "Quantity", "Rate", "per", "Amount"]];
 
         const tableBody = lineItems.map((item: any, i: number) => {
@@ -263,19 +264,24 @@ export async function POST(req: NextRequest) {
                 : (prod?.notes ? `\n${prod.notes}` : "");
 
             const pkgCountStr = Number(item.pkgCount || 0);
-            const rawPerBox = item.qtyPerBox || prod?.qtyPerBox || 0;
+            const rawPerBox = (Number(item.qtyPerBox || 0) > 0) ? item.qtyPerBox : (prod?.qtyPerBox || 0);
+
             const perBox = (rawPerBox && typeof rawPerBox === 'object' && 'toNumber' in rawPerBox)
                 ? (rawPerBox as any).toNumber()
                 : Number(rawPerBox || 0);
-            
-            const pkgSuffix = (perBox > 0) ? `\n(${perBox} ${item.unit || 'NOS'}/${item.pkgType || 'BOX'})` : "";
+
+            const pkgTypeRaw = (item.pkgType || "BOX").toUpperCase();
+            const pkgType = pkgCountStr > 1
+                ? (pkgTypeRaw.endsWith('X') ? `${pkgTypeRaw}ES` : `${pkgTypeRaw}S`)
+                : pkgTypeRaw;
+
             const pkgValue = (pkgCountStr > 0 && perBox > 0)
-                ? `${pkgCountStr} X ${perBox}${item.unit || "NOS"}`
-                : (pkgCountStr > 0 ? `${pkgCountStr} ${item.pkgType || "BOX"}` : "-");
-            
+                ? `${pkgCountStr} ${pkgType}\nX ${perBox} ${item.unit || prod?.unit || "NOS"}`
+                : (pkgCountStr > 0 ? `${pkgCountStr} ${pkgType}` : "-");
+
             // If showing pkg in separate column, don't put it in description
             const pkgInDesc = (!showPkg && pkgCountStr > 0)
-                ? `\nNo. & Kind of Pkgs: ${pkgCountStr} ${item.pkgType || "BOX"}${pkgSuffix}`
+                ? `\nNo. & Kind of Pkgs: ${pkgValue}`
                 : "";
 
             const row = [
@@ -308,11 +314,11 @@ export async function POST(req: NextRequest) {
                 fontSize: 7.5,
                 textColor: [0, 0, 0],
                 cellPadding: 2,
-                valign: "top",
+                valign: "middle",
             },
             columnStyles: showPkg ? {
                 0: { halign: "center", cellWidth: 10 },
-                1: { halign: "center", cellWidth: 18, fontStyle: "bold" },
+                1: { halign: "center", cellWidth: 18, fontSize: 6, cellPadding: 1, overflow: 'linebreak' },
                 2: { halign: "left" },
                 3: { halign: "center", cellWidth: 20 },
                 4: { halign: "right", cellWidth: 22 },
@@ -371,8 +377,20 @@ export async function POST(req: NextRequest) {
             head: hsnHead,
             body: hsnBody,
             theme: "grid",
-            headStyles: { fontSize: 6.5, fillColor: [255, 255, 255], textColor: [0, 0, 0], halign: "center" },
-            bodyStyles: { fontSize: 6.5, halign: "right" },
+            headStyles: {
+                fontSize: 7.5,
+                fillColor: [255, 255, 255],
+                textColor: [0, 0, 0],
+                halign: "center",
+                lineWidth: 0.1,
+                fontStyle: "bold"
+            },
+            bodyStyles: {
+                fontSize: 7,
+                halign: "right",
+                lineWidth: 0.1,
+                textColor: [0, 0, 0]
+            },
             columnStyles: { 0: { halign: "center" } },
             margin: { left: LEFT_MARGIN, right: RIGHT_MARGIN },
         });
@@ -403,7 +421,7 @@ export async function POST(req: NextRequest) {
         if (cgst > 0) drawTotalRow("Output CGST @ " + (lineItems[0]?.taxPercent.toNumber() / 2) + "%:", fmt(cgst));
         if (sgst > 0) drawTotalRow("Output SGST @ " + (lineItems[0]?.taxPercent.toNumber() / 2) + "%:", fmt(sgst));
         if (igst > 0) drawTotalRow("Output IGST @ " + (lineItems[0]?.taxPercent.toNumber()) + "%:", fmt(igst));
-        
+
         if (Math.abs(roundOff) > 0) {
             drawTotalRow("Rounding Off:", (roundOff > 0 ? "+" : "") + fmt(roundOff));
         }

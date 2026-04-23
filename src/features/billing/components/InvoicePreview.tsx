@@ -171,7 +171,7 @@ export default function InvoicePreview({ invoice }: Props) {
           <thead>
             <tr className="bg-slate-950 text-white font-mono uppercase tracking-[0.2em] text-[9px]">
               <th className="p-4 text-center border-r border-white/10">Sl</th>
-              <th className="p-4 text-center border-r border-white/10">No. & Kind of Pkgs</th>
+              <th className="p-4 text-center border-r border-white/10 whitespace-pre-line leading-tight">No. & Kind{"\n"}of Pkgs</th>
               <th className="p-4 text-left border-r border-white/10">Description of Goods</th>
               <th className="p-4 text-center border-r border-white/10">HSN</th>
               <th className="p-4 text-center border-r border-white/10">Qty</th>
@@ -182,11 +182,19 @@ export default function InvoicePreview({ invoice }: Props) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {items.map((p: any, i: number) => {
+              const prod = p.product;
               const pkgCount = Number(p.pkgCount || 0);
-              const perBox = Number(p.qtyPerBox || 0);
+              const perBox = Number(p.qtyPerBox || prod?.qtyPerBox || 0);
+              const unit = (p.unit && p.unit !== "NOS") ? p.unit : (prod?.unit || "NOS");
+
+              const pkgTypeRaw = (p.pkgType || prod?.pkgType || "BOX").toUpperCase();
+              const pkgType = pkgCount > 1 
+                ? (pkgTypeRaw.endsWith('X') ? `${pkgTypeRaw}ES` : `${pkgTypeRaw}S`)
+                : pkgTypeRaw;
+              
               const pkgDisplay = (pkgCount > 0 && perBox > 0)
-                ? `${pkgCount} X ${perBox}${p.unit || "NOS"}`
-                : (pkgCount > 0 ? `${pkgCount} ${p.pkgType || "BOX"}` : "-");
+                ? `${pkgCount} ${pkgType}\nX ${perBox} ${unit}`
+                : (pkgCount > 0 ? `${pkgCount} ${pkgType}` : "-");
 
               return (
                 <tr key={i} className="hover:bg-slate-50 transition-colors">
