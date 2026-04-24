@@ -2,57 +2,27 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  Download,
-  Edit,
-  Trash2,
+import { 
+  Trash2, 
   ExternalLink,
   Loader2,
   RefreshCw,
   XCircle
 } from "lucide-react";
 import { Button } from "@/ui/core/Button";
-import { deleteInvoiceAction, restoreInvoiceAction, permanentlyDeleteInvoiceAction } from "@/features/billing/actions/billing";
+import { deletePurchaseAction, restorePurchaseAction, permanentlyDeletePurchaseAction } from "@/features/procurement/actions";
 import { useToast } from "@/context/ToastContext";
 
-interface InvoiceListActionsProps {
-  invoiceId: string;
+interface PurchaseListActionsProps {
+  purchaseId: string;
   isTrashed?: boolean;
 }
 
-export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceListActionsProps) {
+export function PurchaseListActions({ purchaseId, isTrashed = false }: PurchaseListActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const { success, error } = useToast();
-
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    try {
-      const response = await fetch("/api/invoices/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: invoiceId }),
-      });
-
-      if (!response.ok) throw new Error("Download failed");
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Invoice_${invoiceId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      success("Invoice downloaded successfully.");
-    } catch (err) {
-      error("Failed to download invoice.");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!showConfirm) {
@@ -62,16 +32,12 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
 
     setIsDeleting(true);
     try {
-      const res = isTrashed
-        ? await permanentlyDeleteInvoiceAction(invoiceId)
-        : await deleteInvoiceAction(invoiceId);
+      const res = isTrashed 
+        ? await permanentlyDeletePurchaseAction(purchaseId)
+        : await deletePurchaseAction(purchaseId);
 
-      if (res && 'error' in res) {
-        error(res.error || "Failed to delete invoice.");
-      } else {
-        success(isTrashed ? "Invoice permanently deleted." : "Invoice moved to trash.");
-        setShowConfirm(false);
-      }
+      success(isTrashed ? "Purchase permanently deleted." : "Purchase moved to trash.");
+      setShowConfirm(false);
     } catch (err) {
       error("An unexpected error occurred.");
     } finally {
@@ -82,12 +48,8 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
   const handleRestore = async () => {
     setIsRestoring(true);
     try {
-      const res = await restoreInvoiceAction(invoiceId);
-      if (res && 'error' in res) {
-        error(res.error || "Failed to restore invoice.");
-      } else {
-        success("Invoice restored successfully.");
-      }
+      await restorePurchaseAction(purchaseId);
+      success("Purchase restored successfully.");
     } catch (err) {
       error("An unexpected error occurred.");
     } finally {
@@ -100,10 +62,10 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
       <div className="flex items-center justify-end gap-2">
         {!showConfirm ? (
           <>
-            <Link href={`/invoices/${invoiceId}`}>
-              <Button
-                variant="ghost"
-                size="sm"
+            <Link href={`/purchases/${purchaseId}`}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-900"
                 title="View Details"
               >
@@ -111,20 +73,20 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
               </Button>
             </Link>
 
-            <Button
-              variant="ghost"
-              size="sm"
+            <Button 
+              variant="ghost" 
+              size="sm" 
               className="h-9 w-9 p-0 rounded-xl hover:bg-emerald-50 text-emerald-500 hover:text-emerald-600"
               onClick={handleRestore}
               disabled={isRestoring}
-              title="Restore Invoice"
+              title="Restore Purchase"
             >
               {isRestoring ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
+            <Button 
+              variant="ghost" 
+              size="sm" 
               className="h-9 w-9 p-0 rounded-xl hover:bg-red-50 text-red-400 hover:text-red-600"
               onClick={() => setShowConfirm(true)}
               disabled={isDeleting}
@@ -163,10 +125,10 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
     <div className="flex items-center justify-end gap-2">
       {!showConfirm ? (
         <>
-          <Link href={`/invoices/${invoiceId}`}>
-            <Button
-              variant="ghost"
-              size="sm"
+          <Link href={`/purchases/${purchaseId}`}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
               className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-900"
               title="View Details"
             >
@@ -174,35 +136,13 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
             </Button>
           </Link>
 
-          <Link href={`/invoices/${invoiceId}/edit`}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 rounded-xl hover:bg-primary-50 text-slate-400 hover:text-primary-600"
-              title="Edit Invoice"
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-          </Link>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 w-9 p-0 rounded-xl hover:bg-emerald-50 text-slate-400 hover:text-emerald-600"
-            onClick={handleDownload}
-            disabled={isDownloading}
-            title="Download PDF"
-          >
-            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
+          <Button 
+            variant="ghost" 
+            size="sm" 
             className="h-9 w-9 p-0 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-600"
             onClick={() => setShowConfirm(true)}
             disabled={isDeleting}
-            title="Move to Trash"
+            title="Delete Purchase"
           >
             <Trash2 className="w-4 h-4" />
           </Button>

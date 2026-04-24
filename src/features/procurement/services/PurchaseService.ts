@@ -30,7 +30,7 @@ export class PurchaseService {
       const fyStr = month >= 3 ? `${year % 100}-${(year + 1) % 100}` : `${(year - 1) % 100}-${year % 100}`;
 
       const countThisFY = await tx.purchase.count({
-        where: { date: { gte: fyStart, lte: fyEnd } }
+        where: { date: { gte: fyStart, lte: fyEnd }, deletedAt: null }
       });
       
       const nextSequence = countThisFY + 1;
@@ -66,9 +66,16 @@ export class PurchaseService {
   }
 
   async deletePurchase(id: string) {
-    return await purchaseRepo.model.update({
-      where: { id },
-      data: { deletedAt: new Date() }
+    return await purchaseRepo.softDelete(id);
+  }
+
+  async restorePurchase(id: string, userId: string) {
+    return await purchaseRepo.restore(id);
+  }
+
+  async permanentlyDeletePurchase(id: string, userId: string) {
+    return await purchaseRepo.model.delete({
+      where: { id }
     });
   }
 }

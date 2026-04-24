@@ -26,7 +26,8 @@ export class QuotationService {
       // Count quotations in this FY to get next sequence
       const countThisFY = await tx.quotation.count({
           where: {
-              date: { gte: fyStart, lte: fyEnd }
+              date: { gte: fyStart, lte: fyEnd },
+              deletedAt: null
           }
       });
 
@@ -221,5 +222,34 @@ export class QuotationService {
 
       return serializePrisma(invoice);
     }, { timeout: 15000 });
+  }
+
+  /**
+   * Soft deletes a quotation.
+   */
+  static async softDeleteQuotation(quotationId: string, userId: string | null) {
+    return await db.quotation.update({
+      where: { id: quotationId },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  /**
+   * Restores a soft-deleted quotation.
+   */
+  static async restoreQuotation(quotationId: string, userId: string | null) {
+    return await db.quotation.update({
+      where: { id: quotationId },
+      data: { deletedAt: null },
+    });
+  }
+
+  /**
+   * Permanently deletes a quotation.
+   */
+  static async permanentlyDeleteQuotation(quotationId: string, userId: string | null) {
+    return await db.quotation.delete({
+      where: { id: quotationId },
+    });
   }
 }

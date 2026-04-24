@@ -1,4 +1,5 @@
 import { jwtVerify, SignJWT } from "jose";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { env } from "./env";
 
@@ -30,7 +31,7 @@ export async function createSessionCookie(payload: SessionPayload) {
     });
 }
 
-export async function verifySessionCookie(): Promise<SessionPayload | null> {
+export const verifySessionCookie = cache(async (): Promise<SessionPayload | null> => {
     const cookieStore = await cookies();
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -44,7 +45,7 @@ export async function verifySessionCookie(): Promise<SessionPayload | null> {
     } catch (error) {
         return null;
     }
-}
+});
 
 export async function destroySessionCookie() {
     const cookieStore = await cookies();

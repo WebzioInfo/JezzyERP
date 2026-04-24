@@ -4,6 +4,7 @@ import { db } from "@/db/prisma/client";
 import { numberToWords } from "@/utils/financials";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { PDFDocument } from "pdf-lib";
 import fs from "fs";
 import path from "path";
 
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
                 taxTotal: true,
                 grandTotal: true,
                 ewayBill: true,
+                ewayBillUrl: true,
                 vehicleNo: true,
                 billingName: true,
                 billingAddress1: true,
@@ -496,18 +498,43 @@ export async function POST(req: NextRequest) {
             W / 2, 285, { align: "center" }
         );
 
-        // --- Output ---
-        const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+        // --- Final Output Handling (Merging or Single) ---
+        let finalBuffer = Buffer.from(doc.output("arraybuffer"));
+
+        if (invoice.ewayBillUrl) {
+            try {
+                const ewayBillResponse = await fetch(invoice.ewayBillUrl);
+                if (ewayBillResponse.ok) {
+                    const ewayBillBuffer = await ewayBillResponse.arrayBuffer();
+                    
+                    const mergedPdf = await PDFDocument.create();
+                    const invoiceDoc = await PDFDocument.load(finalBuffer);
+                    const ewayBillDoc = await PDFDocument.load(ewayBillBuffer);
+
+                    const invoicePages = await mergedPdf.copyPages(invoiceDoc, invoiceDoc.getPageIndices());
+                    invoicePages.forEach(p => mergedPdf.addPage(p));
+
+                    const ewayBillPages = await mergedPdf.copyPages(ewayBillDoc, ewayBillDoc.getPageIndices());
+                    ewayBillPages.forEach(p => mergedPdf.addPage(p));
+
+                    const mergedBytes = await mergedPdf.save();
+                    finalBuffer = Buffer.from(mergedBytes);
+                }
+            } catch (mergeError) {
+                console.error("[PDF_MERGE_ERROR]", mergeError);
+                // Fallback to just the invoice if merge fails
+            }
+        }
 
         const clientName = (invoice.client?.name || "JEZZY").split(" ")[0].toUpperCase();
         const safeFileName = `${clientName}_${invoice.invoiceNo}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
 
-        return new NextResponse(pdfBuffer, {
+        return new NextResponse(finalBuffer, {
             status: 200,
             headers: {
                 "Content-Type": "application/pdf",
                 "Content-Disposition": `attachment; filename="${safeFileName}"`,
-                "Content-Length": String(pdfBuffer.length),
+                "Content-Length": String(finalBuffer.length),
             },
         });
     } catch (err: unknown) {

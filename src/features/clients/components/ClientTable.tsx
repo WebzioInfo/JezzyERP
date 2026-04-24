@@ -20,6 +20,7 @@ import { ClientForm } from "./ClientForm";
 
 import type { Client } from "@/features/clients/types";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { Modal } from "@/ui/core/Modal";
 
 interface ClientTableProps {
     clients: Client[];
@@ -165,7 +166,7 @@ const ClientMobileCard = ({ client, onEdit }: { client: Client, onEdit: (client:
     };
 
     return (
-        <div className="clay-card p-6 space-y-5 animate-in fade-in zoom-in duration-500 fill-mode-both border-0">
+        <Card className="p-6 space-y-5 animate-in fade-in zoom-in duration-500 fill-mode-both border-0 shadow-lg">
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
@@ -222,7 +223,7 @@ const ClientMobileCard = ({ client, onEdit }: { client: Client, onEdit: (client:
                     </div>
                 </div>
             )}
-        </div>
+        </Card>
     );
 };
 
@@ -248,23 +249,25 @@ export function ClientTable({ clients }: ClientTableProps) {
     return (
         <div className="space-y-10">
             {/* Unified Modal Overlay */}
-            {(editingClient || isAdding) && (
-                <div className="fixed inset-0 z-100 h-full flex p-10 items-center justify-center bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
-                    <div className="w-full max-w-4xl h-full overflow-y-auto">
-                        <ClientForm
-                            client={editingClient || undefined}
-                            onSuccess={() => {
-                                setEditingClient(null);
-                                setIsAdding(false);
-                            }}
-                            onCancel={() => {
-                                setEditingClient(null);
-                                setIsAdding(false);
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={!!editingClient || isAdding}
+                onClose={() => {
+                    setEditingClient(null);
+                    setIsAdding(false);
+                }}
+            >
+                <ClientForm
+                    client={editingClient || undefined}
+                    onSuccess={() => {
+                        setEditingClient(null);
+                        setIsAdding(false);
+                    }}
+                    onCancel={() => {
+                        setEditingClient(null);
+                        setIsAdding(false);
+                    }}
+                />
+            </Modal>
 
             <Card className="p-6 shadow-none bg-transparent overflow-hidden rounded-3xl">
                 <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-8 px-0 py-6">
@@ -295,7 +298,7 @@ export function ClientTable({ clients }: ClientTableProps) {
                 <CardContent className="p-0">
                     <ErrorBoundary name="Client Directory">
                         {clients.length === 0 ? (
-                            <div className="py-32 text-center clay-card animate-in fade-in zoom-in duration-700 bg-white">
+                            <Card className="py-32 text-center border-0 animate-in fade-in zoom-in duration-700 bg-white shadow-xl">
                                 <div className="mx-auto w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
                                     <UserMinus className="h-10 w-10 text-slate-300" />
                                 </div>
@@ -303,11 +306,11 @@ export function ClientTable({ clients }: ClientTableProps) {
                                 <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">
                                     No corporate records match your current criteria.
                                 </p>
-                            </div>
+                            </Card>
                         ) : (
                             <>
                                 {/* Desktop Table View */}
-                                <div className="hidden lg:block clay-card overflow-hidden border-0 bg-white">
+                                <Card className="hidden lg:block overflow-hidden border-0 bg-white shadow-2xl">
                                     <Table>
                                         <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                                             <TableRow>
@@ -328,7 +331,7 @@ export function ClientTable({ clients }: ClientTableProps) {
                                             ))}
                                         </TableBody>
                                     </Table>
-                                </div>
+                                </Card>
 
                                 {/* Mobile Grid View */}
                                 <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">

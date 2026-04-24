@@ -29,6 +29,12 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
     const store = useTransactionStore();
     const totals = useTransactionTotals();
 
+    // Memoize the freight total calculation for UI smoothness
+    const freightTotal = React.useMemo(() => {
+        if (!store.isFreightCollect) return 0;
+        return (store.freightAmount || 0) * (1 + (store.freightTaxPercent || 0) / 100);
+    }, [store.isFreightCollect, store.freightAmount, store.freightTaxPercent]);
+
     // Initialize store
     useEffect(() => {
         store.reset();
@@ -120,6 +126,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                 shippingSameAsBilling: store.shippingSameAsBilling,
                 ...(mode === "INVOICE" && {
                     ewayBill: store.ewayBill || undefined,
+                    ewayBillUrl: store.ewayBillUrl || undefined,
                     vehicleNo: store.vehicleNo || undefined,
                 }),
                 ...(mode === "QUOTATION" && {
@@ -259,7 +266,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                                         variant="primary"
                                         disabled={isPending || store.items.length === 0 || !store.entityId}
                                     >
-                                        <div className="absolute w-full inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/submit:translate-x-full transition-transform duration-1000" />
+                                        <div className="group/submit absolute w-full inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/submit:translate-x-full transition-transform duration-1000" />
                                         {initialData?.id ? (
                                             <><CheckCircle2 className="w-8 h-8" /> Update</>
                                         ) : mode === "QUOTATION" ? (
@@ -278,7 +285,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                         </div>
                     </Card>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

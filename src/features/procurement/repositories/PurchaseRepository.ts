@@ -30,4 +30,18 @@ export class PurchaseRepository extends BaseRepository<Purchase> {
       include: { lineItems: true, vendor: true }
     });
   }
+
+  async softDelete(id: string): Promise<Purchase> {
+    const existing = await this.model.findUnique({ where: { id } });
+    if (!existing) throw new Error("Purchase record not found");
+    
+    return await this.model.update({
+      where: { id },
+      data: { 
+        deletedAt: new Date(),
+        purchaseNo: `${existing.purchaseNo}-DEL-${Date.now()}`,
+        sequenceNumber: -1 * Math.floor(Date.now() / 1000)
+      },
+    });
+  }
 }

@@ -90,69 +90,64 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
     };
 
     return (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
             {status === "DRAFT" && (
-                <Button 
+                <button 
                     onClick={handleMarkSent} 
                     disabled={isPending}
-                    variant="secondary"
-                    className="h-10 px-6 gap-2 border-slate-200 shadow-sm"
+                    className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98] disabled:opacity-50"
                 >
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 text-primary-500" />}
                     Mark as Sent
-                </Button>
+                </button>
             )}
 
             {status !== "PAID" && status !== "DRAFT" && (
                 <Link href={`/payments/new?invoiceId=${invoiceId}`}>
-                    <Button 
-                        className="h-10 px-6 gap-2 shadow-xl shadow-success-500/20"
-                        style={{ background: "linear-gradient(135deg, #16A34A, #15803D)" }}
+                    <button 
+                        className="h-14 px-8 bg-emerald-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-3 active:scale-[0.98]"
                     >
-                        <CheckCircle2 className="w-4 h-4" /> Record Payment
-                    </Button>
+                        <CheckCircle2 className="w-4 h-4" /> Record Settlement
+                    </button>
                 </Link>
             )}
 
             {status === "DRAFT" && (
                 <Link href={`/invoices/${invoiceId}/edit`}>
-                    <Button variant="ghost" className="h-10 px-4 gap-2 text-slate-500 hover:text-slate-900">
-                        <Edit className="w-4 h-4" /> Edit
-                    </Button>
+                    <button className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98]">
+                        <Edit className="w-4 h-4 text-indigo-500" /> Modify
+                    </button>
                 </Link>
             )}
 
-            <Button
+            <button
                 onClick={() => window.print()}
-                variant="outline"
-                className="h-10 px-6 gap-2 border-slate-200"
+                className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98]"
             >
-                <Printer className="w-4 h-4" />
-                Print
-            </Button>
+                <Printer className="w-4 h-4 text-slate-400" />
+                Print Protocol
+            </button>
 
-            <Button
+            <button
                 onClick={handleDownload}
                 disabled={isDownloading}
-                variant="secondary"
-                className="h-10 px-6 gap-2 border-slate-200"
+                className="h-14 px-8 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-slate-900/10 hover:bg-primary-600 transition-all flex items-center gap-3 active:scale-[0.98] disabled:opacity-70"
             >
                 {isDownloading
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <FileDown className="w-4 h-4" />
                 }
-                {isDownloading ? "Generating PDF…" : "Download PDF"}
-            </Button>
+                {isDownloading ? "Protocol Generation…" : "Download Ledger"}
+            </button>
 
-            <Button 
+            <button 
                 onClick={handleTrash}
                 disabled={isPending}
-                variant="ghost"
-                className="h-10 px-4 gap-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all ml-auto group"
-                title="Move to Trash"
+                className="h-14 px-6 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all ml-auto active:scale-90 group"
+                title="Terminate Record"
             >
-                <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            </Button>
+                <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </button>
         </div>
     );
 }

@@ -19,6 +19,7 @@ import { useToast } from "@/context/ToastContext";
 import { formatCurrency } from "@/utils/financials";
 import { ProductForm } from "./ProductForm";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { Modal } from "@/ui/core/Modal";
 
 interface Product {
     id: string;
@@ -30,6 +31,7 @@ interface Product {
     gstRate: any; // Prisma Decimal
     unit: string;
     notes?: string | null;
+    currentStock: number;
 }
 
 interface ProductTableProps {
@@ -88,6 +90,22 @@ const ProductTableRow = ({ product, onEdit }: { product: Product, onEdit: (produ
                     <span className="text-sm font-black text-slate-700 italic tracking-tight">{formatCurrency(Number(product.sellingRate))}</span>
                     <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Selling Price</span>
                     <span className="text-[10px] font-bold text-slate-400 opacity-60">Cost: {formatCurrency(Number(product.purchaseRate))}</span>
+                </div>
+            </TableCell>
+            <TableCell>
+                <div className="flex flex-col items-start gap-1">
+                    <span className={`text-lg font-black italic tabular-nums tracking-tighter ${product.currentStock <= 0 ? "text-rose-600" : "text-slate-900"}`}>
+                        {product.currentStock}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                        {product.currentStock <= 0 ? (
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-rose-50 rounded-lg text-[8px] font-black text-rose-600 uppercase tracking-widest border border-rose-100">
+                                <AlertTriangle className="w-2 h-2" /> OUT OF STOCK
+                            </span>
+                        ) : (
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic opacity-60">Current Reserve</span>
+                        )}
+                    </div>
                 </div>
             </TableCell>
             <TableCell>
@@ -164,7 +182,7 @@ const ProductMobileCard = ({ product, onEdit }: { product: Product, onEdit: (pro
     };
 
     return (
-        <div className="clay-card p-6 space-y-6 animate-in fade-in zoom-in duration-500 fill-mode-both border-0">
+        <Card className="p-6 space-y-6 animate-in fade-in zoom-in duration-500 fill-mode-both border-0 shadow-lg">
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
@@ -192,10 +210,17 @@ const ProductMobileCard = ({ product, onEdit }: { product: Product, onEdit: (pro
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-5 border-t border-slate-50">
+            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-slate-50">
                 <div className="flex flex-col">
                     <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1 italic">Selling Price</span>
                     <span className="text-base font-black text-slate-900 italic tracking-tighter">{formatCurrency(Number(product.sellingRate))}</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1 italic">Stock Level</span>
+                    <span className={`text-base font-black italic tracking-tighter ${product.currentStock <= 0 ? "text-rose-600" : "text-slate-900"}`}>
+                        {product.currentStock}
+                    </span>
+                    {product.currentStock <= 0 && <span className="text-[7px] font-black text-rose-500 uppercase">Alert</span>}
                 </div>
                 {product.sku && (
                     <div className="flex flex-col">
@@ -217,7 +242,7 @@ const ProductMobileCard = ({ product, onEdit }: { product: Product, onEdit: (pro
                     </div>
                 </div>
             )}
-        </div>
+        </Card>
     );
 };
 
@@ -235,39 +260,32 @@ export function ProductTable({ products }: ProductTableProps) {
     return (
         <div className="space-y-10">
             {/* Unified Modal Overlay */}
-            {(editingProduct || isAdding) && (
-                <div className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
-                    <div className="w-full max-w-4xl max-h-[95vh] overflow-y-auto custom-scrollbar animate-reveal">
-                        <ProductForm
-                            product={editingProduct || undefined}
-                            onSuccess={() => {
-                                setEditingProduct(null);
-                                setIsAdding(false);
-                            }}
-                            onCancel={() => {
-                                setEditingProduct(null);
-                                setIsAdding(false);
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={!!editingProduct || isAdding}
+                onClose={() => {
+                    setEditingProduct(null);
+                    setIsAdding(false);
+                }}
+            >
+                <ProductForm
+                    product={editingProduct || undefined}
+                    onSuccess={() => {
+                        setEditingProduct(null);
+                        setIsAdding(false);
+                    }}
+                    onCancel={() => {
+                        setEditingProduct(null);
+                        setIsAdding(false);
+                    }}
+                />
+            </Modal>
 
             <Card className="border-0 shadow-none p-4 bg-transparent overflow-hidden rounded-3xl">
                 <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-8 px-0 py-6">
                     <div className="text-center lg:text-left">
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-max">
-                        <div className="relative w-full md:w-80">
-                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                            <Input
-                                placeholder="Search inventory..."
-                                className="pl-14 h-16 w-full"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
+                    <div className="flex flex-col md:flex-row items-center justify-end gap-4 w-full">
                         <button
                             onClick={() => setIsAdding(true)}
                             className="w-full md:w-max h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
@@ -280,7 +298,7 @@ export function ProductTable({ products }: ProductTableProps) {
                 <CardContent className="p-0">
                     <ErrorBoundary name="Inventory Catalog">
                         {filtered.length === 0 ? (
-                            <div className="py-32 text-center clay-card border-0 animate-in fade-in zoom-in duration-700 bg-white">
+                            <Card className="py-32 text-center border-0 animate-in fade-in zoom-in duration-700 bg-white shadow-xl">
                                 <div className="mx-auto w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-8 border-2 border-dashed border-slate-200 shadow-inner">
                                     <ArchiveX className="h-10 w-10 text-slate-300" />
                                 </div>
@@ -288,17 +306,18 @@ export function ProductTable({ products }: ProductTableProps) {
                                 <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">
                                     No master inventory records match your criteria.
                                 </p>
-                            </div>
+                            </Card>
                         ) : (
                             <>
                                 {/* Desktop Table View */}
-                                <div className="hidden lg:block clay-card overflow-hidden border-0 bg-white">
+                                <Card className="hidden lg:block overflow-hidden border-0 bg-white shadow-2xl">
                                     <Table>
                                         <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                                             <TableRow>
-                                                <TableHead className="w-[50%] px-8 text-[10px] font-black uppercase tracking-[0.25em] italic">Product Specifications</TableHead>
+                                                <TableHead className="w-[40%] px-8 text-[10px] font-black uppercase tracking-[0.25em] italic">Product Specifications</TableHead>
                                                 <TableHead className="w-[15%] text-[10px] font-black uppercase tracking-[0.25em] italic">Base Rate</TableHead>
-                                                <TableHead className="w-[15%] text-[10px] font-black uppercase tracking-[0.25em] italic">Tax Class</TableHead>
+                                                <TableHead className="w-[15%] text-[10px] font-black uppercase tracking-[0.25em] italic">Stock Status</TableHead>
+                                                <TableHead className="w-[10%] text-[10px] font-black uppercase tracking-[0.25em] italic">Tax Class</TableHead>
                                                 <TableHead className="w-[20%] text-right px-8 text-[10px] font-black uppercase tracking-[0.25em] italic">Operations</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -312,7 +331,7 @@ export function ProductTable({ products }: ProductTableProps) {
                                             ))}
                                         </TableBody>
                                     </Table>
-                                </div>
+                                </Card>
 
                                 {/* Mobile Grid View */}
                                 <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">

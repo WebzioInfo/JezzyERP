@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/lib/store/uiStore";
 import Link from "next/link";
@@ -14,7 +14,6 @@ import {
   Package,
   FileText,
   Settings,
-  LogOut,
   FilePlus,
   CreditCard,
   ClipboardList,
@@ -28,6 +27,8 @@ import {
   Search,
   LifeBuoy,
   Building2,
+  Power,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/utils";
 
@@ -50,106 +51,100 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    label: "Overview",
+    label: "OVERVIEW",
     items: [
       {
         name: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        description: "Business overview & KPIs",
+        description: "Business summary",
         exact: true,
+      },
+      {
+        name: "Reports",
+        href: "/reports",
+        icon: BarChart3,
+        description: "Tax summaries",
       },
     ],
   },
   {
-    label: "Billing",
+    label: "SALES",
     items: [
       {
         name: "Invoices",
         href: "/invoices",
         icon: FileText,
-        description: "View and manage invoices",
-      },
-      {
-        name: "New Invoice",
-        href: "/invoices/new",
-        icon: FilePlus,
-        description: "Create a new invoice",
-        highlight: true,
+        description: "Billing",
       },
       {
         name: "Quotations",
         href: "/quotations",
         icon: ClipboardList,
-        description: "Create and send estimates",
-      },
-    ],
-  },
-  {
-    label: "Management",
-    items: [
-      {
-        name: "Clients",
-        href: "/clients",
-        icon: Users,
-        description: "Client directory & contacts",
-      },
-      {
-        name: "Inventory",
-        href: "/products",
-        icon: Package,
-        description: "Product catalog & pricing",
+        description: "Estimates",
       },
       {
         name: "Payments",
         href: "/payments",
         icon: CreditCard,
-        description: "Record incoming payments",
+        description: "Income",
       },
     ],
   },
   {
-    label: "Procurement",
+    label: "PURCHASES",
     items: [
-      {
-        name: "Vendors",
-        href: "/vendors",
-        icon: Building2,
-        description: "Supplier directory & contacts",
-      },
       {
         name: "Purchases",
         href: "/purchases",
         icon: FilePlus,
-        description: "Track inward inventory & tax",
+        description: "Bills",
+      },
+      {
+        name: "Vendors",
+        href: "/vendors",
+        icon: Building2,
+        description: "Suppliers",
+      },
+      {
+        name: "Products",
+        href: "/products",
+        icon: Package,
+        description: "Inventory",
       },
     ],
   },
   {
-    label: "Analytics",
+    label: "PEOPLE",
     items: [
       {
-        name: "Reports",
-        href: "/reports",
-        icon: BarChart3,
-        description: "Revenue & GST summaries",
+        name: "Clients",
+        href: "/clients",
+        icon: Users,
+        description: "Customers",
       },
     ],
   },
   {
-    label: "System",
+    label: "SYSTEM",
     items: [
       {
         name: "Settings",
         href: "/settings",
         icon: Settings,
-        description: "Company info & preferences",
+        description: "Profile",
+      },
+      {
+        name: "Trash",
+        href: "/trash",
+        icon: Trash2,
+        description: "Recovery",
       },
       {
         name: "Support",
         href: "/support",
         icon: LifeBuoy,
-        description: "Professional help & guides",
+        description: "Help",
       },
     ],
   },
@@ -164,12 +159,21 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const { sidebarCollapsed, toggleSidebar, mobileMenuOpen, setMobileMenuOpen, setSidebarCollapsed } = useUIStore();
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Sync sidebar state from store persistence if needed or just use it
   useEffect(() => {
     // Zustand persist takes care of it, but we can sync manually if required
   }, []);
+
+  if (!isMounted) {
+    return <SidebarSkeleton />; 
+  }
 
 
   return (
@@ -183,7 +187,7 @@ export default function AuthenticatedLayout({
       >
         <div className="glass clay-card h-full flex flex-col overflow-hidden border-0 shadow-2xl shadow-primary-900/5">
           <React.Suspense fallback={<SidebarSkeleton />}>
-            <SidebarContent isCollapsed={sidebarCollapsed} pathname={pathname} />
+            <SidebarContent sidebarCollapsed={sidebarCollapsed} pathname={pathname} />
           </React.Suspense>
         </div>
 
@@ -255,21 +259,22 @@ export default function AuthenticatedLayout({
 
 function SidebarContent({
   pathname,
-  isCollapsed = false,
+  sidebarCollapsed = false,
   isMobile = false
 }: {
   pathname: string;
-  isCollapsed?: boolean;
+  sidebarCollapsed?: boolean;
   isMobile?: boolean;
 }) {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   };
 
   return (
-    <div className="flex-1 flex flex-col py-8 overflow-hidden">
-      {!isMobile && !isCollapsed && (
+    <div className="flex-1 bg-primary-100 flex flex-col py-8 overflow-hidden">
+      {!isMobile && !sidebarCollapsed && (
         <div className="px-8 mb-10 flex items-center gap-4 animate-reveal">
           <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-2xl border border-white/20 overflow-hidden shrink-0">
             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -282,86 +287,163 @@ function SidebarContent({
         </div>
       )}
 
-      {!isMobile && isCollapsed && (
+      {!isMobile && sidebarCollapsed && (
         <div className="flex justify-center mb-10 animate-reveal">
-          <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-xl border border-white/20 overflow-hidden">
+          <div className="relative w-12 h-12 rounded-full bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-xl overflow-hidden">
             <Building2 className="w-6 h-6 text-white" />
           </div>
         </div>
       )}
 
-      <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pb-10" data-lenis-prevent>
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.label} className="animate-reveal">
-            {!isCollapsed && (
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] px-4 mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-500/30" />
-                {section.label}
-              </p>
-            )}
-            {isCollapsed && (
-              <div className="h-px bg-slate-100/50 mx-4 my-6" />
-            )}
-            <ul className="space-y-1.5">
-              {section.items.map((item) => {
-                const active = isActive(item.href, item.exact);
-                return (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "group flex items-center gap-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
-                        active
-                          ? "bg-primary-600 text-white shadow-xl shadow-primary-600/20 py-3.5"
-                          : "text-slate-500 hover:bg-white hover:shadow-lg hover:shadow-primary-900/5 hover:text-primary-600 py-3",
-                        isCollapsed ? "justify-center px-0" : "px-4"
-                      )}
-                      title={isCollapsed ? item.name : ""}
-                    >
-                      {active && (
-                        <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                      )}
-                      <item.icon
-                        className={cn(
-                          "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
-                          active ? "text-white" : "text-slate-400 group-hover:text-primary-500"
-                        )}
-                      />
-                      {!isCollapsed && <span className="flex-1 truncate text-xs font-black uppercase tracking-widest">{item.name}</span>}
-                      {!isCollapsed && active && <ChevronRightIcon size={14} className="opacity-50" />}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav className={cn(
+        "flex-1 space-y-4 pb-10",
+        sidebarCollapsed ? "overflow-y-auto scrollbar-hide px-2" : "overflow-y-auto px-4 custom-scrollbar"
+      )} data-lenis-prevent>
+        {NAV_SECTIONS.map((section) => {
+          const { expandedSections, toggleSection } = useUIStore();
+          const isExpanded = expandedSections.includes(section.label);
+
+          return (
+            <div key={section.label} className="animate-reveal">
+              {!sidebarCollapsed && (
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className="w-full flex items-center justify-between px-4 mb-3 rounded-2xl hover:bg-slate-300 py-1 group/label"
+                >
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2 group-hover/label:text-primary-500  transition-colors">
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full transition-all",
+                      isExpanded ? "bg-primary-500" : "bg-slate-300"
+                    )} />
+                    {section.label}
+                  </p>
+                  <ChevronRightIcon
+                    size={10}
+                    className={cn(
+                      "text-slate-300 transition-transform duration-300 group-hover/label:text-primary-400",
+                      isExpanded ? "rotate-90" : "rotate-0"
+                    )}
+                  />
+                </button>
+              )}
+              {sidebarCollapsed && (
+                <div className="h-px bg-slate-100/50 mx-4 my-6" />
+              )}
+
+              <AnimatePresence initial={false}>
+                {(isExpanded || sidebarCollapsed) && (
+                  <motion.ul
+                    initial={isMobile || sidebarCollapsed ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="space-y-1.5 overflow-hidden"
+                  >
+                    {section.items.map((item) => {
+                      const active = isActive(item.href, item.exact);
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            href={item.href}
+                            className={cn(
+                              "group flex items-center gap-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
+                              active
+                                ? "bg-primary-600 text-white shadow-xl shadow-primary-600/20 py-3.5"
+                                : "text-slate-500 hover:bg-white hover:shadow-lg hover:shadow-primary-900/5 hover:text-primary-600 py-3",
+                              sidebarCollapsed ? "justify-center px-0" : "px-4"
+                            )}
+                            title={sidebarCollapsed ? item.name : ""}
+                          >
+                            {active && (
+                              <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                            )}
+                            <item.icon
+                              className={cn(
+                                "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
+                                active ? "text-white" : "text-slate-400 group-hover:text-primary-500"
+                              )}
+                            />
+                            {!sidebarCollapsed && <span className="flex-1 truncate text-xs font-black uppercase tracking-widest">{item.name}</span>}
+                            {!sidebarCollapsed && active && <ChevronRightIcon size={14} className="opacity-50" />}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </nav>
 
       <div className="px-4 pt-6 mt-auto shrink-0 space-y-4">
-        {!isCollapsed ? (
-          <div className="glass p-4 flex items-center gap-4 border border-white/50 rounded-2xl shadow-xl shadow-primary-900/5">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tight">JEZZY Admin</p>
-              <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Master Node</p>
-            </div>
+        {!sidebarCollapsed ? (
+          <div className="relative group">
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className={cn(
+                "w-full glass p-4 flex items-center gap-4 border rounded-2xl transition-all duration-300",
+                isProfileMenuOpen ? "border-primary-500 bg-white/60 shadow-2xl" : "border-white/50 shadow-xl shadow-primary-900/5 hover:bg-white/40"
+              )}
+            >
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
+              <div className="min-w-0 text-left flex-1">
+                <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tight">JEZZY Admin</p>
+                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Master Node</p>
+              </div>
+              <ChevronRight className={cn("w-3.5 h-3.5 text-slate-300 transition-transform duration-300", isProfileMenuOpen && "rotate-90 text-primary-500")} />
+            </button>
+
+            <AnimatePresence>
+              {isProfileMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute bottom-full left-0 w-full mb-2 z-50"
+                >
+                  <form action="/api/auth/logout" method="POST">
+                    <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all group overflow-hidden relative">
+                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                      <Power className="w-4 h-4 text-red-400 group-hover:text-white" />
+                      <span>Terminate Protocol</span>
+                    </button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
-          <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
+          <div className="flex flex-col items-center gap-4 relative">
+            <AnimatePresence>
+              {isProfileMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="absolute bottom-0 left-full ml-4 z-50 w-48"
+                >
+                  <form action="/api/auth/logout" method="POST">
+                    <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all">
+                      <Power className="w-4 h-4 text-red-400" />
+                      <span>Terminate</span>
+                    </button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shadow-sm border transition-all",
+                isProfileMenuOpen ? "bg-primary-600 text-white border-primary-600 scale-110" : "bg-slate-100 text-primary-600 border-white hover:bg-primary-50"
+              )}
+            >
+              EA
+            </button>
           </div>
         )}
-
-        <form action="/api/auth/logout" method="POST">
-          <button className={cn(
-            "w-full flex items-center gap-4 rounded-2xl py-3 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all duration-300 group",
-            isCollapsed ? "justify-center px-0" : "px-4"
-          )}>
-            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-            {!isCollapsed && <span className="text-[11px] font-black uppercase tracking-widest">Terminate Session</span>}
-          </button>
-        </form>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import { db } from "@/db/prisma/client";
 import { formatCurrency } from "@/utils/financials";
 import Link from "next/link";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { Card, CardHeader, CardContent } from "@/ui/core/Card";
+import { CheckCircle2, Clock } from "lucide-react";
 
 export async function OperationalMetrics() {
     const [invoiceCount, pendingInvoices, statusCounts] = await Promise.all([
@@ -31,45 +32,52 @@ export async function OperationalMetrics() {
     return (
         <div className="space-y-8">
             {/* Status Architecture */}
-            <div className="glass clay-card p-8 border-0 shadow-2xl shadow-primary-900/5">
-                <h3 className="text-lg font-black text-slate-900 font-display uppercase italic mb-8 tracking-tight">Status Metrics</h3>
-                <div className="space-y-5">
-                    <StatusRow label="DRAFT" count={statusMap["DRAFT"] || 0} color="#94A3B8" total={invoiceCount} />
-                    <StatusRow label="SENT" count={statusMap["SENT"] || 0} color="#6366F1" total={invoiceCount} />
-                    <StatusRow label="PAID" count={statusMap["PAID"] || 0} color="#10B981" total={invoiceCount} />
-                    <StatusRow label="OVERDUE" count={statusMap["OVERDUE"] || 0} color="#EF4444" total={invoiceCount} />
-                    <StatusRow label="PARTIAL" count={statusMap["PARTIAL"] || 0} color="#F59E0B" total={invoiceCount} />
-                </div>
-            </div>
+            <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
+                <CardHeader className="bg-slate-900 rounded-t-4xl px-8 py-5">
+                    <h3 className="text-lg font-black text-white font-display uppercase italic tracking-tight">Status Metrics</h3>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="space-y-5">
+                        <StatusRow label="DRAFT" count={statusMap["DRAFT"] || 0} color="#94A3B8" total={invoiceCount} />
+                        <StatusRow label="SENT" count={statusMap["SENT"] || 0} color="#6366F1" total={invoiceCount} />
+                        <StatusRow label="PAID" count={statusMap["PAID"] || 0} color="#10B981" total={invoiceCount} />
+                        <StatusRow label="OVERDUE" count={statusMap["OVERDUE"] || 0} color="#EF4444" total={invoiceCount} />
+                        <StatusRow label="PARTIAL" count={statusMap["PARTIAL"] || 0} color="#F59E0B" total={invoiceCount} />
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Pending Priority */}
-            <div className="glass clay-card p-8 border-0 shadow-2xl shadow-primary-900/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-accent-500/5 blur-2xl rounded-full" />
-                <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-lg font-black text-slate-900 font-display uppercase italic tracking-tight">Priority Debt</h3>
-                    <Clock className="w-5 h-5 text-accent-500 animate-pulse" />
-                </div>
-                <div className="space-y-4">
-                    {pendingInvoices.length === 0 ? (
-                        <div className="text-center py-6">
-                            <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-                            <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">All Cleared</p>
-                        </div>
-                    ) : (
-                        pendingInvoices.map((inv: any) => (
-                            <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                                <div className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                                    <div className="min-w-0">
-                                        <p className="text-[11px] font-black text-slate-700 truncate uppercase tracking-tight">{inv.client.name}</p>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{inv.invoiceNo}</p>
+            <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
+                <CardHeader className="bg-primary-600 rounded-t-4xl px-8 py-5">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-black text-white font-display uppercase italic tracking-tight">Priority Debt</h3>
+                        <Clock className="w-5 h-5 text-white/50 animate-pulse" />
+                    </div>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="space-y-4">
+                        {pendingInvoices.length === 0 ? (
+                            <div className="text-center py-6">
+                                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
+                                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">All Cleared</p>
+                            </div>
+                        ) : (
+                            pendingInvoices.map((inv: any) => (
+                                <Link key={inv.id} href={`/invoices/${inv.id}`}>
+                                    <div className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-black text-slate-700 truncate uppercase tracking-tight">{inv.client.name}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{inv.invoiceNo}</p>
+                                        </div>
+                                        <p className="text-xs font-black text-red-600 ml-4 shrink-0">{formatCurrency(inv.grandTotal.toNumber())}</p>
                                     </div>
-                                    <p className="text-xs font-black text-red-600 ml-4 shrink-0">{formatCurrency(inv.grandTotal.toNumber())}</p>
-                                </div>
-                            </Link>
-                        ))
-                    )}
-                </div>
-            </div>
+                                </Link>
+                            ))
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

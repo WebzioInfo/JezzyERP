@@ -17,7 +17,7 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
 
     return (
         <Card className="overflow-hidden group shadow-2xl animate-reveal custom-scrollbar">
-            <CardHeader className="bg-slate-900 px-10 py-10 group-hover:bg-slate-800 transition-colors">
+            <CardHeader className="bg-slate-900 rounded-t-4xl px-10 py-10 group-hover:bg-slate-800 transition-colors">
                 <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-3xl bg-white/10 flex items-center justify-center backdrop-blur-md shadow-inner">

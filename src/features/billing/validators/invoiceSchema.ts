@@ -28,6 +28,7 @@ export const invoiceSchema = z.object({
 
     // Logistics
     ewayBill: z.string().optional(),
+    ewayBillUrl: z.string().optional(),
     vehicleNo: z.string().optional(),
     dispatchedThrough: z.string().optional(),
     isFreightCollect: z.boolean().default(false),

@@ -1,6 +1,7 @@
 import { db } from "@/db/prisma/client";
 import { formatCurrency } from "@/utils/financials";
 import { TrendingUp, IndianRupee, AlertTriangle, Users } from "lucide-react";
+import { Card } from "@/ui/core/Card";
 
 export async function KpiGroup() {
     const [
@@ -82,10 +83,10 @@ function KpiCard({ label, value, icon, color, subtitle }: {
     const theme = themes[color];
 
     return (
-        <div className="glass clay-card p-8 border-0 group hover:scale-[1.03] active:scale-95 transition-all duration-500 relative overflow-hidden">
+        <Card className="p-8 border-0 group hover:scale-[1.03] active:scale-95 transition-all duration-500 relative overflow-hidden shadow-2xl shadow-slate-200/50">
             <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full blur-2xl opacity-10 ${theme.bgAccent}`} />
 
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className={`w-12 h-12 rounded-2xl ${theme.iconBg} flex items-center justify-center text-white shadow-xl ${theme.glow} group-hover:rotate-12 transition-all duration-500 border border-white/20`}>
                     {icon}
                 </div>
@@ -94,12 +95,12 @@ function KpiCard({ label, value, icon, color, subtitle }: {
                 </div>
             </div>
 
-            <div className="space-y-2 pb-2">
+            <div className="space-y-2 pb-2 relative z-10">
                 <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none font-display">{value}</h4>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{subtitle}</p>
             </div>
 
             <div className={`h-1 w-0 group-hover:w-full transition-all duration-700 ${theme.bgAccent} absolute bottom-0 left-0`} />
-        </div>
+        </Card>
     );
 }

@@ -80,3 +80,30 @@ export async function createPurchaseAction(formData: FormData) {
     revalidatePath("/purchases");
     revalidatePath("/reports");
 }
+
+export async function deletePurchaseAction(purchaseId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    await purchaseService.deletePurchase(purchaseId);
+    revalidatePath("/purchases");
+    revalidatePath("/dashboard");
+}
+
+export async function restorePurchaseAction(purchaseId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    await purchaseService.restorePurchase(purchaseId, session.userId);
+    revalidatePath("/purchases");
+    revalidatePath("/dashboard");
+}
+
+export async function permanentlyDeletePurchaseAction(purchaseId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    await purchaseService.permanentlyDeletePurchase(purchaseId, session.userId);
+    revalidatePath("/purchases");
+    revalidatePath("/dashboard");
+}

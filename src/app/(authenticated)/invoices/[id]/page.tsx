@@ -51,6 +51,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
       grandTotal: true,
       status: true,
       ewayBill: true,
+      ewayBillUrl: true,
       vehicleNo: true,
       dispatchedThrough: true,
       notes: true,

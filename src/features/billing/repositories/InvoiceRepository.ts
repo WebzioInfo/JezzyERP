@@ -59,4 +59,18 @@ export class InvoiceRepository extends BaseRepository<Invoice> {
       });
     }, { timeout: 15000 });
   }
+
+  async softDelete(id: string): Promise<Invoice> {
+    const existing = await this.model.findUnique({ where: { id } });
+    if (!existing) throw new Error("Invoice not found");
+    
+    return await this.model.update({
+      where: { id },
+      data: { 
+        deletedAt: new Date(),
+        invoiceNo: `${existing.invoiceNo}-DEL-${Date.now()}`,
+        sequenceNumber: -1 * Math.floor(Date.now() / 1000) // Free up sequence number
+      },
+    });
+  }
 }

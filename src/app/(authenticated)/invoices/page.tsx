@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/
 import { Button } from "@/ui/core/Button";
 import { Input } from "@/ui/core/Input";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { LiveSearch } from "@/components/common/LiveSearch";
 
 interface PageProps {
   searchParams: Promise<{ status?: string; q?: string }>;
@@ -25,6 +26,7 @@ const STATUS_TABS = [
   { label: "Sent", value: "SENT" },
   { label: "Paid", value: "PAID" },
   { label: "Overdue", value: "OVERDUE" },
+  { label: "Trash", value: "TRASH" },
 ];
 
 export default async function InvoicesPage({ searchParams }: PageProps) {
@@ -35,39 +37,44 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   const statusFilter = params.status || "";
   const searchQuery = params.q || "";
 
-  const invoices = await db.invoice.findMany({
-    where: {
-      deletedAt: null,
-      ...(statusFilter && { status: statusFilter }),
-      ...(searchQuery && {
-        OR: [
-          { invoiceNo: { contains: searchQuery } },
-          { client: { name: { contains: searchQuery } } },
-        ],
-      }),
-    },
-    orderBy: { date: "desc" },
-    select: {
-      id: true,
-      invoiceNo: true,
-      date: true,
-      grandTotal: true,
-      status: true,
-      client: { select: { name: true } }
-    },
-  });
-
-  // Count by status for tabs
-  const counts = await db.invoice.groupBy({
-    by: ["status"],
-    where: { deletedAt: null },
-    _count: { status: true },
-  });
+  const [invoices, counts, trashCount] = await Promise.all([
+    db.invoice.findMany({
+      where: {
+        ...(statusFilter === "TRASH" ? { deletedAt: { not: null } } : { deletedAt: null }),
+        ...(statusFilter && statusFilter !== "TRASH" && { status: statusFilter }),
+        ...(searchQuery && {
+          OR: [
+            { invoiceNo: { contains: searchQuery } },
+            { client: { name: { contains: searchQuery } } },
+          ],
+        }),
+      },
+      orderBy: { invoiceNo: "desc" },
+      select: {
+        id: true,
+        invoiceNo: true,
+        date: true,
+        grandTotal: true,
+        status: true,
+        client: { select: { name: true } }
+      },
+      take: 100,
+    }),
+    db.invoice.groupBy({
+      by: ["status"],
+      where: { deletedAt: null },
+      _count: { status: true },
+    }),
+    db.invoice.count({
+      where: { deletedAt: { not: null } }
+    })
+  ]);
   
   const countMap: Record<string, number> = {};
   counts.forEach((c) => { countMap[c.status] = c._count.status; });
   const total = counts.reduce((a, c) => a + c._count.status, 0);
   countMap[""] = total;
+  countMap["TRASH"] = trashCount;
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -84,21 +91,13 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
           </Button>
         </Link>
       </div>
-
-      {/* ── Search & Filter ── */}
       <Card className="border-0 shadow-sm ring-1 ring-slate-200/60 overflow-hidden rounded-[2.5rem] animate-in stagger-2">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-6 items-center">
-             <form className="flex-1 w-full relative group" method="GET">
-                {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
-                <Input 
-                   name="q"
-                   defaultValue={searchQuery}
-                   placeholder="Search by Invoice # or Client Name..."
-                   icon={<Search className="w-5 h-5 text-slate-400" />}
-                   className="h-12 rounded-[1.25rem] bg-slate-50 border-0 ring-1 ring-slate-200 group-focus-within:ring-primary-500 group-focus-within:ring-2 transition-all"
-                />
-             </form>
+             <LiveSearch 
+               placeholder="Search by Invoice # or Client Name..." 
+               className="flex-1 w-full"
+             />
 
              <div className="flex flex-wrap items-center gap-2">
                 {STATUS_TABS.map((tab) => {
@@ -196,7 +195,10 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <InvoiceListActions invoiceId={inv.id} />
+                      <InvoiceListActions 
+                        invoiceId={inv.id} 
+                        isTrashed={statusFilter === "TRASH"} 
+                      />
                     </td>
                   </tr>
                 ))}

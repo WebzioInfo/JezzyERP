@@ -81,39 +81,38 @@ export async function recordPaymentAction(data: {
     if (!session) throw new Error("Unauthorized");
 
     try {
-        const payment = await db.payment.create({
-            data: {
-                invoiceId: data.invoiceId,
-                amount: data.amount,
-                method: data.method,
-                reference: data.reference || null,
-                notes: data.notes || null,
-                paidAt: new Date(data.paidAt),
-                recordedBy: session.userId,
-            },
-        });
+        const result = await db.$transaction(async (tx) => {
+            const payment = await tx.payment.create({
+                data: {
+                    invoiceId: data.invoiceId,
+                    amount: data.amount,
+                    method: data.method,
+                    reference: data.reference || null,
+                    notes: data.notes || null,
+                    paidAt: new Date(data.paidAt),
+                    recordedBy: session.userId,
+                },
+            });
 
-        // Re-calculate amountPaid and update invoice status
-        const allPayments = await db.payment.aggregate({
-            where: { invoiceId: data.invoiceId },
-            _sum: { amount: true },
-        });
+            // Re-calculate amountPaid and update invoice status in one go
+            const invoice = await tx.invoice.findUnique({
+                where: { id: data.invoiceId },
+                select: { grandTotal: true, payments: { select: { amount: true } } },
+            });
 
-        const invoice = await db.invoice.findUnique({
-            where: { id: data.invoiceId },
-            select: { grandTotal: true },
-        });
+            if (!invoice) throw new Error("Invoice not found");
 
-        if (invoice) {
-            const totalPaid = allPayments._sum.amount?.toNumber() || 0;
+            const totalPaid = invoice.payments.reduce((sum, p) => sum + p.amount.toNumber(), 0);
             const grandTotal = invoice.grandTotal.toNumber();
             const newStatus = totalPaid >= grandTotal ? "PAID" : "PARTIAL";
 
-            await db.invoice.update({
+            await tx.invoice.update({
                 where: { id: data.invoiceId },
                 data: { amountPaid: totalPaid, status: newStatus },
             });
-        }
+
+            return payment;
+        });
 
         revalidatePath(`/invoices/${data.invoiceId}`);
         revalidatePath("/invoices");

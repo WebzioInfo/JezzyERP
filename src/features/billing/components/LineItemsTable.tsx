@@ -196,14 +196,17 @@ LineItemRow.displayName = 'LineItemRow';
 export function LineItemsTable({ items, products, handleAddItem, updateItem, removeItem, handleProductSelect }: LineItemsTableProps) {
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-center justify-between px-2 mb-2">
                 <div>
-                    <h3 className="text-xl font-black text-slate-900 italic tracking-tight uppercase">Line Items</h3>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Define products and service charges</p>
+                    <h3 className="text-2xl font-black text-slate-900 font-display uppercase italic tracking-tight">Commodity Registry</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">Define commercial items & quantity specifications</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleAddItem} className="gap-2 border-primary-100 text-primary-600 hover:bg-primary-50">
+                <button 
+                    onClick={handleAddItem} 
+                    className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-primary-50 hover:text-primary-600 hover:border-primary-100 transition-all flex items-center gap-2"
+                >
                     <Plus className="w-4 h-4" /> Add Row
-                </Button>
+                </button>
             </div>
 
             <div className="space-y-4">

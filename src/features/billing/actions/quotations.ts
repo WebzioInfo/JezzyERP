@@ -55,3 +55,45 @@ export async function updateQuotationStatusAction(quotationId: string, status: s
         return handleActionError(error);
     }
 }
+
+export async function deleteQuotationAction(quotationId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await QuotationService.softDeleteQuotation(quotationId, session.userId);
+        revalidatePath("/quotations");
+        revalidatePath("/dashboard");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}
+
+export async function restoreQuotationAction(quotationId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await QuotationService.restoreQuotation(quotationId, session.userId);
+        revalidatePath("/quotations");
+        revalidatePath("/dashboard");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}
+
+export async function permanentlyDeleteQuotationAction(quotationId: string) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        await QuotationService.permanentlyDeleteQuotation(quotationId, session.userId);
+        revalidatePath("/quotations");
+        revalidatePath("/dashboard");
+        return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}

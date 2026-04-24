@@ -1,6 +1,7 @@
 //generateInvoicePDF.ts
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { PDFDocument } from "pdf-lib";
 import { numberToWords } from "@/utils/financials";
 import { formatDateDMY } from "@/utils/date";
 
@@ -185,5 +186,107 @@ State: ${invoice.client.state}
     doc.setFont("helvetica", "normal");
     doc.text("Authorised Signatory", 150, bankY + 30);
 
-    doc.save(`${invoice.invoiceNo}.pdf`);
+    // ─── PDF HANDLING (MERGING OR CUSTOM FALLBACK) ───
+    if (invoice.ewayBillUrl) {
+        try {
+            const invoicePdfBytes = doc.output('arraybuffer');
+            const ewayBillPdfResponse = await fetch(invoice.ewayBillUrl);
+            if (!ewayBillPdfResponse.ok) throw new Error("Failed to fetch E-Way bill PDF");
+            const ewayBillPdfBytes = await ewayBillPdfResponse.arrayBuffer();
+
+            const mergedPdf = await PDFDocument.create();
+            const invoiceDoc = await PDFDocument.load(invoicePdfBytes);
+            const ewayBillDoc = await PDFDocument.load(ewayBillPdfBytes);
+
+            const invoicePages = await mergedPdf.copyPages(invoiceDoc, invoiceDoc.getPageIndices());
+            invoicePages.forEach(page => mergedPdf.addPage(page));
+
+            const ewayBillPages = await mergedPdf.copyPages(ewayBillDoc, ewayBillDoc.getPageIndices());
+            ewayBillPages.forEach(page => mergedPdf.addPage(page));
+
+            const mergedPdfBytes = await mergedPdf.save();
+            const blob = new Blob([mergedPdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${invoice.invoiceNo}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+            return;
+        } catch (error) {
+            console.error("Merging Error:", error);
+            doc.save(`${invoice.invoiceNo}.pdf`);
+        }
+    } else if (invoice.ewayBill || invoice.vehicleNo) {
+        // ─── GENERATE CUSTOM LOGISTICS PAGE ───
+        doc.addPage();
+        
+        // Header
+        doc.setFillColor(15, 23, 42); // Slate 900
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont("helvetica", "bold");
+        doc.text("LOGISTICS & TRANSPORT", 20, 25);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Electronic Way Bill & Goods Movement Declaration", 20, 32);
+
+        // Watermark for Custom Page
+        doc.setTextColor(240, 240, 240);
+        doc.setFontSize(60);
+        doc.text("GENERATED COPY", 40, 150, { angle: 45 });
+
+        // Details Grid
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(12);
+        
+        // Left Column Labels
+        doc.setFont("helvetica", "bold");
+        doc.text("E-Way Bill Number:", 20, 60);
+        doc.text("Vehicle Number:", 20, 75);
+        doc.text("Dispatch Date:", 20, 90);
+        doc.text("Transport Mode:", 20, 105);
+        
+        // Right Column Values
+        doc.setFont("helvetica", "normal");
+        doc.text(invoice.ewayBill || "NOT PROVIDED", 70, 60);
+        doc.text(invoice.vehicleNo || "NOT PROVIDED", 70, 75);
+        doc.text(formatDateDMY(invoice.date), 70, 90);
+        doc.text("ROAD (SURFACE)", 70, 105);
+
+        // Divider
+        doc.setDrawColor(226, 232, 240);
+        doc.line(20, 115, 190, 115);
+
+        // Origin/Destination Info
+        doc.setFont("helvetica", "bold");
+        doc.text("Consignor (From):", 20, 130);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("JEZZY ENTERPRISES", 20, 137);
+        doc.text("GSTIN: " + (process.env.NEXT_PUBLIC_COMPANY_GST || "32XXXXX"), 20, 142);
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Consignee (To):", 110, 130);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(invoice.billingAddress?.name || "CLIENT", 110, 137);
+        doc.text("GSTIN: " + (invoice.billingAddress?.gst || "UNREGISTERED"), 110, 142);
+
+        // Bottom Footer
+        doc.setFillColor(248, 250, 252);
+        doc.rect(20, 240, 170, 30, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text("This is a computer-generated logistics summary associated with Invoice " + invoice.invoiceNo + ".", 30, 255);
+        doc.text("Valid for internal tracking and goods movement records only.", 30, 260);
+
+        doc.save(`${invoice.invoiceNo}.pdf`);
+    } else {
+        doc.save(`${invoice.invoiceNo}.pdf`);
+    }
 }

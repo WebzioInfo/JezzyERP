@@ -41,7 +41,7 @@ export default async function SettingsPage() {
           <div className="lg:col-span-7 space-y-8">
             {/* Business Identity */}
             <Card>
-              <CardHeader className="bg-slate-900">
+              <CardHeader className="bg-slate-900 rounded-t-4xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
                     <Building2 className="w-5 h-5 text-white" />
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
+              <CardContent className="p-6 pt-6 ">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2">
                     <Input
@@ -175,7 +175,7 @@ export default async function SettingsPage() {
 
             {/* Display & Billing Preferences */}
             <Card className="border-orange-100 shadow-2xl shadow-orange-500/5 ring-1 ring-orange-500/10">
-              <CardHeader className="bg-linear-to-r from-orange-600 to-amber-600 text-white">
+              <CardHeader className="bg-linear-to-r from-orange-600 to-amber-600 rounded-t-4xl text-white">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
                     <ShieldCheck className="w-5 h-5 text-white" />
@@ -213,7 +213,7 @@ export default async function SettingsPage() {
           <div className="lg:col-span-5 space-y-8">
             {/* Bank Settlement */}
             <Card className="border-primary-100 shadow-2xl shadow-primary-500/5 ring-1 ring-primary-500/10">
-              <CardHeader className="bg-primary-600">
+              <CardHeader className="bg-primary-600 rounded-t-4xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
                     <Landmark className="w-5 h-5 text-white" />

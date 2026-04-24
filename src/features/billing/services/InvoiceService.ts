@@ -40,7 +40,8 @@ export class InvoiceService {
         // Count invoices in this FY to get next sequence
         const countThisFY = await tx.invoice.count({
             where: {
-                date: { gte: fyStart, lte: fyEnd }
+                date: { gte: fyStart, lte: fyEnd },
+                deletedAt: null
             }
         });
 
@@ -61,6 +62,7 @@ export class InvoiceService {
           taxTotal: validatedData.taxTotal,
           grandTotal: validatedData.grandTotal,
           ewayBill: validatedData.ewayBill,
+          ewayBillUrl: validatedData.ewayBillUrl,
           vehicleNo: validatedData.vehicleNo,
           dispatchedThrough: validatedData.dispatchedThrough,
           isFreightCollect: validatedData.isFreightCollect,
@@ -114,10 +116,23 @@ export class InvoiceService {
     }, { timeout: 15000 });
   }
 
-  async getInvoices() {
+  async getInvoices(params: { page?: number; take?: number } = {}) {
+    const { page = 1, take = 50 } = params;
+    const skip = (page - 1) * take;
+
     const invoices = await invoiceRepo.findAll({
       include: { client: { select: { name: true } } },
-      orderBy: { date: 'desc' }
+      orderBy: { date: 'desc' },
+      take,
+      skip,
+      select: {
+        id: true,
+        invoiceNo: true,
+        date: true,
+        grandTotal: true,
+        status: true,
+        clientId: true,
+      }
     });
     return serializePrisma(invoices);
   }
@@ -132,6 +147,7 @@ export class InvoiceService {
       taxTotal: validatedData.taxTotal,
       grandTotal: validatedData.grandTotal,
       ewayBill: validatedData.ewayBill,
+      ewayBillUrl: validatedData.ewayBillUrl,
       vehicleNo: validatedData.vehicleNo,
       invoiceNo: validatedData.invoiceNo,
       dispatchedThrough: validatedData.dispatchedThrough,
@@ -200,9 +216,43 @@ export class InvoiceService {
   }
 
   async restoreInvoice(invoiceId: string, userId: string) {
+    const existing = await invoiceRepo.model.findUnique({
+      where: { id: invoiceId }
+    });
+    if (!existing) throw new Error("Invoice not found");
+
+    // Remove the -DEL- suffix if present
+    let originalInvoiceNo = existing.invoiceNo;
+    if (originalInvoiceNo.includes("-DEL-")) {
+      originalInvoiceNo = originalInvoiceNo.split("-DEL-")[0];
+    }
+
+    // Handle sequenceNumber restoration
+    // We try to restore to a positive one if it was negative, but we need to find a gap or just use the absolute value if it doesn't conflict
+    let restoredSequence = Math.abs(existing.sequenceNumber);
+    
+    // Check if the number or sequence is already taken
+    const conflict = await invoiceRepo.model.findFirst({
+      where: {
+        OR: [
+          { invoiceNo: originalInvoiceNo, deletedAt: null },
+          { sequenceNumber: restoredSequence, deletedAt: null }
+        ],
+        NOT: { id: invoiceId }
+      }
+    });
+
+    if (conflict) {
+      throw new Error(`Cannot restore: Invoice number ${originalInvoiceNo} or sequence ${restoredSequence} is already taken by another active invoice.`);
+    }
+
     const invoice = await invoiceRepo.model.update({
       where: { id: invoiceId },
-      data: { deletedAt: null } as any
+      data: { 
+        deletedAt: null,
+        invoiceNo: originalInvoiceNo,
+        sequenceNumber: restoredSequence
+      } as any
     });
 
     await recordAuditLog(db, {

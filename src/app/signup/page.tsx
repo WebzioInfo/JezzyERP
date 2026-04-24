@@ -34,7 +34,7 @@ export default function SignupPage() {
       </Link>
 
       <Card className="w-full max-w-lg shadow-2xl shadow-slate-200/50 border-slate-200/60 overflow-hidden">
-        <CardHeader className="bg-primary-600 text-white p-8">
+        <CardHeader className="bg-primary-600 text-white p-8 rounded-t-4xl">
           <CardTitle className="text-2xl font-bold">Get Started</CardTitle>
           <CardDescription className="text-primary-100">
             Create your company account and start professional billing in minutes.

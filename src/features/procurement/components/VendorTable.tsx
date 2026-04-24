@@ -17,6 +17,7 @@ import {
 import { deleteVendorAction } from "../actions";
 import { VendorForm } from "./VendorForm";
 import { cn } from "@/utils";
+import { Modal } from "@/ui/core/Modal";
 
 interface VendorTableProps {
     vendors: any[];
@@ -74,18 +75,17 @@ export function VendorTable({ vendors }: VendorTableProps) {
             </div>
 
             {/* Form Overlay */}
-            {isFormOpen && (
-                <div className="fixed inset-0 z-100 flex items-center justify-center sm:p-6 lg:p-20 overflow-y-auto custom-scrollbar">
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={handleCloseForm} />
-                    <div className="relative z-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[3rem] scrollbar-hide">
-                        <VendorForm 
-                            vendor={editingVendor} 
-                            onCancel={handleCloseForm}
-                            onSuccess={handleCloseForm}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={isFormOpen}
+                onClose={handleCloseForm}
+                maxWidth="max-w-5xl"
+            >
+                <VendorForm 
+                    vendor={editingVendor} 
+                    onCancel={handleCloseForm}
+                    onSuccess={handleCloseForm}
+                />
+            </Modal>
 
             {/* Table Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">

@@ -1,21 +1,39 @@
 import { db } from "@/db/prisma/client";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { ProductForm } from "@/features/inventory/components/ProductForm";
 import { ProductTable } from "@/features/inventory/components/ProductTable";
-import { Package, TrendingUp, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Package, TrendingUp, ShieldCheck, ArrowUpRight, Search } from "lucide-react";
 import { serializePrisma } from "@/utils/serialization";
+import { StockService } from "@/features/inventory/services/StockService";
+import { LiveSearch } from "@/components/common/LiveSearch";
+import { Card, CardContent } from "@/ui/core/Card";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
     const session = await verifySessionCookie();
     if (!session) redirect("/login");
 
-    const rawProducts = await db.product.findMany({
-        where: { deletedAt: null },
-        orderBy: { createdAt: "desc" },
-    });
+    const { q: searchQuery = "" } = await searchParams;
 
-    const products = serializePrisma(rawProducts);
+    const [rawProducts, inventoryLevels] = await Promise.all([
+        db.product.findMany({
+            where: { 
+                deletedAt: null,
+                ...(searchQuery && {
+                    OR: [
+                        { sku: { contains: searchQuery } },
+                        { description: { contains: searchQuery } },
+                    ]
+                })
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+        StockService.getInventoryLevels()
+    ]);
+
+    const products = serializePrisma(rawProducts).map((p: any) => ({
+        ...p,
+        currentStock: inventoryLevels[p.id] || 0
+    }));
 
     return (
         <div className="space-y-12 animate-in fade-in duration-700 pb-20">
@@ -39,6 +57,14 @@ export default async function ProductsPage() {
                         <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter italic">{products.length} <span className="text-sm font-bold text-slate-300 not-italic uppercase tracking-widest ml-1">Items</span></div>
                     </div>
                 </div>
+            </div>
+
+            {/* Search & Actions */}
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+                <LiveSearch 
+                    placeholder="Search Vault by SKU or Description..." 
+                    className="flex-1 w-full"
+                />
             </div>
 
             {/* Main Listing Area */}

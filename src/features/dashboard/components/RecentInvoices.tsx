@@ -3,6 +3,7 @@ import { formatCurrency } from "@/utils/financials";
 import Link from "next/link";
 import { FileText, ArrowRight, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
+import { Card, CardHeader, CardContent } from "@/ui/core/Card";
 
 export async function RecentInvoices() {
     const recentInvoices = await db.invoice.findMany({
@@ -20,51 +21,54 @@ export async function RecentInvoices() {
     });
 
     return (
-        <div className="glass clay-card p-8 border-0 shadow-2xl shadow-primary-900/5">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h3 className="text-xl font-black text-slate-900 font-display uppercase italic tracking-tight">Recent Archives</h3>
-                    <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-widest">Last 8 synchronization events</p>
+        <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
+            <CardHeader className="bg-slate-900 rounded-t-4xl px-8 py-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-xl font-black text-white font-display uppercase italic tracking-tight">Recent Archives</h3>
+                        <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">Last 8 synchronization events</p>
+                    </div>
+                    <Link href="/invoices" className="p-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10">
+                        <ArrowRight className="w-5 h-5" />
+                    </Link>
                 </div>
-                <Link href="/invoices" className="p-3 rounded-xl bg-slate-50 text-primary-600 hover:bg-primary-50 transition-all border border-slate-100">
-                    <ArrowRight className="w-5 h-5" />
-                </Link>
-            </div>
-            
-            <div className="space-y-3">
-                {recentInvoices.length === 0 ? (
-                    <EmptyState
-                        icon={<FileText className="w-10 h-10 text-slate-200" />}
-                        title="No activity detected"
-                        description="Start by creating an invoice to populate your archives."
-                        action={{ label: "Create Invoice", href: "/invoices/new" }}
-                    />
-                ) : (
-                    recentInvoices.map((inv: any) => (
-                        <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                            <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-primary-900/5 transition-all cursor-pointer border border-transparent hover:border-slate-100">
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
-                                        <FileText className="w-5 h-5 text-slate-400 group-hover:text-primary-600" />
+            </CardHeader>
+            <CardContent className="p-8">
+                <div className="space-y-3">
+                    {recentInvoices.length === 0 ? (
+                        <EmptyState
+                            icon={<FileText className="w-10 h-10 text-slate-200" />}
+                            title="No activity detected"
+                            description="Start by creating an invoice to populate your archives."
+                            action={{ label: "Create Invoice", href: "/invoices/new" }}
+                        />
+                    ) : (
+                        recentInvoices.map((inv: any) => (
+                            <Link key={inv.id} href={`/invoices/${inv.id}`}>
+                                <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer border border-transparent hover:border-slate-100">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
+                                            <FileText className="w-5 h-5 text-slate-400 group-hover:text-primary-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-black text-sm text-slate-900 uppercase tracking-tight truncate">{inv.invoiceNo}</p>
+                                            <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate">{inv.client.name}</p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="font-black text-sm text-slate-900 uppercase tracking-tight truncate">{inv.invoiceNo}</p>
-                                        <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate">{inv.client.name}</p>
+                                    <div className="flex items-center gap-6 shrink-0">
+                                        <div className="hidden sm:block">
+                                            <StatusBadge status={inv.status} />
+                                        </div>
+                                        <p className="font-black text-sm text-slate-900">{formatCurrency(inv.grandTotal.toNumber())}</p>
+                                        <ChevronRight className="w-5 h-5 text-slate-200 group-hover:text-primary-500 transition-all group-hover:translate-x-1" />
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6 shrink-0">
-                                    <div className="hidden sm:block">
-                                        <StatusBadge status={inv.status} />
-                                    </div>
-                                    <p className="font-black text-sm text-slate-900">{formatCurrency(inv.grandTotal.toNumber())}</p>
-                                    <ChevronRight className="w-5 h-5 text-slate-200 group-hover:text-primary-500 transition-all group-hover:translate-x-1" />
-                                </div>
-                            </div>
-                        </Link>
-                    ))
-                )}
-            </div>
-        </div>
+                            </Link>
+                        ))
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
