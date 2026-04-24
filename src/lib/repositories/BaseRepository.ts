@@ -44,4 +44,13 @@ export abstract class BaseRepository<T extends { id: string; deletedAt?: Date | 
       },
     });
   }
+
+  async restore(id: string): Promise<T> {
+    return await this.model.update({
+      where: { id },
+      data: { 
+        deletedAt: null,
+      },
+    });
+  }
 }

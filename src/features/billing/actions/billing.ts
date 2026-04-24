@@ -119,7 +119,7 @@ export async function recordPaymentAction(data: {
         revalidatePath("/dashboard");
         revalidatePath("/payments");
 
-        return { success: true, paymentId: payment.id };
+        return { success: true, paymentId: result.id };
     } catch (error: any) {
         return handleActionError(error);
     }
