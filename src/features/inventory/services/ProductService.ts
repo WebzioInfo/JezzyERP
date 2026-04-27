@@ -9,8 +9,20 @@ const productRepo = new ProductRepository();
 export class ProductService {
   static async createProduct(userId: string, data: any) {
     const validatedData = await validateData(productSchema, data);
-    const product = await productRepo.model.create({
-      data: validatedData
+    const product = await productRepo.db.$transaction(async (tx: any) => {
+      const p = await tx.product.create({
+        data: validatedData
+      });
+      
+      // Initialize Stock
+      await tx.stock.create({
+        data: {
+          productId: p.id,
+          quantity: 0
+        }
+      });
+
+      return p;
     });
 
     await recordAuditLog(productRepo.db, {

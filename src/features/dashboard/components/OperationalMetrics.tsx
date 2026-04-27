@@ -3,12 +3,13 @@ import { formatCurrency } from "@/utils/financials";
 import Link from "next/link";
 import { Card, CardHeader, CardContent } from "@/ui/core/Card";
 import { CheckCircle2, Clock } from "lucide-react";
+import { InvoiceStatus } from "@prisma/client";
 
 export async function OperationalMetrics() {
     const [invoiceCount, pendingInvoices, statusCounts] = await Promise.all([
         db.invoice.count({ where: { deletedAt: null } }),
         db.invoice.findMany({
-            where: { deletedAt: null, status: { in: ["SENT", "OVERDUE", "PARTIAL"] } },
+            where: { deletedAt: null, status: { in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIAL] } },
             orderBy: { grandTotal: "desc" },
             take: 5,
             select: {

@@ -29,6 +29,7 @@ import {
   Building2,
   Power,
   Trash2,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/utils";
 
@@ -110,7 +111,13 @@ const NAV_SECTIONS: NavSection[] = [
         name: "Products",
         href: "/products",
         icon: Package,
-        description: "Inventory",
+        description: "Catalog",
+      },
+      {
+        name: "Inventory",
+        href: "/inventory",
+        icon: Layers,
+        description: "Stock levels",
       },
     ],
   },

@@ -32,14 +32,6 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
                             </CardDescription>
                         </div>
                     </div>
-                    {onCancel && (
-                        <button
-                            onClick={onCancel}
-                            className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                        >
-                            <X size={24} />
-                        </button>
-                    )}
                 </div>
             </CardHeader>
             <CardContent className="p-12 lg:p-16">

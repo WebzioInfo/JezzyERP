@@ -7,10 +7,11 @@ import { Button } from "@/ui/core/Button";
 import { Send, CheckCircle2, TrendingUp, XCircle, ArrowRight, FileText, FileDown, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { QuotationStatus } from "@prisma/client";
 
 interface QuotationActionsProps {
     quotationId: string;
-    status: string;
+    status: string | QuotationStatus;
     convertedInvoiceId?: string | null;
 }
 
@@ -19,7 +20,7 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
     const { success, error } = useToast();
     const router = useRouter();
 
-    const handleUpdateStatus = (newStatus: string) => {
+    const handleUpdateStatus = (newStatus: QuotationStatus) => {
         startTransition(async () => {
             const res = await updateQuotationStatusAction(quotationId, newStatus);
             if (res && 'success' in res) {
@@ -53,9 +54,9 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
 
     return (
         <div className="flex flex-wrap items-center gap-3">
-            {status === "DRAFT" && (
+            {status === QuotationStatus.DRAFT && (
                 <Button 
-                    onClick={() => handleUpdateStatus("SENT")} 
+                    onClick={() => handleUpdateStatus(QuotationStatus.SENT)} 
                     disabled={isPending}
                     variant="secondary"
                     className="h-10 px-6 gap-2 border-slate-200"
@@ -65,10 +66,10 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
                 </Button>
             )}
             
-            {status === "SENT" && (
+            {status === QuotationStatus.SENT && (
                 <>
                     <Button 
-                        onClick={() => handleUpdateStatus("ACCEPTED")} 
+                        onClick={() => handleUpdateStatus(QuotationStatus.ACCEPTED)} 
                         disabled={isPending}
                         className="h-10 px-6 gap-2 shadow-xl shadow-success-500/20"
                         style={{ background: "linear-gradient(135deg, #16A34A, #15803D)" }}
@@ -76,7 +77,7 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
                         <CheckCircle2 className="w-4 h-4" /> Accept Proposal
                     </Button>
                     <Button 
-                        onClick={() => handleUpdateStatus("REJECTED")} 
+                        onClick={() => handleUpdateStatus(QuotationStatus.REJECTED)} 
                         disabled={isPending}
                         variant="ghost"
                         className="h-10 px-4 gap-2 text-danger-600 hover:bg-danger-50"
@@ -86,7 +87,7 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
                 </>
             )}
 
-            {status === "ACCEPTED" && (
+            {status === QuotationStatus.ACCEPTED && (
                 <Button 
                     onClick={handleConvert} 
                     disabled={isPending}
@@ -98,7 +99,7 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
                 </Button>
             )}
 
-            {status === "CONVERTED" && convertedInvoiceId && (
+            {status === QuotationStatus.CONVERTED && convertedInvoiceId && (
                 <Link href={`/invoices/${convertedInvoiceId}`}>
                     <Button variant="secondary" className="h-10 px-6 gap-2 text-primary-700 bg-primary-50 border-primary-200 hover:bg-primary-100">
                         <FileText className="w-4 h-4" /> View Linked Invoice

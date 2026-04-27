@@ -1,24 +1,28 @@
 import { PurchaseRepository } from "../repositories/PurchaseRepository";
 import { db } from "@/db/prisma/client";
 import { Prisma } from "@prisma/client";
+import { StockService, StockLogType } from "@/features/inventory/services/StockService";
+import { serializePrisma } from "@/utils/serialization";
 
 const purchaseRepo = new PurchaseRepository();
 
 export class PurchaseService {
   async getAllPurchases() {
-    return await purchaseRepo.model.findMany({
+    const purchases = await purchaseRepo.model.findMany({
       where: { deletedAt: null },
       include: { vendor: true },
       orderBy: { date: 'desc' }
     });
+    return serializePrisma(purchases);
   }
 
   async getPurchaseById(id: string) {
-    return await purchaseRepo.findWithItems(id);
+    const purchase = await purchaseRepo.findWithItems(id);
+    return serializePrisma(purchase);
   }
 
   async createPurchase(userId: string, data: any) {
-    const { items, ...purchaseData } = data;
+    const { items, grandTotal, ...purchaseData } = data;
 
     return await db.$transaction(async (tx: Prisma.TransactionClient) => {
       // Sequence Generation per Financial Year
@@ -36,11 +40,12 @@ export class PurchaseService {
       const nextSequence = countThisFY + 1;
       const purchaseNo = `JE/PUR/${String(nextSequence).padStart(2, '0')}/${fyStr}`;
 
-      return await tx.purchase.create({
+      const purchase = await tx.purchase.create({
         data: {
           ...purchaseData,
+          grandTotal: Math.round(Number(grandTotal)),
           purchaseNo,
-          sequenceNumber: nextSequence, // Note: This might not be globally unique but that's okay if we use it with FY
+          sequenceNumber: nextSequence,
           createdById: userId,
           isFreightCollect: data.isFreightCollect || false,
           freightAmount: data.freightAmount || 0,
@@ -62,15 +67,79 @@ export class PurchaseService {
         },
         include: { lineItems: true }
       });
-    });
+
+      // Update Stock (Inward)
+      for (const item of purchase.lineItems) {
+        if (item.productId) {
+          await StockService.recordChange({
+            productId: item.productId,
+            type: StockLogType.ADD,
+            quantityChange: Number(item.qty),
+            referenceId: purchase.id,
+            notes: `Purchase ${purchase.purchaseNo} Recorded`,
+            tx
+          });
+        }
+      }
+
+      return serializePrisma(purchase);
+    }, { timeout: 30000 });
   }
 
   async deletePurchase(id: string) {
-    return await purchaseRepo.softDelete(id);
+    const purchase = await purchaseRepo.softDelete(id);
+    
+    // Reverse Stock (Remove)
+    await db.$transaction(async (tx) => {
+        const fullPurchase = await tx.purchase.findUnique({
+            where: { id },
+            include: { lineItems: true }
+        });
+        if (fullPurchase) {
+            for (const item of fullPurchase.lineItems) {
+                if (item.productId) {
+                    await StockService.recordChange({
+                        productId: item.productId,
+                        type: StockLogType.REMOVE,
+                        quantityChange: -Number(item.qty),
+                        referenceId: id,
+                        notes: `Purchase ${fullPurchase.purchaseNo} Trashed (Stock Removed)`,
+                        tx
+                    });
+                }
+            }
+        }
+    }, { timeout: 30000 });
+
+    return serializePrisma(purchase);
   }
 
   async restorePurchase(id: string, userId: string) {
-    return await purchaseRepo.restore(id);
+    const purchase = await purchaseRepo.restore(id);
+
+    // Re-apply Stock (ADD)
+    await db.$transaction(async (tx) => {
+        const fullPurchase = await tx.purchase.findUnique({
+            where: { id },
+            include: { lineItems: true }
+        });
+        if (fullPurchase) {
+            for (const item of fullPurchase.lineItems) {
+                if (item.productId) {
+                    await StockService.recordChange({
+                        productId: item.productId,
+                        type: StockLogType.ADD,
+                        quantityChange: Number(item.qty),
+                        referenceId: id,
+                        notes: `Purchase ${fullPurchase.purchaseNo} Restored`,
+                        tx
+                    });
+                }
+            }
+        }
+    }, { timeout: 30000 });
+
+    return serializePrisma(purchase);
   }
 
   async permanentlyDeletePurchase(id: string, userId: string) {

@@ -10,7 +10,7 @@ interface StateSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement>
   icon?: React.ReactNode;
 }
 
-export function StateSelect({ label, error, icon, className, ...props }: StateSelectProps) {
+export function StateSelect({ label, error, icon, className, defaultValue, ...props }: StateSelectProps) {
   return (
     <div className="w-full space-y-1.5 focus-within:z-10 relative">
       {label && (
@@ -31,6 +31,7 @@ export function StateSelect({ label, error, icon, className, ...props }: StateSe
             error && "ring-red-500 focus:ring-red-500/20",
             className
           )}
+          defaultValue={defaultValue ?? "Kerala"}
           {...props}
         >
           <option value="" disabled>Select State</option>

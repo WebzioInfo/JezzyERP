@@ -9,6 +9,7 @@ export const INDIAN_STATES = [
   "Haryana",
   "Himachal Pradesh",
   "Jharkhand",
+  "Karnataka",
   "Keralam",
   "Kerala",
   "Madhya Pradesh",

@@ -284,7 +284,7 @@ model InvoiceLineItem {
   product     Product? @relation(fields: [productId], references: [id])
 
   @@index([invoiceId])
-  @@index([productId], map: "invoice_line_items_productId_fkey")
+  @@index([productId])
   @@map("invoice_line_items")
 }
 
@@ -435,7 +435,7 @@ model AuditLog {
   user       User?    @relation("UserAudits", fields: [userId], references: [id])
 
   @@index([createdAt])
-  @@index([userId], map: "audit_logs_userId_fkey")
+  @@index([userId])
   @@index([entityType, entityId])
   @@map("audit_logs")
 }

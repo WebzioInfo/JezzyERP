@@ -25,7 +25,7 @@ interface TransactionState {
     entityId: string; // clientId or vendorId
     date: string;
     validUntil: string;
-    gstType: "CGST_SGST" | "IGST" | "NO_GST";
+    gstType: "CGST_SGST" | "IGST" | "NONE";
     items: TransactionItem[];
     invoiceNo: string;
     ewayBill: string;

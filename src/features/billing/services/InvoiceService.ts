@@ -1,10 +1,23 @@
 import { Prisma } from "@prisma/client";
+import { StockLogType } from "@/features/inventory/services/StockService";
+
+// Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
+export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export const InvoiceStatus = {
+  DRAFT: 'DRAFT' as const,
+  SENT: 'SENT' as const,
+  PARTIAL: 'PARTIAL' as const,
+  PAID: 'PAID' as const,
+  OVERDUE: 'OVERDUE' as const,
+  CANCELLED: 'CANCELLED' as const,
+};
 import { InvoiceRepository } from "../repositories/InvoiceRepository";
 import { validateData } from "@/lib/validation";
 import { invoiceSchema } from "../validators/invoiceSchema";
 import { serializePrisma } from "@/utils/serialization";
 import { db } from "@/db/prisma/client";
 import { recordAuditLog } from "@/lib/audit";
+import { StockService } from "@/features/inventory/services/StockService";
 
 const invoiceRepo = new InvoiceRepository();
 
@@ -60,7 +73,7 @@ export class InvoiceService {
           gstType: validatedData.gstType,
           subTotal: validatedData.subTotal,
           taxTotal: validatedData.taxTotal,
-          grandTotal: validatedData.grandTotal,
+          grandTotal: Math.round(Number(validatedData.grandTotal)),
           ewayBill: validatedData.ewayBill,
           ewayBillUrl: validatedData.ewayBillUrl,
           vehicleNo: validatedData.vehicleNo,
@@ -112,8 +125,22 @@ export class InvoiceService {
         details: { invoiceNo }
       });
 
+      // 5. Stock Movement
+      for (const item of validatedData.items) {
+        if (item.productId) {
+          await StockService.recordChange({
+            productId: item.productId,
+            type: StockLogType.REMOVE,
+            quantityChange: -Number(item.qty),
+            referenceId: invoice.id,
+            notes: `Invoice ${invoiceNo} Created`,
+            tx
+          });
+        }
+      }
+
       return serializePrisma(invoice);
-    }, { timeout: 15000 });
+    }, { timeout: 30000 });
   }
 
   async getInvoices(params: { page?: number; take?: number } = {}) {
@@ -145,7 +172,7 @@ export class InvoiceService {
       gstType: validatedData.gstType,
       subTotal: validatedData.subTotal,
       taxTotal: validatedData.taxTotal,
-      grandTotal: validatedData.grandTotal,
+      grandTotal: Math.round(Number(validatedData.grandTotal)),
       ewayBill: validatedData.ewayBill,
       ewayBillUrl: validatedData.ewayBillUrl,
       vehicleNo: validatedData.vehicleNo,
@@ -198,11 +225,72 @@ export class InvoiceService {
       details: { invoiceNo: invoice.invoiceNo }
     });
 
+    // 5. Stock Movement (Update handling)
+    // We reverse the old stock and apply the new stock to ensure consistency
+    await db.$transaction(async (tx) => {
+        const oldInvoice = await tx.invoice.findUnique({
+            where: { id: invoiceId },
+            include: { lineItems: true }
+        });
+
+        if (oldInvoice) {
+            // Reverse old stock
+            for (const item of oldInvoice.lineItems) {
+                if (item.productId) {
+                    await StockService.recordChange({
+                        productId: item.productId,
+                        type: StockLogType.ADD,
+                        quantityChange: Number(item.qty),
+                        referenceId: invoiceId,
+                        notes: `Invoice ${oldInvoice.invoiceNo} Updated (Reversal)`,
+                        tx
+                    });
+                }
+            }
+        }
+
+        // Apply new stock
+        for (const item of validatedData.items) {
+            if (item.productId) {
+                await StockService.recordChange({
+                    productId: item.productId,
+                    type: StockLogType.REMOVE,
+                    quantityChange: -Number(item.qty),
+                    referenceId: invoiceId,
+                    notes: `Invoice ${validatedData.invoiceNo || oldInvoice?.invoiceNo} Updated (New Levels)`,
+                    tx
+                });
+            }
+        }
+    }, { timeout: 30000 });
+
     return serializePrisma(invoice);
   }
 
   async softDeleteInvoice(invoiceId: string, userId: string) {
     const invoice = await invoiceRepo.softDelete(invoiceId, userId);
+    
+    // Reverse Stock
+    await db.$transaction(async (tx) => {
+        const fullInvoice = await tx.invoice.findUnique({
+            where: { id: invoiceId },
+            include: { lineItems: true }
+        });
+        if (fullInvoice) {
+            for (const item of fullInvoice.lineItems) {
+                if (item.productId) {
+                    await StockService.recordChange({
+                        productId: item.productId,
+                        type: StockLogType.ADD,
+                        quantityChange: Number(item.qty),
+                        referenceId: invoiceId,
+                        notes: `Invoice ${fullInvoice.invoiceNo} Trashed (Stock Restored)`,
+                        tx
+                    });
+                }
+            }
+        }
+    }, { timeout: 30000 });
     
     await recordAuditLog(db, {
       userId,
@@ -252,8 +340,25 @@ export class InvoiceService {
         deletedAt: null,
         invoiceNo: originalInvoiceNo,
         sequenceNumber: restoredSequence
-      } as any
+      } as any,
+      include: { lineItems: true }
     });
+
+    // Subtract Stock again
+    await db.$transaction(async (tx) => {
+        for (const item of (invoice as any).lineItems) {
+            if (item.productId) {
+                await StockService.recordChange({
+                    productId: item.productId,
+                    type: StockLogType.REMOVE,
+                    quantityChange: -Number(item.qty),
+                    referenceId: invoiceId,
+                    notes: `Invoice ${invoice.invoiceNo} Restored`,
+                    tx
+                });
+            }
+        }
+    }, { timeout: 30000 });
 
     await recordAuditLog(db, {
       userId,

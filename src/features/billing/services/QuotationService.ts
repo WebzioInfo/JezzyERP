@@ -1,6 +1,35 @@
 import { db } from "@/db/prisma/client";
 import { serializePrisma } from "@/utils/serialization";
 import { recordAuditLog } from "@/lib/audit";
+import { StockService } from "@/features/inventory/services/StockService";
+
+// Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
+export type QuotationStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'CONVERTED' | 'EXPIRED';
+export const QuotationStatus = {
+  DRAFT: 'DRAFT' as const,
+  SENT: 'SENT' as const,
+  ACCEPTED: 'ACCEPTED' as const,
+  REJECTED: 'REJECTED' as const,
+  CONVERTED: 'CONVERTED' as const,
+  EXPIRED: 'EXPIRED' as const,
+};
+
+export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export const InvoiceStatus = {
+  DRAFT: 'DRAFT' as const,
+  SENT: 'SENT' as const,
+  PARTIAL: 'PARTIAL' as const,
+  PAID: 'PAID' as const,
+  OVERDUE: 'OVERDUE' as const,
+  CANCELLED: 'CANCELLED' as const,
+};
+
+export type GstType = 'CGST_SGST' | 'IGST' | 'NONE';
+export const GstType = {
+  CGST_SGST: 'CGST_SGST' as const,
+  IGST: 'IGST' as const,
+  NONE: 'NONE' as const,
+};
 
 export class QuotationService {
   /**
@@ -13,6 +42,7 @@ export class QuotationService {
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastQuo?.sequenceNumber || 0) + 1;
+      
       // Indian FY runs April 1 -> March 31
       const docDate = new Date(data.date);
       const year = docDate.getFullYear();
@@ -42,7 +72,7 @@ export class QuotationService {
           quotationNo: quoNo,
           date: new Date(data.date),
           validUntil: data.validUntil ? new Date(data.validUntil) : null,
-          gstType: data.gstType,
+          gstType: data.gstType as GstType,
           subTotal: data.subTotal,
           taxTotal: data.taxTotal,
           grandTotal: data.grandTotal,
@@ -51,6 +81,7 @@ export class QuotationService {
           freightAmount: data.freightAmount || 0,
           freightTaxPercent: data.freightTaxPercent || 0,
           createdById: userId,
+          status: QuotationStatus.DRAFT,
 
           // Address snapshots
           billingName: data.billingAddress?.name,
@@ -123,17 +154,17 @@ export class QuotationService {
       });
 
       if (!quotation) throw new Error("Quotation not found");
-      if (quotation.status === "CONVERTED") throw new Error("Already converted");
+      if (quotation.status === QuotationStatus.CONVERTED) throw new Error("Already converted");
 
       // 1. Get next invoice sequence
       const lastInv = await tx.invoice.findFirst({
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastInv?.sequenceNumber || 0) + 1;
-      // Indian FY runs April 1 -> March 31
+      
       const docDate = new Date(); // Use current date for converted invoice
       const year = docDate.getFullYear();
-      const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
+      const month = docDate.getMonth();
       const fyStartYear = month >= 3 ? year : year - 1;
       const fyEndYear = fyStartYear + 1;
       const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
@@ -163,7 +194,7 @@ export class QuotationService {
           subTotal: quotation.subTotal,
           taxTotal: quotation.taxTotal,
           grandTotal: quotation.grandTotal,
-          status: "DRAFT",
+          status: InvoiceStatus.DRAFT,
           createdById: userId,
 
           // Transfer address snapshots from quotation
@@ -206,7 +237,7 @@ export class QuotationService {
       await tx.quotation.update({
         where: { id: quotationId },
         data: {
-          status: "CONVERTED",
+          status: QuotationStatus.CONVERTED,
           convertedInvoiceId: invoice.id,
         },
       });
@@ -228,28 +259,31 @@ export class QuotationService {
    * Soft deletes a quotation.
    */
   static async softDeleteQuotation(quotationId: string, userId: string | null) {
-    return await db.quotation.update({
+    const q = await db.quotation.update({
       where: { id: quotationId },
       data: { deletedAt: new Date() },
     });
+    return serializePrisma(q);
   }
 
   /**
    * Restores a soft-deleted quotation.
    */
   static async restoreQuotation(quotationId: string, userId: string | null) {
-    return await db.quotation.update({
+    const q = await db.quotation.update({
       where: { id: quotationId },
       data: { deletedAt: null },
     });
+    return serializePrisma(q);
   }
 
   /**
    * Permanently deletes a quotation.
    */
   static async permanentlyDeleteQuotation(quotationId: string, userId: string | null) {
-    return await db.quotation.delete({
+    const q = await db.quotation.delete({
       where: { id: quotationId },
     });
+    return serializePrisma(q);
   }
 }

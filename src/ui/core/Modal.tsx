@@ -42,40 +42,41 @@ export function Modal({
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 md:p-10">
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
+                <div 
+                    className="fixed inset-0 z-[9999] overflow-y-auto overflow-x-hidden custom-scrollbar bg-slate-900/60 backdrop-blur-xl"
+                    data-lenis-prevent
+                >
+                    {/* Centering Wrapper - Handles backdrop clicks */}
+                    <div 
+                        className="min-h-full w-full flex items-center justify-center p-4 md:p-10"
                         onClick={onClose}
-                    />
-
-                    {/* Modal Content Container */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className={cn(
-                            "relative w-full overflow-hidden flex flex-col bg-white rounded-[2.5rem] shadow-2xl border border-white/20 animate-reveal",
-                            maxWidth,
-                            className
-                        )}
                     >
-                        {/* Close Button */}
-                        <button
-                            onClick={onClose}
-                            className="absolute top-6 right-6 z-10 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                        {/* Modal Content - Stop propagation to prevent closing on internal clicks */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className={cn(
+                                "relative w-full bg-white rounded-[2.5rem] shadow-2xl border border-white/20 animate-reveal",
+                                maxWidth,
+                                className
+                            )}
                         >
-                            <X size={20} />
-                        </button>
+                            {/* Close Button */}
+                            <button
+                                onClick={onClose}
+                                className="absolute top-6 right-6 z-10 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                            >
+                                <X size={20} />
+                            </button>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar max-h-[90vh]">
-                            {children}
-                        </div>
-                    </motion.div>
+                            <div className="p-0">
+                                {children}
+                            </div>
+                        </motion.div>
+                    </div>
                 </div>
             )}
         </AnimatePresence>,

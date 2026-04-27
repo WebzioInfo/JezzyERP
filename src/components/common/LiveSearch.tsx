@@ -37,7 +37,10 @@ export function LiveSearch({
       const search = current.toString();
       const query = search ? `?${search}` : "";
       
-      router.push(`${pathname}${query}`);
+      // Only push if the query has actually changed to avoid loops
+      if (query !== (searchParams.toString() ? `?${searchParams.toString()}` : "")) {
+        router.push(`${pathname}${query}`);
+      }
       setIsSearching(false);
     }, 500);
 

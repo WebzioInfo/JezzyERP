@@ -7,14 +7,12 @@ import { db } from "@/db/prisma/client";
 import {
   CreditCard,
   Plus,
-  Calendar,
-  ExternalLink,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
-  Search,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  Users
 } from "lucide-react";
 import { Card, CardContent } from "@/ui/core/Card";
 import { LiveSearch } from "@/components/common/LiveSearch";
@@ -25,8 +23,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
 
   const { q: searchQuery = "" } = await searchParams;
 
-  const [payments, invoices, purchases] = await Promise.all([
-    PaymentService.getAllPayments(),
+  const [invoices, purchases, clients] = await Promise.all([
     db.invoice.findMany({
       where: { deletedAt: null, status: { notIn: ["PAID", "CANCELLED"] } },
       select: { grandTotal: true, amountPaid: true }
@@ -34,17 +31,40 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
     db.purchase.findMany({
       where: { deletedAt: null, status: { notIn: ["PAID", "CANCELLED"] } },
       select: { grandTotal: true, amountPaid: true }
+    }),
+    db.client.findMany({
+      where: { active: true },
+      include: {
+        invoices: {
+          where: { deletedAt: null },
+          select: { grandTotal: true, amountPaid: true }
+        }
+      }
     })
   ]);
 
   const incomingCredit = invoices.reduce((sum, inv) => sum + (inv.grandTotal.toNumber() - inv.amountPaid.toNumber()), 0);
   const outgoingCredit = purchases.reduce((sum, pur) => sum + (pur.grandTotal.toNumber() - pur.amountPaid.toNumber()), 0);
   
-  const filteredPayments = searchQuery 
-    ? payments.filter((p: any) => 
-        p.invoice.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.invoice.client.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : payments;
+  const clientData = clients.map(client => {
+    let billed = 0;
+    let paid = 0;
+    client.invoices.forEach(inv => {
+      billed += inv.grandTotal.toNumber();
+      paid += inv.amountPaid.toNumber();
+    });
+    return {
+      id: client.id,
+      name: client.name,
+      billed,
+      paid,
+      pending: billed - paid
+    };
+  }).filter(c => c.billed > 0).sort((a, b) => b.pending - a.pending);
+
+  const filteredClients = searchQuery 
+    ? clientData.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : clientData;
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700 pb-20">
@@ -105,68 +125,54 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       {/* ── Search & Filter ── */}
       <div className="flex flex-col md:flex-row items-center gap-4">
         <LiveSearch 
-          placeholder="Filter by Invoice # or Client..." 
+          placeholder="Filter by Client Name..." 
           className="flex-1 w-full"
         />
       </div>
 
-      {/* ── Payments List ── */}
+      {/* ── Client Payments List ── */}
       <Card className="border-0 shadow-2xl shadow-slate-200/50 overflow-hidden">
         <CardContent className="p-0">
-          {filteredPayments.length === 0 ? (
+          {filteredClients.length === 0 ? (
             <div className="text-center py-32 bg-slate-50/30">
-              <CreditCard className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-              <h3 className="text-slate-800 font-black text-2xl font-display uppercase italic tracking-tighter">No Payment Trajectories</h3>
-              <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">Adjust search parameters or record a new transaction.</p>
+              <Users className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+              <h3 className="text-slate-800 font-black text-2xl font-display uppercase italic tracking-tighter">No Client Data Found</h3>
+              <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">Adjust search parameters or issue new invoices.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-900">
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date Log</th>
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Reference</th>
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Entity</th>
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Method</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Valuation</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Execution</th>
+                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Client Name</th>
+                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Billed</th>
+                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Amount Paid</th>
+                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pending Balance</th>
+                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredPayments.map((p: any) => (
-                    <tr key={p.id} className="group hover:bg-slate-50 transition-all">
+                  {filteredClients.map((client) => (
+                    <tr key={client.id} className="group hover:bg-slate-50 transition-all">
                       <td className="px-8 py-6">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-black text-slate-900 text-sm">
-                            {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(p.paidAt))}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Registry Date</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <Link href={`/invoices/${p.invoiceId}`} className="group/link">
-                          <div className="flex items-center gap-2">
-                             <span className="font-black text-primary-600 uppercase tracking-tight group-hover/link:underline">{p.invoice.invoiceNo}</span>
-                             <ExternalLink className="w-3 h-3 text-slate-300 group-hover/link:text-primary-400" />
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Commercial ID</span>
+                        <Link href={`/clients/${client.id}`} className="group/link">
+                          <span className="font-black text-slate-900 text-sm group-hover/link:text-primary-600 transition-colors uppercase tracking-tight">{client.name}</span>
                         </Link>
                       </td>
-                      <td className="px-8 py-6">
-                        <span className="font-extrabold text-slate-800 uppercase text-xs tracking-tight">{p.invoice.client.name}</span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] italic">{p.method.replace("_", " ")}</span>
-                        </div>
+                      <td className="px-8 py-6 text-right">
+                        <span className="text-sm font-black text-slate-600 tabular-nums">{formatCurrency(client.billed)}</span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <span className="text-lg font-black text-emerald-600 tabular-nums italic tracking-tighter">{formatCurrency(p.amount.toNumber())}</span>
+                        <span className="text-sm font-black text-emerald-600 tabular-nums">{formatCurrency(client.paid)}</span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <Link href={`/invoices/${p.invoiceId}`}>
-                          <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                        <span className={`text-lg font-black tabular-nums italic tracking-tighter ${client.pending > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                          {formatCurrency(client.pending)}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <Link href={`/clients/${client.id}`}>
+                          <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm ml-auto">
                             <ChevronRight className="w-4 h-4" />
                           </button>
                         </Link>

@@ -1,29 +1,31 @@
 import { useActionState } from "react";
 import { createClientAction, updateClientAction } from "@/features/clients/actions/clientActions";
-import { useToast } from "@/context/ToastContext";
+import { executeAction } from "@/lib/utils/actions";
 
 export function useClientForm(client?: any, onSuccess?: () => void) {
-    const { success, error } = useToast();
     const isEdit = !!client;
 
     const [state, formAction, pending] = useActionState(
         async (prevState: any, formData: FormData) => {
-            const res: any = isEdit
-                ? await updateClientAction(client.id, formData)
-                : await createClientAction(formData);
+            const res = await executeAction(
+                async () => isEdit 
+                    ? updateClientAction(client.id, formData) 
+                    : createClientAction(formData),
+                {
+                    scope: 'client-form',
+                    loadingMessage: isEdit ? 'Syncing updates...' : 'Initializing profile...',
+                    successMessage: isEdit ? 'Client profile updated.' : 'Client successfully onboarded.',
+                }
+            );
 
-            if (res && 'error' in res) {
-                error(res.error || `Failed to ${isEdit ? 'update' : 'add'} client.`);
-                return { error: res.error };
-            }
-            if (res && 'success' in res) {
-                success(isEdit ? "Client details updated successfully." : "New corporate client added to the directory.");
+            if (res && 'success' in (res as any)) {
                 if (onSuccess) onSuccess();
                 const form = document.getElementById("client-form") as HTMLFormElement;
                 form?.reset();
                 return { success: true };
             }
-            return prevState;
+            
+            return res as any || prevState;
         },
         null
     );

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, ClipboardList, Search, Filter, ChevronRight } from "lucide-react";
+import { Plus, ClipboardList, Search, Filter, ChevronRight, ArrowUpRight } from "lucide-react";
 import { verifySessionCookie } from "@/lib/auth";
 import { Card, CardHeader, CardContent } from "@/ui/core/Card";
 import { db } from "@/db/prisma/client";
@@ -43,7 +43,7 @@ export default async function QuotationsPage({ searchParams }: PageProps) {
         }),
       },
       orderBy: { quotationNo: "desc" },
-      include: { client: { select: { name: true } } },
+      include: { client: { select: { id: true, name: true } } },
     }),
     db.quotation.groupBy({
       by: ["status"],
@@ -164,7 +164,15 @@ export default async function QuotationsPage({ searchParams }: PageProps) {
                         <p className="font-black text-slate-900 group-hover:text-primary-600 transition-colors tracking-tight uppercase">{quo.quotationNo}</p>
                       </td>
                       <td className="px-8 py-6">
-                        <p className="font-extrabold text-slate-700 uppercase tracking-tight text-sm">{quo.client.name}</p>
+                        <Link 
+                          href={`/clients/${quo.client.id}`}
+                          className="group/client inline-flex flex-col hover:text-primary-600 transition-colors"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-extrabold text-slate-700 uppercase tracking-tight text-sm group-hover/client:text-primary-600 transition-colors">{quo.client.name}</p>
+                            <ArrowUpRight size={12} className="opacity-0 group-hover/client:opacity-100 transition-all text-primary-500" />
+                          </div>
+                        </Link>
                       </td>
                       <td className="px-8 py-6 hidden sm:table-cell">
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">

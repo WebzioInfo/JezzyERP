@@ -2,6 +2,7 @@ import { db } from "@/db/prisma/client";
 import { formatCurrency } from "@/utils/financials";
 import { TrendingUp, IndianRupee, AlertTriangle, Users } from "lucide-react";
 import { Card } from "@/ui/core/Card";
+import { InvoiceStatus } from "@prisma/client";
 
 export async function KpiGroup() {
     const [
@@ -14,17 +15,17 @@ export async function KpiGroup() {
         db.client.count({ where: { deletedAt: null } }),
         db.product.count({ where: { deletedAt: null } }),
         db.invoice.aggregate({
-            where: { deletedAt: null, status: { in: ["PAID", "PARTIAL"] } },
+            where: { deletedAt: null, status: { in: [InvoiceStatus.PAID, InvoiceStatus.PARTIAL] } },
             _sum: { grandTotal: true },
         }),
         db.invoice.aggregate({
-            where: { deletedAt: null, status: { in: ["SENT", "OVERDUE", "DRAFT"] } },
+            where: { deletedAt: null, status: { in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.DRAFT] } },
             _sum: { grandTotal: true },
         }),
         db.invoice.aggregate({
             where: {
                 deletedAt: null,
-                status: { in: ["PAID", "PARTIAL"] },
+                status: { in: [InvoiceStatus.PAID, InvoiceStatus.PARTIAL] },
                 date: {
                     gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
                 },

@@ -3,9 +3,28 @@
 import { verifySessionVerified } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { InvoiceService } from "../services/InvoiceService";
+import { PaymentService } from "../services/PaymentService";
 import { handleActionError } from "@/lib/validation";
 import { db } from "@/db/prisma/client";
-import { redirect } from "next/navigation";
+// Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
+export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export const InvoiceStatus = {
+  DRAFT: 'DRAFT' as const,
+  SENT: 'SENT' as const,
+  PARTIAL: 'PARTIAL' as const,
+  PAID: 'PAID' as const,
+  OVERDUE: 'OVERDUE' as const,
+  CANCELLED: 'CANCELLED' as const,
+};
+
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'UPI' | 'CHEQUE' | 'OTHER';
+export const PaymentMethod = {
+  CASH: 'CASH' as const,
+  BANK_TRANSFER: 'BANK_TRANSFER' as const,
+  UPI: 'UPI' as const,
+  CHEQUE: 'CHEQUE' as const,
+  OTHER: 'OTHER' as const,
+};
 
 const invoiceService = new InvoiceService();
 
@@ -32,7 +51,7 @@ export async function markInvoiceSentAction(invoiceId: string) {
     try {
         await db.invoice.update({
             where: { id: invoiceId },
-            data: { status: "SENT" },
+            data: { status: InvoiceStatus.SENT },
         });
         revalidatePath(`/invoices/${invoiceId}`);
         revalidatePath("/invoices");
@@ -59,11 +78,15 @@ export async function markInvoicePaidAction(formData: FormData) {
 
         await db.invoice.update({
             where: { id: invoiceId },
-            data: { status: "PAID", amountPaid: invoice.grandTotal },
+            data: { 
+                status: InvoiceStatus.PAID, 
+                amountPaid: invoice.grandTotal 
+            },
         });
         revalidatePath(`/invoices/${invoiceId}`);
         revalidatePath("/invoices");
         revalidatePath("/dashboard");
+        return { success: true };
     } catch (error: any) {
         return handleActionError(error);
     }
@@ -72,7 +95,7 @@ export async function markInvoicePaidAction(formData: FormData) {
 export async function recordPaymentAction(data: {
     invoiceId: string;
     amount: number;
-    method: string;
+    method: PaymentMethod;
     reference?: string;
     notes?: string;
     paidAt: string;
@@ -81,37 +104,10 @@ export async function recordPaymentAction(data: {
     if (!session) throw new Error("Unauthorized");
 
     try {
-        const result = await db.$transaction(async (tx) => {
-            const payment = await tx.payment.create({
-                data: {
-                    invoiceId: data.invoiceId,
-                    amount: data.amount,
-                    method: data.method,
-                    reference: data.reference || null,
-                    notes: data.notes || null,
-                    paidAt: new Date(data.paidAt),
-                    recordedBy: session.userId,
-                },
-            });
-
-            // Re-calculate amountPaid and update invoice status in one go
-            const invoice = await tx.invoice.findUnique({
-                where: { id: data.invoiceId },
-                select: { grandTotal: true, payments: { select: { amount: true } } },
-            });
-
-            if (!invoice) throw new Error("Invoice not found");
-
-            const totalPaid = invoice.payments.reduce((sum, p) => sum + p.amount.toNumber(), 0);
-            const grandTotal = invoice.grandTotal.toNumber();
-            const newStatus = totalPaid >= grandTotal ? "PAID" : "PARTIAL";
-
-            await tx.invoice.update({
-                where: { id: data.invoiceId },
-                data: { amountPaid: totalPaid, status: newStatus },
-            });
-
-            return payment;
+        const payment = await PaymentService.recordPayment({
+            ...data,
+            paidAt: new Date(data.paidAt),
+            recordedBy: session.userId,
         });
 
         revalidatePath(`/invoices/${data.invoiceId}`);
@@ -119,7 +115,7 @@ export async function recordPaymentAction(data: {
         revalidatePath("/dashboard");
         revalidatePath("/payments");
 
-        return { success: true, paymentId: result.id };
+        return { success: true, paymentId: payment.id };
     } catch (error: any) {
         return handleActionError(error);
     }

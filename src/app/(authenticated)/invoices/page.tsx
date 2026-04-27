@@ -56,7 +56,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
         date: true,
         grandTotal: true,
         status: true,
-        client: { select: { name: true } }
+        client: { select: { id: true, name: true } }
       },
       take: 100,
     }),
@@ -173,8 +173,16 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <p className="text-sm font-black text-slate-800 tracking-tight">{inv.client.name}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Corporate Client</p>
+                      <Link 
+                        href={`/clients/${inv.client.id}`}
+                        className="group/client inline-flex flex-col hover:text-primary-600 transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-black text-slate-800 tracking-tight group-hover/client:text-primary-600 transition-colors">{inv.client.name}</p>
+                          <ArrowUpRight size={12} className="opacity-0 group-hover/client:opacity-100 transition-all text-primary-500" />
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Corporate Client</p>
+                      </Link>
                     </td>
                     <td className="px-8 py-6 hidden sm:table-cell">
                       <div className="flex flex-col gap-1.5">

@@ -9,6 +9,8 @@ export const metadata: Metadata = {
 };
 
 import { ConfirmDialog } from "@/ui/core/ConfirmDialog";
+import { LoadingBar } from "@/ui/core/LoadingBar";
+import { NetworkActivityIndicator } from "@/ui/core/NetworkActivityIndicator";
 
 export default function RootLayout({
   children,
@@ -27,8 +29,10 @@ export default function RootLayout({
       >
         <ToastProvider>
           <TransitionProvider>
+            <LoadingBar />
             {children}
             <ConfirmDialog />
+            <NetworkActivityIndicator />
           </TransitionProvider>
         </ToastProvider>
       </body>

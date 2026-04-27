@@ -164,6 +164,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 @keyframes float {
   0% { transform: translateY(0) translateX(0); }
   33% { transform: translateY(-20px) translateX(10px); }

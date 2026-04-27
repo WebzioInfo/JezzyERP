@@ -9,7 +9,8 @@ import {
   Hash, Calendar, Truck, CreditCard,
   ShieldCheck, ArrowUpRight, Landmark, Info
 } from "lucide-react";
-import { InvoiceActions, StatusBadge, PDFPreview } from "@/features/billing/components";
+import { InvoiceActions, StatusBadge } from "@/features/billing/components";
+import InvoicePreview from "@/features/billing/components/InvoicePreview";
 import { cn } from "@/utils";
 
 interface PageProps {
@@ -101,7 +102,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
          {/* ── PDF Document Preview ── */}
          <div className="card border-0 shadow-2xl ring-1 ring-slate-900/5 p-0 overflow-hidden rounded-4xl bg-slate-100/50">
-            <PDFPreview invoiceId={id} />
+            <InvoicePreview invoice={invoice} />
          </div>
 
          {/* ── Quick Stats Footer (Optional but helpful) ── */}

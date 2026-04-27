@@ -136,7 +136,7 @@ export function InvoiceDetailsCard({
                         >
                             <option value="CGST_SGST">Intra-state (9+9)</option>
                             <option value="IGST">Inter-state (18%)</option>
-                            <option value="NO_GST">Exempted (0%)</option>
+                            <option value="NONE">Exempted (0%)</option>
                         </select>
                     </div>
 
