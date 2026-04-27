@@ -42,7 +42,7 @@ export async function signupAction(formData: FormData) {
       data: {
         email,
         passwordHash,
-        role: "OWNER",
+        role: "ADMIN",
       },
     });
 

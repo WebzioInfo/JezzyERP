@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ToastProvider } from "@/context/ToastContext";
 import { TransitionProvider } from "@/components/providers/TransitionProvider";
 import "./globals.css";
@@ -29,7 +30,9 @@ export default function RootLayout({
       >
         <ToastProvider>
           <TransitionProvider>
-            <LoadingBar />
+            <Suspense fallback={null}>
+              <LoadingBar />
+            </Suspense>
             {children}
             <ConfirmDialog />
             <NetworkActivityIndicator />

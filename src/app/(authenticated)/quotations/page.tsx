@@ -34,7 +34,7 @@ export default async function QuotationsPage({ searchParams }: PageProps) {
     db.quotation.findMany({
       where: {
         ...(statusFilter === "TRASH" ? { deletedAt: { not: null } } : { deletedAt: null }),
-        ...(statusFilter && statusFilter !== "TRASH" && { status: statusFilter }),
+        ...(statusFilter && statusFilter !== "TRASH" && { status: statusFilter as any }),
         ...(searchQuery && {
           OR: [
             { quotationNo: { contains: searchQuery } },

@@ -37,7 +37,7 @@ export async function middleware(req: NextRequest) {
     const response = NextResponse.next();
     
     // Security Best Practices
-    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -47,13 +47,14 @@ export async function middleware(req: NextRequest) {
     const cspHeader = `
         default-src 'self';
         script-src 'self' 'unsafe-inline' 'unsafe-eval';
-        style-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         img-src 'self' blob: data:;
-        font-src 'self';
+        font-src 'self' https://fonts.gstatic.com;
+        frame-src 'self' blob:;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
-        frame-ancestors 'none';
+        frame-ancestors 'self';
         block-all-mixed-content;
         upgrade-insecure-requests;
     `.replace(/\s{2,}/g, ' ').trim();

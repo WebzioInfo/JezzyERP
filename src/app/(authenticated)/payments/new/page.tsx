@@ -57,7 +57,7 @@ function PaymentForm() {
         paidAt: formData.get("paidAt") as string,
       };
 
-      const res = await recordPaymentAction(data);
+      const res = await recordPaymentAction(data as any);
       if (res && 'error' in res) return { error: res.error };
       if (res && 'success' in res) {
         // Show success and redirect

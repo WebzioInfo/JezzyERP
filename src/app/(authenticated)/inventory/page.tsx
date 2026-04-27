@@ -3,18 +3,13 @@ import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { StockService } from "@/features/inventory/services/StockService";
 import { StockLogTable } from "@/features/inventory/components/StockLogTable";
-import { StockAdjustmentForm } from "@/features/inventory/components/StockAdjustmentForm";
-import { Card, CardContent } from "@/ui/core/Card";
-import { 
-    Layers, 
-    ArrowUpRight, 
-    ArrowDownRight, 
-    AlertTriangle, 
-    History as HistoryIcon, 
-    PlusCircle 
+import { Card } from "@/ui/core/Card";
+import {
+    Layers,
+    AlertTriangle,
+    History as HistoryIcon,
 } from "lucide-react";
-import { Modal } from "@/ui/core/Modal";
-import { InventoryClient } from "./InventoryClient";
+import { InventoryClient } from "@/app/(authenticated)/inventory/InventoryClient";
 import { serializePrisma } from "@/utils/serialization";
 
 export default async function InventoryPage() {
@@ -34,8 +29,8 @@ export default async function InventoryPage() {
     // Simple aggregations
     const productList = serializePrisma(products);
     const totalItems = productList.length;
-    const lowStockItems = productList.filter(p => (inventoryLevels[p.id] || 0) <= 5).length;
-    const totalStockValue = productList.reduce((acc, p) => acc + (Number(p.purchaseRate) * (inventoryLevels[p.id] || 0)), 0);
+    const lowStockItems = productList.filter((p: any) => (inventoryLevels[p.id] || 0) <= 5).length;
+    const totalStockValue = productList.reduce((acc: number, p: any) => acc + (Number(p.purchaseRate) * (inventoryLevels[p.id] || 0)), 0);
 
     return (
         <div className="space-y-12 animate-in fade-in duration-700 pb-20">
@@ -104,7 +99,7 @@ export default async function InventoryPage() {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Recent Ledger Movements</p>
                     </div>
                 </div>
-                
+
                 <StockLogTable logs={stockLogs} />
             </div>
         </div>
