@@ -30,7 +30,11 @@ import {
   Power,
   Trash2,
   Layers,
+  TrendingUp,
+  Loader2,
 } from "lucide-react";
+import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
+
 import { cn } from "@/utils";
 
 // ==========================================
@@ -52,20 +56,43 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    label: "OVERVIEW",
+    label: "EXECUTIVE",
     items: [
       {
         name: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        description: "Business summary",
+        description: "Fin Overview",
         exact: true,
       },
       {
         name: "Reports",
         href: "/reports",
         icon: BarChart3,
-        description: "Tax summaries",
+        description: "Statements",
+      },
+    ],
+  },
+  {
+    label: "BANKING",
+    items: [
+      {
+        name: "Accounts",
+        href: "/accounts",
+        icon: Building2,
+        description: "Banks & Cash",
+      },
+      {
+        name: "Transactions",
+        href: "/transactions",
+        icon: Layers,
+        description: "Unified Ledger",
+      },
+      {
+        name: "Payments",
+        href: "/payments",
+        icon: CreditCard,
+        description: "Money Transfers",
       },
     ],
   },
@@ -76,7 +103,7 @@ const NAV_SECTIONS: NavSection[] = [
         name: "Invoices",
         href: "/invoices",
         icon: FileText,
-        description: "Billing",
+        description: "Tax Billing",
       },
       {
         name: "Quotations",
@@ -85,21 +112,27 @@ const NAV_SECTIONS: NavSection[] = [
         description: "Estimates",
       },
       {
-        name: "Payments",
-        href: "/payments",
-        icon: CreditCard,
-        description: "Income",
+        name: "Clients",
+        href: "/clients",
+        icon: Users,
+        description: "Customers",
       },
     ],
   },
   {
-    label: "PURCHASES",
+    label: "PROCUREMENT",
     items: [
       {
         name: "Purchases",
         href: "/purchases",
         icon: FilePlus,
-        description: "Bills",
+        description: "Supplier Bills",
+      },
+      {
+        name: "Expenses",
+        href: "/expenses",
+        icon: Trash2,
+        description: "Overheads",
       },
       {
         name: "Vendors",
@@ -107,28 +140,33 @@ const NAV_SECTIONS: NavSection[] = [
         icon: Building2,
         description: "Suppliers",
       },
+    ],
+  },
+  {
+    label: "ASSETS",
+    items: [
       {
         name: "Products",
         href: "/products",
         icon: Package,
-        description: "Catalog",
+        description: "Master Catalog",
       },
       {
         name: "Inventory",
         href: "/inventory",
-        icon: Layers,
-        description: "Stock levels",
+        icon: TrendingUp,
+        description: "Stock Levels",
       },
     ],
   },
   {
-    label: "PEOPLE",
+    label: "CAPITAL",
     items: [
       {
-        name: "Clients",
-        href: "/clients",
-        icon: Users,
-        description: "Customers",
+        name: "Loans & Advances",
+        href: "/loans",
+        icon: LifeBuoy,
+        description: "Capital & Pre-payments",
       },
     ],
   },
@@ -139,23 +177,24 @@ const NAV_SECTIONS: NavSection[] = [
         name: "Settings",
         href: "/settings",
         icon: Settings,
-        description: "Profile",
+        description: "Configuration",
       },
       {
         name: "Trash",
         href: "/trash",
         icon: Trash2,
-        description: "Recovery",
+        description: "Deleted Records",
       },
       {
         name: "Support",
         href: "/support",
         icon: LifeBuoy,
-        description: "Help",
+        description: "Help Desk",
       },
     ],
   },
 ];
+
 
 // ==========================================
 // AUTHENTICATED LAYOUT
@@ -185,6 +224,7 @@ export default function AuthenticatedLayout({
 
   return (
     <div className="flex h-screen mesh-bg-soft overflow-hidden text-slate-900 font-sans">
+      <NavigationProgressBar />
       {/* ── Sidebar (Desktop) ── */}
       <aside
         className={cn(
@@ -274,6 +314,12 @@ function SidebarContent({
   isMobile?: boolean;
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNavigatingHref(null);
+  }, [pathname]);
+
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
     return pathname.startsWith(href);
@@ -348,10 +394,17 @@ function SidebarContent({
                   >
                     {section.items.map((item) => {
                       const active = isActive(item.href, item.exact);
+                      const isLoading = navigatingHref === item.href;
+
                       return (
                         <li key={item.name}>
                           <Link
                             href={item.href}
+                            onClick={() => {
+                              if (item.href !== pathname) {
+                                setNavigatingHref(item.href);
+                              }
+                            }}
                             className={cn(
                               "group flex items-center gap-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
                               active
@@ -364,12 +417,16 @@ function SidebarContent({
                             {active && (
                               <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                             )}
-                            <item.icon
-                              className={cn(
-                                "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
-                                active ? "text-white" : "text-slate-400 group-hover:text-primary-500"
-                              )}
-                            />
+                            {isLoading ? (
+                              <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
+                            ) : (
+                              <item.icon
+                                className={cn(
+                                  "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
+                                  active ? "text-white" : "text-slate-400 group-hover:text-primary-500"
+                                )}
+                              />
+                            )}
                             {!sidebarCollapsed && <span className="flex-1 truncate text-xs font-black uppercase tracking-widest">{item.name}</span>}
                             {!sidebarCollapsed && active && <ChevronRightIcon size={14} className="opacity-50" />}
                           </Link>

@@ -7,7 +7,8 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
-  XCircle
+  XCircle,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/ui/core/Button";
 import { deletePurchaseAction, restorePurchaseAction, permanentlyDeletePurchaseAction } from "@/features/procurement/actions";
@@ -133,6 +134,17 @@ export function PurchaseListActions({ purchaseId, isTrashed = false }: PurchaseL
               title="View Details"
             >
               <ExternalLink className="w-4 h-4" />
+            </Button>
+          </Link>
+
+          <Link href={`/purchases/${purchaseId}/edit`}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-9 w-9 p-0 rounded-xl hover:bg-primary-50 text-slate-400 hover:text-primary-600"
+              title="Edit Purchase"
+            >
+              <Pencil className="w-4 h-4" />
             </Button>
           </Link>
 

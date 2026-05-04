@@ -2,15 +2,6 @@ import { Prisma } from "@prisma/client";
 import { StockLogType } from "@/features/inventory/services/StockService";
 
 // Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
-export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export const InvoiceStatus = {
-  DRAFT: 'DRAFT' as const,
-  SENT: 'SENT' as const,
-  PARTIAL: 'PARTIAL' as const,
-  PAID: 'PAID' as const,
-  OVERDUE: 'OVERDUE' as const,
-  CANCELLED: 'CANCELLED' as const,
-};
 import { InvoiceRepository } from "../repositories/InvoiceRepository";
 import { validateData } from "@/lib/validation";
 import { invoiceSchema } from "../validators/invoiceSchema";
@@ -18,6 +9,24 @@ import { serializePrisma } from "@/utils/serialization";
 import { db } from "@/db/prisma/client";
 import { recordAuditLog } from "@/lib/audit";
 import { StockService } from "@/features/inventory/services/StockService";
+import { FinanceService } from "./FinanceService";
+import { AllocationService } from "./AllocationService";
+import { calculateInvoiceStatus } from "@/utils/financial-status";
+
+export type AccountType = 'CASH' | 'BANK' | 'CLIENT' | 'SUPPLIER' | 'EXPENSE' | 'PURCHASE' | 'REVENUE' | 'LOAN' | 'ADVANCE' | 'EQUITY';
+export const AccountType = {
+  CASH: 'CASH' as AccountType,
+  BANK: 'BANK' as AccountType,
+  CLIENT: 'CLIENT' as AccountType,
+  SUPPLIER: 'SUPPLIER' as AccountType,
+  EXPENSE: 'EXPENSE' as AccountType,
+  PURCHASE: 'PURCHASE' as AccountType,
+  REVENUE: 'REVENUE' as AccountType,
+  LOAN: 'LOAN' as AccountType,
+  ADVANCE: 'ADVANCE' as AccountType,
+  EQUITY: 'EQUITY' as AccountType,
+};
+import { roundTo2 } from "@/utils/financial";
 
 const invoiceRepo = new InvoiceRepository();
 
@@ -25,8 +34,9 @@ export class InvoiceService {
   async createInvoice(userId: string, rawData: any) {
     // 1. Validation
     const validatedData = await validateData(invoiceSchema, rawData);
+    const dbAny = db as any;
 
-    return await invoiceRepo.db.$transaction(async (tx: Prisma.TransactionClient) => {
+    return await dbAny.$transaction(async (tx: any) => {
       // 2. Sequence Generation
       const lastSequence = await tx.invoice.findFirst({
         orderBy: { sequenceNumber: 'desc' },
@@ -71,16 +81,16 @@ export class InvoiceService {
           invoiceNo: invoiceNo,
           date: new Date(validatedData.date),
           gstType: validatedData.gstType,
-          subTotal: validatedData.subTotal,
-          taxTotal: validatedData.taxTotal,
-          grandTotal: Math.round(Number(validatedData.grandTotal)),
+          subTotal: roundTo2(validatedData.subTotal),
+          taxTotal: roundTo2(validatedData.taxTotal),
+          grandTotal: roundTo2(validatedData.grandTotal),
           ewayBill: validatedData.ewayBill,
           ewayBillUrl: validatedData.ewayBillUrl,
           vehicleNo: validatedData.vehicleNo,
           dispatchedThrough: validatedData.dispatchedThrough,
           isFreightCollect: validatedData.isFreightCollect,
-          freightAmount: validatedData.freightAmount ?? 0,
-          freightTaxPercent: validatedData.freightTaxPercent ?? 0,
+          freightAmount: roundTo2(validatedData.freightAmount ?? 0),
+          freightTaxPercent: roundTo2(validatedData.freightTaxPercent ?? 0),
 
           // Address snapshots
           billingName: validatedData.billingAddress?.name,
@@ -97,32 +107,62 @@ export class InvoiceService {
           shippingState: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.state : validatedData.shippingAddress?.state,
           shippingPinCode: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.pinCode : validatedData.shippingAddress?.pinCode,
 
+          isFinalized: true, // Auto-finalize for now unless it's a quote conversion
           lineItems: {
             create: validatedData.items.map((item: any) => ({
               product: item.productId ? { connect: { id: item.productId } } : undefined,
               description: item.description,
               hsn: item.hsn,
               qty: item.qty,
-              rate: item.rate,
-              taxPercent: item.taxPercent,
-              taxAmount: item.taxAmount,
-              unit: item.unit || "NOS",
+              rate: roundTo2(item.rate),
+              taxPercent: roundTo2(item.taxPercent),
+              taxAmount: roundTo2(item.taxAmount),
+              unit: item.unit ?? "",
               pkgCount: item.pkgCount || 0,
-              pkgType: item.pkgType || "BOX",
+              pkgType: item.pkgType ?? "",
               qtyPerBox: item.qtyPerBox || 0,
-              totalAmount: item.totalAmount
+              totalAmount: roundTo2(item.totalAmount)
             }))
           }
-        }
+        } as any
       });
 
-      // 4. Audit
+      // 4. Record Double-Entry in Ledger
+      const clientAccount = await FinanceService.getPartyAccount(invoice.clientId, 'CLIENT');
+      const salesAccount = await FinanceService.getSystemAccount(AccountType.REVENUE);
+
+      if (!clientAccount || !salesAccount) {
+          throw new Error("Financial accounts not found. Accounting failed.");
+      }
+
+      await FinanceService.recordTransaction(tx, {
+          debitAccountId: clientAccount.id,
+          creditAccountId: salesAccount.id,
+          amount: invoice.grandTotal,
+          referenceType: 'INVOICE',
+          referenceId: invoice.id,
+          description: `Sales Invoice ${invoice.invoiceNo}`,
+          date: invoice.date,
+      });
+
+      // 5. Consume any unallocated advance payments via Allocation Engine
+      await AllocationService.consumeClientAdvance(tx, invoice.clientId, invoice.id);
+      await AllocationService.syncDocumentStatus(tx, invoice.id, 'INVOICE');
+
+      // 6. Hardened Audit Log
       await recordAuditLog(tx, {
         userId,
         action: "INVOICE_CREATED",
         entityType: "Invoice",
         entityId: invoice.id,
-        details: { invoiceNo }
+        newValue: {
+          invoiceNo,
+          grandTotal: invoice.grandTotal,
+          clientId: invoice.clientId
+        },
+        changes: {
+          after: { invoiceNo, grandTotal: invoice.grandTotal }
+        }
       });
 
       // 5. Stock Movement
@@ -140,138 +180,196 @@ export class InvoiceService {
       }
 
       return serializePrisma(invoice);
-    }, { timeout: 30000 });
+    }, { 
+        timeout: 60000,
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable 
+    });
+
+
   }
 
   async getInvoices(params: { page?: number; take?: number } = {}) {
     const { page = 1, take = 50 } = params;
     const skip = (page - 1) * take;
 
-    const invoices = await invoiceRepo.findAll({
-      include: { client: { select: { name: true } } },
-      orderBy: { date: 'desc' },
-      take,
-      skip,
+    const invoices = await (db.invoice as any).findMany({
       select: {
         id: true,
         invoiceNo: true,
         date: true,
         grandTotal: true,
+        isFinalized: true,
         status: true,
-        clientId: true,
-      }
+        client: { select: { name: true } },
+        allocations: { select: { amount: true } }
+      },
+      orderBy: { date: 'desc' },
+      take,
+      skip,
     });
-    return serializePrisma(invoices);
+
+
+    const transformed = invoices.map((inv: any) => ({
+        ...inv,
+        status: calculateInvoiceStatus({
+            grandTotal: inv.grandTotal,
+            isFinalized: inv.isFinalized,
+            allocations: inv.allocations
+        })
+    }));
+
+    return serializePrisma(transformed);
   }
+
 
   async updateInvoice(invoiceId: string, userId: string, rawData: any) {
     const validatedData = await validateData(invoiceSchema, rawData);
     
-    const invoice = await invoiceRepo.updateWithItems(invoiceId, {
-      date: new Date(validatedData.date),
-      gstType: validatedData.gstType,
-      subTotal: validatedData.subTotal,
-      taxTotal: validatedData.taxTotal,
-      grandTotal: Math.round(Number(validatedData.grandTotal)),
-      ewayBill: validatedData.ewayBill,
-      ewayBillUrl: validatedData.ewayBillUrl,
-      vehicleNo: validatedData.vehicleNo,
-      invoiceNo: validatedData.invoiceNo,
-      dispatchedThrough: validatedData.dispatchedThrough,
-      isFreightCollect: validatedData.isFreightCollect,
-      freightAmount: validatedData.freightAmount ?? 0,
-      freightTaxPercent: validatedData.freightTaxPercent ?? 0,
-
-      // Use Prisma relation syntax for client
-      client: { connect: { id: validatedData.clientId } },
-
-      // Address snapshots
-      billingName: validatedData.billingAddress?.name,
-      billingAddress1: validatedData.billingAddress?.address1,
-      billingAddress2: validatedData.billingAddress?.address2,
-      billingState: validatedData.billingAddress?.state,
-      billingPinCode: validatedData.billingAddress?.pinCode,
-      billingPhone: validatedData.billingAddress?.phone,
-      billingGst: validatedData.billingAddress?.gst,
-      shippingSameAsBilling: validatedData.shippingSameAsBilling,
-      shippingName: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.name : validatedData.shippingAddress?.name,
-      shippingAddress1: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.address1 : validatedData.shippingAddress?.address1,
-      shippingAddress2: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.address2 : validatedData.shippingAddress?.address2,
-      shippingState: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.state : validatedData.shippingAddress?.state,
-      shippingPinCode: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.pinCode : validatedData.shippingAddress?.pinCode,
-
-      lineItems: validatedData.items.map((item: any) => ({
-        product: item.productId ? { connect: { id: item.productId } } : undefined,
-        description: item.description,
-        hsn: item.hsn,
-        qty: item.qty,
-        rate: item.rate,
-        taxPercent: item.taxPercent,
-        taxAmount: item.taxAmount,
-        unit: item.unit || "NOS",
-        pkgCount: item.pkgCount || 0,
-        pkgType: item.pkgType || "BOX",
-        qtyPerBox: item.qtyPerBox || 0,
-        totalAmount: item.totalAmount
-      }))
+    // 1. Fetch OLD invoice before update to capture previous stock levels
+    const oldInvoice = await db.invoice.findUnique({
+        where: { id: invoiceId },
+        include: { lineItems: true }
     });
+    if (!oldInvoice) throw new Error("Invoice not found");
 
-    // Audit
-    await recordAuditLog(db, {
-      userId,
-      action: "INVOICE_UPDATED",
-      entityType: "Invoice",
-      entityId: invoice.id,
-      details: { invoiceNo: invoice.invoiceNo }
-    });
+    return await db.$transaction(async (tx: any) => {
+      // 2. REVERSAL PHASE: Void old ledger entries to prevent balance leakage
+      await (tx as any).ledgerEntry.deleteMany({
+        where: { referenceId: invoiceId, referenceType: 'INVOICE' }
+      });
 
-    // 5. Stock Movement (Update handling)
-    // We reverse the old stock and apply the new stock to ensure consistency
-    await db.$transaction(async (tx) => {
-        const oldInvoice = await tx.invoice.findUnique({
-            where: { id: invoiceId },
-            include: { lineItems: true }
-        });
+      // 3. RECORDING PHASE: Update the Invoice record
+      const invoice = await invoiceRepo.updateWithItems(invoiceId, {
+        date: new Date(validatedData.date),
+        gstType: validatedData.gstType,
+        subTotal: roundTo2(validatedData.subTotal),
+        taxTotal: roundTo2(validatedData.taxTotal),
+        grandTotal: roundTo2(validatedData.grandTotal),
+        ewayBill: validatedData.ewayBill,
+        ewayBillUrl: validatedData.ewayBillUrl,
+        vehicleNo: validatedData.vehicleNo,
+        invoiceNo: validatedData.invoiceNo,
+        dispatchedThrough: validatedData.dispatchedThrough,
+        isFreightCollect: validatedData.isFreightCollect,
+        freightAmount: roundTo2(validatedData.freightAmount ?? 0),
+        freightTaxPercent: roundTo2(validatedData.freightTaxPercent ?? 0),
+        client: { connect: { id: validatedData.clientId } },
+        billingName: validatedData.billingAddress?.name,
+        billingAddress1: validatedData.billingAddress?.address1,
+        billingAddress2: validatedData.billingAddress?.address2,
+        billingState: validatedData.billingAddress?.state,
+        billingPinCode: validatedData.billingAddress?.pinCode,
+        billingPhone: validatedData.billingAddress?.phone,
+        billingGst: validatedData.billingAddress?.gst,
+        shippingSameAsBilling: validatedData.shippingSameAsBilling,
+        shippingName: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.name : validatedData.shippingAddress?.name,
+        shippingAddress1: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.address1 : validatedData.shippingAddress?.address1,
+        shippingAddress2: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.address2 : validatedData.shippingAddress?.address2,
+        shippingState: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.state : validatedData.shippingAddress?.state,
+        shippingPinCode: validatedData.shippingSameAsBilling ? validatedData.billingAddress?.pinCode : validatedData.shippingAddress?.pinCode,
+        lineItems: validatedData.items.map((item: any) => ({
+          product: item.productId ? { connect: { id: item.productId } } : undefined,
+          description: item.description,
+          hsn: item.hsn,
+          qty: item.qty,
+          rate: roundTo2(item.rate),
+          taxPercent: roundTo2(item.taxPercent),
+          taxAmount: roundTo2(item.taxAmount),
+          unit: item.unit ?? "",
+          pkgCount: item.pkgCount || 0,
+          pkgType: item.pkgType ?? "",
+          qtyPerBox: item.qtyPerBox || 0,
+          totalAmount: roundTo2(item.totalAmount)
+        }))
+      }, tx);
 
-        if (oldInvoice) {
-            // Reverse old stock
-            for (const item of oldInvoice.lineItems) {
-                if (item.productId) {
-                    await StockService.recordChange({
-                        productId: item.productId,
-                        type: StockLogType.ADD,
-                        quantityChange: Number(item.qty),
-                        referenceId: invoiceId,
-                        notes: `Invoice ${oldInvoice.invoiceNo} Updated (Reversal)`,
-                        tx
-                    });
-                }
-            }
-        }
+      // 4. LEDGER PHASE: Record new double-entry records
+      const clientAccount = await FinanceService.getPartyAccount(invoice.clientId, 'CLIENT', tx);
+      const salesAccount = await FinanceService.getSystemAccount(AccountType.REVENUE, tx);
 
-        // Apply new stock
-        for (const item of validatedData.items) {
+      if (clientAccount && salesAccount) {
+          await FinanceService.recordTransaction(tx, {
+
+              debitAccountId: clientAccount.id,
+              creditAccountId: salesAccount.id,
+              amount: invoice.grandTotal,
+              referenceType: 'INVOICE',
+              referenceId: invoice.id,
+              description: `Sales Invoice ${invoice.invoiceNo} (Updated)`,
+              date: invoice.date,
+          });
+      }
+
+      // 5. ALLOCATION PHASE: Recalculate settlement standing
+      // Trigger a re-sync of the status based on existing allocations + any new advances
+      await AllocationService.consumeClientAdvance(tx, invoice.clientId, invoice.id);
+      await AllocationService.syncDocumentStatus(tx, invoice.id, 'INVOICE');
+
+      // 6. STOCK PHASE: Adjust inventory levels
+      // 6. STOCK PHASE: Optimized Net Change Adjustment
+      const stockChanges = new Map<string, number>();
+      
+      // Calculate reversals
+      if (oldInvoice) {
+        for (const item of (oldInvoice as any).lineItems) {
             if (item.productId) {
-                await StockService.recordChange({
-                    productId: item.productId,
-                    type: StockLogType.REMOVE,
-                    quantityChange: -Number(item.qty),
-                    referenceId: invoiceId,
-                    notes: `Invoice ${validatedData.invoiceNo || oldInvoice?.invoiceNo} Updated (New Levels)`,
-                    tx
-                });
+                stockChanges.set(item.productId, (stockChanges.get(item.productId) || 0) + Number(item.qty));
             }
         }
-    }, { timeout: 30000 });
+      }
+      
+      // Calculate new levels
+      for (const item of validatedData.items) {
+        if (item.productId) {
+            stockChanges.set(item.productId, (stockChanges.get(item.productId) || 0) - Number(item.qty));
+        }
+      }
 
-    return serializePrisma(invoice);
+      // Record only non-zero net changes
+      for (const [productId, netChange] of stockChanges.entries()) {
+        if (Math.abs(netChange) > 0.0001) {
+            await StockService.recordChange({
+                productId,
+                type: netChange > 0 ? StockLogType.ADD : StockLogType.REMOVE,
+                quantityChange: netChange,
+                referenceId: invoiceId,
+                notes: `Invoice ${invoice.invoiceNo} Updated (Net Adjustment)`,
+                tx
+            });
+        }
+      }
+
+      // 7. AUDIT PHASE: Track detailed JSON changes
+      await recordAuditLog(tx, {
+        userId,
+        action: "INVOICE_UPDATED",
+        entityType: "Invoice",
+        entityId: invoice.id,
+        changes: {
+            before: { grandTotal: oldInvoice.grandTotal, clientId: oldInvoice.clientId },
+            after: { grandTotal: invoice.grandTotal, clientId: invoice.clientId }
+        }
+      });
+
+      return serializePrisma(invoice);
+    }, { 
+        timeout: 60000,
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable 
+    });
+
+
   }
 
   async softDeleteInvoice(invoiceId: string, userId: string) {
     const invoice = await invoiceRepo.softDelete(invoiceId, userId);
     
-    // Reverse Stock
-    await db.$transaction(async (tx) => {
+    // 1. Reverse Ledger (Delete double-entry records)
+    await (db as any).ledgerEntry.deleteMany({
+      where: { referenceId: invoiceId, referenceType: 'INVOICE' }
+    });
+
+    // 2. Reverse Stock
+    await (db as any).$transaction(async (tx: any) => {
         const fullInvoice = await tx.invoice.findUnique({
             where: { id: invoiceId },
             include: { lineItems: true }
@@ -334,18 +432,37 @@ export class InvoiceService {
       throw new Error(`Cannot restore: Invoice number ${originalInvoiceNo} or sequence ${restoredSequence} is already taken by another active invoice.`);
     }
 
-    const invoice = await invoiceRepo.model.update({
+    const invoice = await (invoiceRepo.model as any).update({
       where: { id: invoiceId },
       data: { 
         deletedAt: null,
         invoiceNo: originalInvoiceNo,
         sequenceNumber: restoredSequence
-      } as any,
+      },
       include: { lineItems: true }
     });
 
-    // Subtract Stock again
-    await db.$transaction(async (tx) => {
+    await (db as any).$transaction(async (tx: any) => {
+        // 1. Re-create Ledger Entry (Double Entry)
+        const clientAccount = await FinanceService.getPartyAccount(invoice.clientId, 'CLIENT');
+        const salesAccount = await FinanceService.getSystemAccount(AccountType.REVENUE);
+
+        if (clientAccount && salesAccount) {
+            await FinanceService.recordTransaction(tx, {
+                debitAccountId: clientAccount.id,
+                creditAccountId: salesAccount.id,
+                amount: invoice.grandTotal,
+                referenceType: 'INVOICE',
+                referenceId: invoice.id,
+                description: `Sales Invoice ${invoice.invoiceNo} (Restored)`,
+                date: invoice.date,
+            });
+        }
+
+        // 2. Trigger auto-adjustment
+        await AllocationService.consumeClientAdvance(tx, invoice.clientId, invoice.id);
+
+        // 3. Subtract Stock again
         for (const item of (invoice as any).lineItems) {
             if (item.productId) {
                 await StockService.recordChange({

@@ -1,6 +1,7 @@
 import { db } from "@/db/prisma/client";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
+import { FinanceService } from "@/features/billing/services/FinanceService";
 import Link from "next/link";
 import { formatCurrency } from "@/utils/financials";
 import {
@@ -29,27 +30,52 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
-  const client = await db.client.findUnique({
+  const clientAccount = await FinanceService.getPartyAccount(id, "CLIENT");
+  const ledgerBalance = clientAccount ? await FinanceService.getAccountBalance(clientAccount.id) : 0;
+
+  const client = await (db.client as any).findUnique({
     where: { id },
     include: {
       invoices: {
         where: { deletedAt: null },
         orderBy: { date: "desc" },
+        include: { allocations: true }
+      },
+      payments: {
+        where: { deletedAt: null },
+        orderBy: { paidAt: "desc" },
+        select: {
+          id: true,
+          clientId: true,
+          invoiceId: true,
+          amount: true,
+          paidAt: true,
+          method: true,
+          reference: true,
+          notes: true,
+          createdAt: true,
+          invoice: true
+        }
       }
     }
   });
 
-  if (!client) notFound();
+  if (!client) redirect("/clients");
 
+  // Calculate totals
   let totalBilled = 0;
-  let totalPaid = 0;
+  let totalAllocated = 0;
 
-  client.invoices.forEach(inv => {
-    totalBilled += inv.grandTotal.toNumber();
-    totalPaid += inv.amountPaid.toNumber();
+  client.invoices.forEach((inv: any) => {
+    totalBilled += Number(inv.grandTotal);
+    totalAllocated += (inv as any).allocations.reduce((sum: number, a: any) => sum + Number(a.amount), 0);
   });
 
-  const pendingAmount = totalBilled - totalPaid;
+  // The true "Paid" amount for a client is the sum of all their payments in the ledger.
+  // Account Balance for a CLIENT (Receivable) is SUM(Debit [Invoices]) - SUM(Credit [Payments]).
+  // So: totalBilled - ledgerBalance = totalPaid
+  const totalPaid = totalBilled - Number(ledgerBalance);
+  const pendingAmount = Number(ledgerBalance);
 
   return (
     <div className="space-y-8 animate-fade-up max-w-6xl mx-auto pb-24">
@@ -168,7 +194,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                         {client.invoices.map(inv => (
+                         {client.invoices.map((inv: any) => (
                             <tr key={inv.id} className="hover:bg-slate-50/80 transition-all group">
                                <td className="px-8 py-6">
                                   <span className="font-extrabold text-slate-900 text-base tracking-tight">{inv.invoiceNo}</span>
@@ -193,6 +219,55 @@ export default async function ClientDetailPage({ params }: PageProps) {
                                         <ChevronRight className="w-4 h-4" />
                                      </button>
                                   </Link>
+                               </td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                </div>
+             )}
+           </CardContent>
+         </Card>
+      </div>
+      {/* ── Payment History ── */}
+      <div>
+         <h3 className="text-2xl font-black text-slate-900 tracking-tight italic mb-6">Payment Registry</h3>
+         <Card className="border-0 shadow-2xl ring-1 ring-slate-200 overflow-hidden rounded-[2.5rem]">
+           <CardContent className="p-0">
+             {client.payments.length === 0 ? (
+                <div className="text-center py-20 bg-slate-50/50">
+                   <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                   <h4 className="text-lg font-black text-slate-800 italic uppercase">No Payments Recorded</h4>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Payments added via Accounts will appear here.</p>
+                </div>
+             ) : (
+                <div className="overflow-x-auto">
+                   <table className="w-full">
+                      <thead>
+                         <tr className="bg-slate-900">
+                            <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
+                            <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Method</th>
+                            <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Reference</th>
+                            <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Amount</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                         {client.payments.map((pay: any) => (
+                            <tr key={pay.id} className="hover:bg-slate-50/80 transition-all group">
+                               <td className="px-8 py-6">
+                                  <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
+                                     <Calendar className="w-3.5 h-3.5 text-primary-500" />
+                                     {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(pay.paidAt))}
+                                  </div>
+                               </td>
+                               <td className="px-8 py-6">
+                                  <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-600">{pay.method}</span>
+                               </td>
+                               <td className="px-8 py-6">
+                                  <span className="font-bold text-slate-500 text-xs truncate max-w-[200px] block">{pay.reference || pay.id}</span>
+                               </td>
+                               <td className="px-8 py-6 text-right">
+                                  <span className="text-sm font-black text-emerald-600 italic tracking-tighter tabular-nums">{formatCurrency(pay.amount)}</span>
                                </td>
                             </tr>
                          ))}

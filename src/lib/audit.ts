@@ -13,9 +13,13 @@ export async function recordAuditLog(
     action: string;
     entityType: string;
     entityId?: string;
+    oldValue?: any;
+    newValue?: any;
+    changes?: any;
     details?: any;
     ipAddress?: string;
   }
+
 ) {
   try {
     // If userId is provided, double check it exists to avoid P2003
@@ -31,16 +35,22 @@ export async function recordAuditLog(
         }
     }
 
-    return await tx.auditLog.create({
+    return await (tx as any).auditLog.create({
       data: {
         userId: targetUserId,
         action: data.action,
         entityType: data.entityType,
         entityId: data.entityId,
+        oldValue: data.oldValue,
+        newValue: data.newValue,
+        changes: data.changes,
         details: data.details || {},
         ipAddress: data.ipAddress,
       },
     });
+
+
+
   } catch (error) {
     console.error("[AUDIT] Failed to create audit log:", error);
     // We explicitly DO NOT throw here to prevent crashing the main action

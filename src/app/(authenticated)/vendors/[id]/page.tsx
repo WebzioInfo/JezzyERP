@@ -35,6 +35,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
       purchases: {
         where: { deletedAt: null },
         orderBy: { date: "desc" },
+        include: { allocations: true }
       }
     }
   });
@@ -45,8 +46,8 @@ export default async function VendorDetailPage({ params }: PageProps) {
   let totalPaid = 0;
 
   vendor.purchases.forEach(pur => {
-    totalPurchased += pur.grandTotal.toNumber();
-    totalPaid += pur.amountPaid.toNumber();
+    totalPurchased += Number(pur.grandTotal);
+    totalPaid += (pur as any).allocations.reduce((sum: number, a: any) => sum + Number(a.amount), 0);
   });
 
   const pendingAmount = totalPurchased - totalPaid;

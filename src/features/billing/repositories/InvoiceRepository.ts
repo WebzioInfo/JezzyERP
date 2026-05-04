@@ -31,23 +31,24 @@ export class InvoiceRepository extends BaseRepository<Invoice> {
     });
   }
 
-  async updateWithItems(id: string, data: any) {
+  async updateWithItems(id: string, data: any, tx?: any) {
     const { lineItems, ...invoiceData } = data;
+    const client = tx || this.db;
     
-    return await this.db.$transaction(async (tx) => {
+    const operation = async (dbClient: any) => {
       // 0. Ensure invoice exists and is not deleted
-      const existing = await tx.invoice.findUnique({
+      const existing = await dbClient.invoice.findUnique({
         where: { id, deletedAt: null }
       });
       if (!existing) throw new Error("Invoice record not found or inaccessible.");
 
       // 1. Delete existing items
-      await tx.invoiceLineItem.deleteMany({
+      await dbClient.invoiceLineItem.deleteMany({
         where: { invoiceId: id }
       });
 
       // 2. Update invoice and create new items
-      return await tx.invoice.update({
+      return await dbClient.invoice.update({
         where: { id },
         data: {
           ...invoiceData,
@@ -57,7 +58,13 @@ export class InvoiceRepository extends BaseRepository<Invoice> {
         },
         include: { lineItems: true }
       });
-    }, { timeout: 15000 });
+    };
+
+    if (tx) {
+      return await operation(tx);
+    } else {
+      return await this.db.$transaction(operation, { timeout: 15000 });
+    }
   }
 
   async softDelete(id: string, userId?: string): Promise<Invoice> {

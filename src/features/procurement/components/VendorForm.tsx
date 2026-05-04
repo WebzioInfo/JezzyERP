@@ -8,7 +8,7 @@ import { StateSelect } from "@/components/forms/StateSelect";
 
 interface VendorFormProps {
     vendor?: any;
-    onSuccess?: () => void;
+    onSuccess?: (newVendor?: any) => void;
     onCancel?: () => void;
 }
 

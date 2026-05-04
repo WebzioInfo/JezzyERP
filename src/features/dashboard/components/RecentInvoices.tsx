@@ -4,21 +4,29 @@ import Link from "next/link";
 import { FileText, ArrowRight, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { Card, CardHeader, CardContent } from "@/ui/core/Card";
+import { calculateInvoiceStatus } from "@/utils/financial-status";
+
 
 export async function RecentInvoices() {
-    const recentInvoices = await db.invoice.findMany({
+    const rawInvoices = await (db.invoice as any).findMany({
         where: { deletedAt: null },
         orderBy: { createdAt: "desc" },
         take: 8,
-        select: {
-            id: true,
-            invoiceNo: true,
-            date: true,
-            grandTotal: true,
-            status: true,
-            client: { select: { name: true } }
+        include: {
+            client: { select: { name: true } },
+            allocations: { select: { amount: true } }
         },
     });
+
+    const recentInvoices = rawInvoices.map((inv: any) => ({
+        ...inv,
+        status: calculateInvoiceStatus({
+            grandTotal: inv.grandTotal,
+            isFinalized: inv.isFinalized,
+            allocations: inv.allocations
+        })
+    }));
+
 
     return (
         <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">

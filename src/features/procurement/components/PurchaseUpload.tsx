@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { Upload, FileText, Loader2, Sparkles, CheckCircle2, ChevronRight, AlertCircle, ShoppingCart, Repeat } from "lucide-react";
+import { Upload, FileText, Loader2, Sparkles, CheckCircle2, ChevronRight, AlertCircle, ShoppingCart, Repeat, PlusCircle, PackagePlus } from "lucide-react";
 import { Button } from "@/ui/core/Button";
-import { Card } from "@/ui/core/Card";
+import { Card, CardContent } from "@/ui/core/Card";
+import { createQuickProductAction } from "@/features/inventory/actions/productActions";
 import { Input } from "@/ui/core/Input";
 import { useToast } from "@/context/ToastContext";
 import { formatCurrency } from "@/utils/financials";
@@ -25,7 +26,14 @@ interface PurchaseUploadProps {
 export function PurchaseUpload({ products, onExtract }: PurchaseUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [extractedData, setExtractedData] = useState<any>(null);
+    const [localProducts, setLocalProducts] = useState<any[]>(products);
+    const [isAddingProduct, setIsAddingProduct] = useState<number | null>(null);
     const { success, error, info } = useToast();
+
+    // Sync local products if prop changes
+    React.useEffect(() => {
+        setLocalProducts(products);
+    }, [products]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -58,6 +66,35 @@ export function PurchaseUpload({ products, onExtract }: PurchaseUploadProps) {
 
     const handleConfirm = () => {
         if (onExtract) onExtract(extractedData);
+    };
+
+    const handleQuickAdd = async (idx: number) => {
+        const item = extractedData.items[idx];
+        setIsAddingProduct(idx);
+        
+        try {
+            const res = await createQuickProductAction({
+                description: item.description,
+                purchaseRate: item.rate,
+                hsn: item.hsn,
+            });
+
+            if ('success' in res && res.success && 'product' in res) {
+                success(`"${item.description}" added to catalog.`);
+                setLocalProducts([...localProducts, res.product]);
+                
+                // Update mapping
+                const newItems = [...extractedData.items];
+                newItems[idx].productId = res.product.id;
+                setExtractedData({...extractedData, items: newItems});
+            } else {
+                error("Failed to add product to catalog.");
+            }
+        } catch (err) {
+            error("Error creating product.");
+        } finally {
+            setIsAddingProduct(null);
+        }
     };
 
     if (extractedData) {
@@ -153,20 +190,38 @@ export function PurchaseUpload({ products, onExtract }: PurchaseUploadProps) {
                                             />
                                         </td>
                                         <td className="px-6 py-4">
-                                            <select 
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold italic"
-                                                value={item.productId || ""}
-                                                onChange={(e) => {
-                                                    const newItems = [...extractedData.items];
-                                                    newItems[idx].productId = e.target.value;
-                                                    setExtractedData({...extractedData, items: newItems});
-                                                }}
-                                            >
-                                                <option value="">Select Catalog Item...</option>
-                                                {products.map(p => (
-                                                    <option key={p.id} value={p.id}>{p.description}</option>
-                                                ))}
-                                            </select>
+                                            <div className="flex items-center gap-2">
+                                                <select 
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold italic"
+                                                    value={item.productId || ""}
+                                                    onChange={(e) => {
+                                                        const newItems = [...extractedData.items];
+                                                        newItems[idx].productId = e.target.value;
+                                                        setExtractedData({...extractedData, items: newItems});
+                                                    }}
+                                                >
+                                                    <option value="">Select Catalog Item...</option>
+                                                    {localProducts.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.description}</option>
+                                                    ))}
+                                                </select>
+                                                
+                                                {!item.productId && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="h-8 w-8 p-0 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100"
+                                                        onClick={() => handleQuickAdd(idx)}
+                                                        disabled={isAddingProduct === idx}
+                                                    >
+                                                        {isAddingProduct === idx ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            <PackagePlus className="w-4 h-4" />
+                                                        )}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

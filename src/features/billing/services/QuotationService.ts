@@ -5,7 +5,7 @@ import { StockService } from "@/features/inventory/services/StockService";
 
 // Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
 export type QuotationStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'CONVERTED' | 'EXPIRED';
-export const QuotationStatus = {
+const QuotationStatusEnum = {
   DRAFT: 'DRAFT' as const,
   SENT: 'SENT' as const,
   ACCEPTED: 'ACCEPTED' as const,
@@ -15,7 +15,7 @@ export const QuotationStatus = {
 };
 
 export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-export const InvoiceStatus = {
+const InvoiceStatusEnum = {
   DRAFT: 'DRAFT' as const,
   SENT: 'SENT' as const,
   PARTIAL: 'PARTIAL' as const,
@@ -25,7 +25,7 @@ export const InvoiceStatus = {
 };
 
 export type GstType = 'CGST_SGST' | 'IGST' | 'NONE';
-export const GstType = {
+const GstTypeEnum = {
   CGST_SGST: 'CGST_SGST' as const,
   IGST: 'IGST' as const,
   NONE: 'NONE' as const,
@@ -81,7 +81,7 @@ export class QuotationService {
           freightAmount: data.freightAmount || 0,
           freightTaxPercent: data.freightTaxPercent || 0,
           createdById: userId,
-          status: QuotationStatus.DRAFT,
+          status: QuotationStatusEnum.DRAFT,
 
           // Address snapshots
           billingName: data.billingAddress?.name,
@@ -107,8 +107,9 @@ export class QuotationService {
               rate: item.rate,
               taxPercent: item.taxPercent,
               taxAmount: item.taxAmount,
+              unit: item.unit ?? "",
               pkgCount: item.pkgCount || 0,
-              pkgType: item.pkgType || "BOX",
+              pkgType: item.pkgType ?? "",
               qtyPerBox: item.qtyPerBox || 0,
               totalAmount: item.totalAmount,
             })),
@@ -136,12 +137,18 @@ export class QuotationService {
     const quotations = await db.quotation.findMany({
       where: { deletedAt: null },
       orderBy: { date: "desc" },
-      include: {
+      select: {
+        id: true,
+        quotationNo: true,
+        date: true,
+        grandTotal: true,
+        status: true,
         client: { select: { name: true } },
       },
     });
     return serializePrisma(quotations);
   }
+
 
   /**
    * Converts a quotation into an invoice.
@@ -154,7 +161,7 @@ export class QuotationService {
       });
 
       if (!quotation) throw new Error("Quotation not found");
-      if (quotation.status === QuotationStatus.CONVERTED) throw new Error("Already converted");
+      if (quotation.status === QuotationStatusEnum.CONVERTED) throw new Error("Already converted");
 
       // 1. Get next invoice sequence
       const lastInv = await tx.invoice.findFirst({
@@ -194,7 +201,7 @@ export class QuotationService {
           subTotal: quotation.subTotal,
           taxTotal: quotation.taxTotal,
           grandTotal: quotation.grandTotal,
-          status: InvoiceStatus.DRAFT,
+          status: InvoiceStatusEnum.DRAFT,
           createdById: userId,
 
           // Transfer address snapshots from quotation
@@ -225,8 +232,9 @@ export class QuotationService {
               taxAmount: item.taxAmount,
               totalAmount: item.totalAmount,
               hsn: item.hsn,
+              unit: item.unit ?? "",
               pkgCount: item.pkgCount || 0,
-              pkgType: item.pkgType || "BOX",
+              pkgType: item.pkgType ?? "",
               qtyPerBox: item.qtyPerBox || 0,
             }))
           },
@@ -237,7 +245,7 @@ export class QuotationService {
       await tx.quotation.update({
         where: { id: quotationId },
         data: {
-          status: QuotationStatus.CONVERTED,
+          status: QuotationStatusEnum.CONVERTED,
           convertedInvoiceId: invoice.id,
         },
       });

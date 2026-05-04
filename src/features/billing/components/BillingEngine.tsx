@@ -195,6 +195,13 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                                 <span className="tabular-nums text-primary-600 italic">{formatCurrency(totals.taxTotal)}</span>
                             </div>
 
+                            {totals.roundOff !== 0 && (
+                                <div className="flex justify-between items-center text-sm font-black text-slate-400 animate-in fade-in slide-in-from-top-1">
+                                    <span className="uppercase tracking-[0.2em] text-[10px]">Mathematical Round Off</span>
+                                    <span className="tabular-nums text-slate-500 italic">{totals.roundOff > 0 ? '+' : ''}{totals.roundOff.toFixed(2)}</span>
+                                </div>
+                            )}
+
                             {/* Freight Row — only shown when Freight Collect is active */}
                             {store.isFreightCollect && (
                                 <div className="pt-4 border-t border-slate-50 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -244,7 +251,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                                         <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary-600 italic">Total Payable</p>
                                         <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter  opacity-60 italic">INR (₹) Final Value</p>
                                     </div>
-                                    <p className="text-6xl font-black tracking-tighter text-slate-900 italic animate-reveal">
+                                    <p className="text-6xl font-black tracking-tighter text-emerald-600 italic animate-reveal">
                                         {formatCurrency(totals.grandTotal)}
                                     </p>
                                 </div>

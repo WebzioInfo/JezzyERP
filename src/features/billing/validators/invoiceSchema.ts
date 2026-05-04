@@ -8,9 +8,9 @@ export const invoiceLineItemSchema = z.object({
     rate: z.number().positive("Rate must be greater than 0"),
     taxPercent: z.number().min(0, "GST % cannot be negative"),
     taxAmount: z.number().min(0),
-    unit: z.string().optional().default("NOS"),
+    unit: z.string().nullish().transform(v => v || ""),
     pkgCount: z.number().int().min(0).optional().default(0),
-    pkgType: z.string().optional().default("BOX"),
+    pkgType: z.string().nullish().transform(v => v || ""),
     qtyPerBox: z.number().min(0).optional().default(0),
     totalAmount: z.number().positive(),
 });

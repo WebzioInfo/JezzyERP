@@ -9,7 +9,7 @@ import { useTransactionStore, useTransactionTotals } from "@/lib/store/transacti
 import { PurchaseDetailsCard } from "./PurchaseDetailsCard";
 import { TransactionTable } from "@/ui/core/TransactionTable";
 import { Card } from "@/ui/core/Card";
-import { createPurchaseAction } from "../actions";
+import { createPurchaseAction, updatePurchaseAction } from "../actions";
 
 interface PurchaseEngineProps {
     vendors: any[];
@@ -71,7 +71,12 @@ export function PurchaseEngine({ vendors, products, initialData }: PurchaseEngin
                 }
             });
 
-            await createPurchaseAction(formData);
+            if (initialData?.id) {
+                await updatePurchaseAction(initialData.id, formData);
+            } else {
+                await createPurchaseAction(formData);
+            }
+
             router.push("/purchases");
         } catch (err: any) {
             setError(err.message || "Failed to finalize procurement record.");
@@ -149,6 +154,13 @@ export function PurchaseEngine({ vendors, products, initialData }: PurchaseEngin
                                 <span className="uppercase tracking-[0.2em] text-[10px]">Input GST Claim</span>
                                 <span className="tabular-nums text-emerald-600 italic">+{formatCurrency(totals.taxTotal)}</span>
                             </div>
+
+                            {totals.roundOff !== 0 && (
+                                <div className="flex justify-between items-center text-sm font-black text-slate-400 animate-in fade-in slide-in-from-top-1">
+                                    <span className="uppercase tracking-[0.2em] text-[10px]">Mathematical Round Off</span>
+                                    <span className="tabular-nums text-slate-500 italic">{totals.roundOff > 0 ? '+' : ''}{totals.roundOff.toFixed(2)}</span>
+                                </div>
+                            )}
 
                             <div className="pt-10 border-t border-slate-50 mt-6 relative">
                                 <div className="flex justify-between items-end mb-12">

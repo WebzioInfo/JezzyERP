@@ -2,64 +2,41 @@
 
 import React, { useState } from "react";
 import {
-  FileUp, Receipt, ArrowRightLeft, CheckCircle2,
-  Trash2, Plus, ArrowRight, Loader2, Info, AlertTriangle
+  FileUp, Receipt, ArrowRightLeft,
+  Trash2, Plus, ArrowRight, Loader2, AlertTriangle
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
-import { Input } from "@/ui/core/Input";
 import { useRouter } from "next/navigation";
 import { createPurchaseAction } from "@/features/procurement/actions";
 import { useToast } from "@/context/ToastContext";
 import { useEffect } from "react";
+import { VendorForm } from "@/features/procurement/components/VendorForm";
+import { X as CloseIcon } from "lucide-react";
 
-// Mock Data from the image attached by the user for Demo
-const MOCK_EXTRACTION = [
-  {
-    description: "27mm Alaska K Blue Caps",
-    hsn: "39235010",
-    qty: 80000,
-    unit: "Nos",
-    rate: 0.35,
-    taxPercent: 18,
-    pkgCount: 10,
-    pkgType: "BOX (8000/BX)",
-  },
-  {
-    description: "27MM ALASKA WHITE CAPS",
-    hsn: "39235010",
-    qty: 80000,
-    unit: "Nos",
-    rate: 0.35,
-    taxPercent: 18,
-    pkgCount: 10,
-    pkgType: "BOX (8000/BX)",
-  },
-  {
-    description: "26mm Alaska SN White caps (DOME)",
-    hsn: "39235010",
-    qty: 10000,
-    unit: "Nos",
-    rate: 0.35,
-    taxPercent: 18,
-    pkgCount: 1,
-    pkgType: "BOX (1000/BX)",
-  }
-];
+
+// AI-Powered Purchase Bill Extraction Workflow
 
 export default function PurchaseImportPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedData, setExtractedData] = useState<any[] | null>(null);
   const [vendorData, setVendorData] = useState({
-    name: "ESSAR INDUSTRIES (MOCKED)",
-    gstin: "32AAAAA0000A1Z1",
+    name: "Detected Vendor",
+    gstin: "",
     date: new Date().toISOString().split("T")[0],
-    purchaseNo: "EXT-8871"
+    purchaseNo: "",
+    ewayBill: "",
+    address: "",
+    email: "",
+    phone: "",
+    pin: "",
+    state: ""
   });
   const [vendors, setVendors] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedVendorId, setSelectedVendorId] = useState("");
+  const [showNewVendorForm, setShowNewVendorForm] = useState(false);
 
   const router = useRouter();
   const { success, error } = useToast();
@@ -81,37 +58,79 @@ export default function PurchaseImportPage() {
     fetchData();
   }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const refreshVendors = async (newVendorId?: string) => {
+    try {
+      const vRes = await fetch("/api/vendors").then(res => res.json());
+      setVendors(vRes);
+      if (newVendorId) {
+        setSelectedVendorId(newVendorId);
+      }
+    } catch (err) {
+      console.error("Failed to refresh vendors", err);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsExtracting(true);
-    // Simulated AI Processing Time
-    setTimeout(() => {
-      setExtractedData(MOCK_EXTRACTION);
-      
-      // Simulate Vendor Extraction
-      const extractedVendorName = "ESSAR INDUSTRIES";
-      const extractedGST = "32AAAAA0000A1Z1";
-      
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/purchases/extract", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) throw new Error("Extraction failed");
+
+      const { data } = await res.json();
+
+      // Transform items to match component state
+      const mappedItems = data.items.map((i: any) => ({
+        ...i,
+        unit: "Nos", // Defaulting as OCR might miss unit
+        taxPercent: 18, // Standard assumption if not found
+        pkgCount: 1,
+        pkgType: "STANDARD"
+      }));
+
+      setExtractedData(mappedItems);
+
       setVendorData({
-        name: extractedVendorName,
-        gstin: extractedGST,
-        date: new Date().toISOString().split("T")[0],
-        purchaseNo: `EXT-${Math.floor(1000 + Math.random() * 9000)}`
+        name: data.vendorName || "Identified Vendor",
+        gstin: data.vendorGst,
+        date: data.date || new Date().toISOString().split("T")[0],
+        purchaseNo: data.invoiceNo || `EXT-${Math.floor(1000 + Math.random() * 9000)}`,
+        ewayBill: data.ewayBill || "",
+        address: data.vendorAddress || "",
+        email: data.vendorEmail || "",
+        phone: data.vendorPhone || "",
+        pin: data.vendorPin || "",
+        state: data.vendorState || ""
       });
 
       // Automatically find matching vendor in our database
-      const match = vendors.find(v => 
-        v.gst === extractedGST || 
-        v.name.toLowerCase().includes(extractedVendorName.toLowerCase())
-      );
-      if (match) {
-        setSelectedVendorId(match.id);
+      if (data.vendorGst || data.vendorName) {
+        const match = vendors.find(v => 
+          (data.vendorGst && v.gst === data.vendorGst) || 
+          (data.vendorName && v.name.toLowerCase().includes(data.vendorName.toLowerCase()))
+        );
+        if (match) {
+          setSelectedVendorId(match.id);
+          setVendorData(prev => ({ ...prev, name: match.name }));
+        }
       }
-
+    } catch (err: any) {
+      console.error("AI Extraction Error:", err);
+      error("AI was unable to parse this document clearly. Please try a higher quality scan.");
+    } finally {
       setIsExtracting(false);
-    }, 2500);
+    }
   };
 
   const handleUpdateItem = (index: number, field: string, value: any) => {
@@ -164,6 +183,7 @@ export default function PurchaseImportPage() {
       formData.append("vendorId", selectedVendorId);
       formData.append("date", vendorData.date);
       formData.append("gstType", "IGST"); // Default for import usually
+      formData.append("ewayBill", vendorData.ewayBill);
       formData.append("items", JSON.stringify(items));
       formData.append("subTotal", taxableValue.toString());
       formData.append("taxTotal", taxTotal.toString());
@@ -181,15 +201,20 @@ export default function PurchaseImportPage() {
   };
 
   const handleConvertToSales = () => {
-    // Store in session storage to pass to Billing Page
+    // Store in session storage to pass to Billing Page (JEZZY_RESELL_PACK)
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("resell_data", JSON.stringify({
+      const payload = {
         vendor: vendorData,
-        items: extractedData
-      }));
+        items: extractedData?.map(item => ({
+            ...item,
+            productId: products.find(p => p.description.toLowerCase() === item.description.toLowerCase())?.id
+        }))
+      };
+      sessionStorage.setItem("jezzy_resell_pack", JSON.stringify(payload));
       router.push("/invoices/new?mode=resell");
     }
   };
+
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-24">
@@ -333,9 +358,9 @@ export default function PurchaseImportPage() {
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Detected Entity</h4>
-                       <p className="text-sm font-black text-slate-900">{vendorData.name}</p>
-                       <p className="text-[10px] font-mono text-slate-500">{vendorData.gstin}</p>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Detected Entity</h4>
+                      <p className="text-sm font-black text-slate-900">{vendorData.name}</p>
+                      <p className="text-[10px] font-mono text-slate-500">{vendorData.gstin}</p>
                     </div>
                     {!selectedVendorId && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100">
@@ -345,9 +370,38 @@ export default function PurchaseImportPage() {
                     )}
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-slate-400">Invoice No</label>
+                      <input 
+                        className="w-full bg-slate-50 border-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500"
+                        value={vendorData.purchaseNo}
+                        onChange={(e) => setVendorData(prev => ({ ...prev, purchaseNo: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-slate-400">Invoice Date</label>
+                      <input 
+                        type="date"
+                        className="w-full bg-slate-50 border-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500"
+                        value={vendorData.date}
+                        onChange={(e) => setVendorData(prev => ({ ...prev, date: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[9px] font-black uppercase text-slate-400">E-Way Bill No (12 Digit)</label>
+                      <input 
+                        className="w-full bg-slate-50 border-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Optional"
+                        value={vendorData.ewayBill}
+                        onChange={(e) => setVendorData(prev => ({ ...prev, ewayBill: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
                   <div className="pt-6 border-t border-slate-100 space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Map to Registry Vendor</label>
-                    <select 
+                    <select
                       className="w-full h-12 bg-slate-50 border-0 rounded-xl px-4 text-xs font-bold text-slate-700 outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 transition-all"
                       value={selectedVendorId}
                       onChange={(e) => setSelectedVendorId(e.target.value)}
@@ -357,11 +411,56 @@ export default function PurchaseImportPage() {
                         <option key={v.id} value={v.id}>{v.name} ({v.gst || 'No GST'})</option>
                       ))}
                     </select>
+                    
+                    <div className="flex items-center gap-2 pt-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setShowNewVendorForm(true)}
+                            className="text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50"
+                        >
+                            <Plus size={12} className="mr-1" />
+                            Not in list? Add New Vendor
+                        </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
+
+          {/* New Vendor Modal Overlay */}
+          {showNewVendorForm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-4xl shadow-3xl">
+                    <Button 
+                        variant="ghost" 
+                        className="absolute right-6 top-6 z-10 text-white/50 hover:text-white"
+                        onClick={() => setShowNewVendorForm(false)}
+                    >
+                        <CloseIcon size={24} />
+                    </Button>
+                    <VendorForm 
+                        vendor={{ 
+                            name: vendorData.name, 
+                            gst: vendorData.gstin,
+                            address1: vendorData.address,
+                            email: vendorData.email,
+                            phone: vendorData.phone,
+                            pinCode: vendorData.pin,
+                            state: vendorData.state
+                        }}
+                        onSuccess={(newVendor) => {
+                            setShowNewVendorForm(false);
+                            success("New vendor onboarded successfully!");
+                            refreshVendors(newVendor?.id);
+                        }}
+                        onCancel={() => setShowNewVendorForm(false)}
+                    />
+
+                </div>
+            </div>
+          )}
 
           {/* Actions Sidebar */}
           <div className="lg:col-span-4 space-y-6 sticky top-24">

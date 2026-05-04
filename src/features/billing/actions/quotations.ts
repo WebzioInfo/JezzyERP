@@ -41,14 +41,6 @@ export async function convertQuotationToInvoiceAction(formData: FormData) {
 
 // Local Enum Overrides (Hard Fix for Prisma Stale-ness on Windows)
 export type QuotationStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'CONVERTED' | 'CANCELLED';
-export const QuotationStatus = {
-  DRAFT: 'DRAFT' as const,
-  SENT: 'SENT' as const,
-  ACCEPTED: 'ACCEPTED' as const,
-  REJECTED: 'REJECTED' as const,
-  CONVERTED: 'CONVERTED' as const,
-  CANCELLED: 'CANCELLED' as const,
-};
 
 export async function updateQuotationStatusAction(quotationId: string, status: QuotationStatus) {
     const session = await verifySessionVerified();

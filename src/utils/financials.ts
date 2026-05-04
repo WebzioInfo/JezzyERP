@@ -53,6 +53,7 @@ export interface BillingTotals {
     subTotal: number;
     taxTotal: number;
     grandTotal: number;
+    roundOff: number;
 }
 
 /**
@@ -78,9 +79,13 @@ export function calculateBillingTotals(
 
     totals.subTotal = roundTo2(totals.subTotal + fAmount);
     totals.taxTotal = roundTo2(totals.taxTotal + fTax);
-    totals.grandTotal = roundTo2(totals.subTotal + totals.taxTotal);
+    const rawGrandTotal = totals.subTotal + totals.taxTotal;
+    totals.grandTotal = Math.round(rawGrandTotal);
+    
+    // Add roundOff property
+    (totals as any).roundOff = roundTo2(totals.grandTotal - rawGrandTotal);
 
-    return totals;
+    return totals as BillingTotals;
 }
 
 /**
@@ -117,4 +122,87 @@ export function numberToWords(num: number): string {
     }
 
     return result ? result + " Only" : "Zero Rupees Only";
+}
+
+/**
+ * Formats a date into Indian medium style (e.g., 03-May-2026).
+ */
+export function fmtDate(d: Date | string | null): string {
+    if (!d) return "N/A";
+    try {
+        return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(d));
+    } catch (e) {
+        return "Invalid Date";
+    }
+}
+
+/**
+ * Maps technical ledger/reference types to user-friendly business terms.
+ * Used for displaying transactions in a way that non-accountants can easily understand.
+ * Context-aware: Can use account types to differentiate labels.
+ */
+export function getBusinessLabel(type: string | null | undefined, debitAccountType?: string, creditAccountType?: string): string {
+    // Guard: transactionType may be null/undefined if the DB column hasn't been migrated yet
+    if (!type) return 'Ledger Entry';
+
+    const mapping: Record<string, string> = {
+        'PAYMENT_RECEIVED': 'Collection Received',
+        'PAYMENT_MADE': 'Settlement Paid',
+        'PAYMENT': 'Payment',
+        'EXPENSE': 'Business Expense',
+        'INVOICE': 'Sales Invoice',
+        'PURCHASE': 'Stock Purchase',
+        'OPENING_BALANCE': 'Opening Standing',
+        'FOUNDER_CONTRIBUTION': 'Capital Infusion',
+        'FOUNDER_WITHDRAWAL': 'Owner Withdrawal',
+        'ADJUSTMENT': 'Ledger Correction',
+        'TRANSFER': 'Internal Transfer',
+        'ADVANCE': 'Direct Advance',
+    };
+
+    // Contextual Overrides
+    if (type === 'PAYMENT' || type === 'PAYMENT_RECEIVED') {
+        if (creditAccountType === 'CLIENT') return 'Collection Received';
+        if (debitAccountType === 'SUPPLIER') return 'Supplier Settlement';
+    }
+
+    if (type === 'TRANSFER') {
+        if (debitAccountType === 'CASH' && creditAccountType === 'BANK') return 'Cash Withdrawal';
+        if (debitAccountType === 'BANK' && creditAccountType === 'CASH') return 'Cash Deposit';
+    }
+
+    if (!type) return 'General Transaction';
+    return mapping[type] || mapping[type.replace('_', ' ')] || type;
+}
+
+
+/**
+ * Standardized Financial Summary Calculation.
+ * Outstanding = Total Invoiced - Total Allocated
+ * Advance = Total Paid - Total Allocated
+ * Net = Outstanding - Advance
+ */
+export function calculatePartySummary(invoices: { total: number; paid: number }[], payments: { amount: number; allocated: number }[]) {
+    const outstanding = roundTo2(invoices.reduce((sum, inv) => sum + (inv.total - inv.paid), 0));
+    const advance = roundTo2(payments.reduce((sum, p) => sum + (p.amount - p.allocated), 0));
+    
+    return {
+        outstanding,
+        advance,
+        netBalance: roundTo2(outstanding - advance)
+    };
+}
+
+/**
+ * Maps account types to business-friendly labels.
+ */
+export function getAccountLabel(type: string): string {
+    const mapping: Record<string, string> = {
+        'EQUITY': 'Owner Account',
+        'CASH': 'Cash in Hand',
+        'BANK': 'Bank Account',
+        'CLIENT': 'Client (Receivable)',
+        'SUPPLIER': 'Supplier (Payable)',
+    };
+    return mapping[type] || type;
 }

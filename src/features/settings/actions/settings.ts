@@ -29,6 +29,8 @@ export async function updateCompanySettingsAction(formData: FormData) {
         bankIfsc: formData.get("bankIfsc") as string,
         bankAccountName: formData.get("bankAccountName") as string,
         showPkgDetails: formData.get("showPkgDetails") === "true",
+        showLogo: formData.get("showLogo") === "true",
+        logoUrl: formData.get("logoUrl") as string,
     };
 
     try {

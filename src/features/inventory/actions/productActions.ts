@@ -16,9 +16,9 @@ export async function createProductAction(formData: FormData) {
         purchaseRate: formData.get("purchaseRate") as string,
         sellingRate: formData.get("sellingRate") as string,
         gstRate: formData.get("gstRate") as string,
-        unit: (formData.get("unit") as string) || "NOS",
+        unit: formData.get("unit") as string,
         notes: (formData.get("notes") as string) || undefined,
-        pkgType: (formData.get("pkgType") as string) || "BOX",
+        pkgType: formData.get("pkgType") as string,
         qtyPerBox: formData.get("qtyPerBox") as string,
     };
 
@@ -27,6 +27,30 @@ export async function createProductAction(formData: FormData) {
         revalidatePath("/products");
         revalidatePath("/dashboard");
         return { success: true };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}
+
+export async function createQuickProductAction(data: {
+    description: string;
+    purchaseRate: number;
+    hsn?: string;
+    unit?: string;
+}) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        const product = await ProductService.createProduct(session.userId, {
+            ...data,
+            purchaseRate: data.purchaseRate.toString(),
+            sellingRate: (data.purchaseRate * 1.2).toString(), // Default 20% margin
+            gstRate: "18", // Default
+            unit: data.unit || "NOS"
+        });
+        revalidatePath("/products");
+        return { success: true, product };
     } catch (error: any) {
         return handleActionError(error);
     }
@@ -43,9 +67,9 @@ export async function updateProductAction(productId: string, formData: FormData)
         purchaseRate: formData.get("purchaseRate") as string,
         sellingRate: formData.get("sellingRate") as string,
         gstRate: formData.get("gstRate") as string,
-        unit: (formData.get("unit") as string) || "NOS",
+        unit: formData.get("unit") as string,
         notes: (formData.get("notes") as string) || undefined,
-        pkgType: (formData.get("pkgType") as string) || "BOX",
+        pkgType: formData.get("pkgType") as string,
         qtyPerBox: formData.get("qtyPerBox") as string,
     };
 

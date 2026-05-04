@@ -6,12 +6,13 @@ import { env } from '@/lib/env'
 const prismaClientSingleton = () => {
     return new PrismaClient({
         log: env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-        // Strict connection limits for development to avoid exhausting the 9-connection DB pool
+        // Optimized connection limits for development to handle parallel RSC queries
         datasources: {
             db: {
-                url: env.DATABASE_URL + (env.DATABASE_URL.includes('?') ? '&' : '?') + 'connection_limit=1&pool_timeout=30'
+                url: env.DATABASE_URL + (env.DATABASE_URL.includes('?') ? '&' : '?') + 'connection_limit=5&pool_timeout=60'
             }
         }
+
     })
 }
 

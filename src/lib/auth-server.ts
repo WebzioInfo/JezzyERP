@@ -17,7 +17,6 @@ export async function verifySessionVerified(): Promise<SessionPayload | null> {
         });
 
         if (!user) {
-            console.log(`[AUTH] Session user ${session.userId} not found in DB. Invalidating.`);
             return null;
         }
 

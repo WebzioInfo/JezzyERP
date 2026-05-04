@@ -24,34 +24,48 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   const { q: searchQuery = "" } = await searchParams;
 
   const [invoices, purchases, clients] = await Promise.all([
-    db.invoice.findMany({
+    (db.invoice as any).findMany({
       where: { deletedAt: null, status: { notIn: ["PAID", "CANCELLED"] } },
-      select: { grandTotal: true, amountPaid: true }
+      select: { grandTotal: true, allocations: { select: { amount: true } } }
     }),
-    db.purchase.findMany({
+    (db.purchase as any).findMany({
       where: { deletedAt: null, status: { notIn: ["PAID", "CANCELLED"] } },
-      select: { grandTotal: true, amountPaid: true }
+      select: { grandTotal: true, allocations: { select: { amount: true } } }
     }),
     db.client.findMany({
       where: { active: true },
       include: {
         invoices: {
           where: { deletedAt: null },
-          select: { grandTotal: true, amountPaid: true }
+          select: { grandTotal: true }
+        },
+        payments: {
+          where: { deletedAt: null },
+          select: { amount: true }
         }
-      }
+      } as any
     })
   ]);
 
-  const incomingCredit = invoices.reduce((sum, inv) => sum + (inv.grandTotal.toNumber() - inv.amountPaid.toNumber()), 0);
-  const outgoingCredit = purchases.reduce((sum, pur) => sum + (pur.grandTotal.toNumber() - pur.amountPaid.toNumber()), 0);
+  const incomingCredit = invoices.reduce((sum: number, inv: any) => {
+      const allocated = (inv as any).allocations.reduce((a: number, b: any) => a + Number(b.amount), 0);
+      return sum + (Number(inv.grandTotal) - allocated);
+  }, 0);
+  
+  const outgoingCredit = purchases.reduce((sum: number, pur: any) => {
+      const allocated = (pur as any).allocations.reduce((a: number, b: any) => a + Number(b.amount), 0);
+      return sum + (Number(pur.grandTotal) - allocated);
+  }, 0);
+
   
   const clientData = clients.map(client => {
     let billed = 0;
     let paid = 0;
-    client.invoices.forEach(inv => {
-      billed += inv.grandTotal.toNumber();
-      paid += inv.amountPaid.toNumber();
+    client.invoices.forEach((inv: any) => {
+      billed += Number(inv.grandTotal);
+    });
+    client.payments.forEach((pay: any) => {
+      paid += Number(pay.amount);
     });
     return {
       id: client.id,
@@ -89,38 +103,39 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
 
       {/* ── Credit Summaries ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="border-0 bg-emerald-600 text-white shadow-2xl shadow-emerald-900/20 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-             <TrendingUp className="w-32 h-32" />
+        <Card className="border-0 bg-emerald-50 text-slate-900 shadow-2xl shadow-emerald-900/5 overflow-hidden relative group ring-1 ring-emerald-500/10">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+             <TrendingUp className="w-32 h-32 text-emerald-900" />
           </div>
           <CardContent className="p-10 relative z-10">
             <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                   <ArrowUpRight className="w-5 h-5" />
                </div>
-               <span className="text-xs font-black uppercase tracking-[0.3em] opacity-80">Incoming Credit (Receivable)</span>
+               <span className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600/70">Incoming Credit (Receivable)</span>
             </div>
-            <h2 className="text-5xl font-black italic tabular-nums">{formatCurrency(incomingCredit)}</h2>
-            <p className="mt-4 text-emerald-100 font-bold text-sm uppercase tracking-widest italic">Outstanding revenue from {invoices.length} active invoices</p>
+            <h2 className="text-5xl font-black italic tabular-nums text-emerald-900 tracking-tighter">{formatCurrency(incomingCredit)}</h2>
+            <p className="mt-4 text-emerald-600 font-bold text-sm uppercase tracking-widest italic">Outstanding revenue from {invoices.length} active invoices</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-rose-600 text-white shadow-2xl shadow-rose-900/20 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-             <TrendingDown className="w-32 h-32" />
+        <Card className="border-0 bg-rose-50 text-slate-900 shadow-2xl shadow-rose-900/5 overflow-hidden relative group ring-1 ring-rose-500/10">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+             <TrendingDown className="w-32 h-32 text-rose-900" />
           </div>
           <CardContent className="p-10 relative z-10">
             <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600">
                   <ArrowDownRight className="w-5 h-5" />
                </div>
-               <span className="text-xs font-black uppercase tracking-[0.3em] opacity-80">Outgoing Credit (Payable)</span>
+               <span className="text-xs font-black uppercase tracking-[0.3em] text-rose-600/70">Outgoing Credit (Payable)</span>
             </div>
-            <h2 className="text-5xl font-black italic tabular-nums">{formatCurrency(outgoingCredit)}</h2>
-            <p className="mt-4 text-rose-100 font-bold text-sm uppercase tracking-widest italic">Pending settlements for {purchases.length} purchase bills</p>
+            <h2 className="text-5xl font-black italic tabular-nums text-rose-900 tracking-tighter">{formatCurrency(outgoingCredit)}</h2>
+            <p className="mt-4 text-rose-600 font-bold text-sm uppercase tracking-widest italic">Pending settlements for {purchases.length} purchase bills</p>
           </CardContent>
         </Card>
       </div>
+
 
       {/* ── Search & Filter ── */}
       <div className="flex flex-col md:flex-row items-center gap-4">

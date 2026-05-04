@@ -187,23 +187,55 @@ export default async function SettingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-8">
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-orange-50 border border-orange-100 group transition-all hover:bg-orange-100/50">
-                  <div className="space-y-1">
-                    <p className="text-sm font-black text-orange-900 uppercase tracking-tight italic">Show "No. & Kind of Pkgs" Column</p>
-                    <p className="text-[10px] font-bold text-orange-700/70 uppercase tracking-widest leading-relaxed">
-                      Enable this to display physical packaging details (e.g. 10 BOXES) on your PDF invoices.
-                    </p>
+                <div className="space-y-6">
+                  {/* Pkg Details Toggle */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-orange-50 border border-orange-100 group transition-all hover:bg-orange-100/50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-orange-900 uppercase tracking-tight italic">Show "No. & Kind of Pkgs" Column</p>
+                      <p className="text-[10px] font-bold text-orange-700/70 uppercase tracking-widest leading-relaxed">
+                        Enable this to display physical packaging details (e.g. 10 BOXES) on your PDF invoices.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        name="showPkgDetails"
+                        value="true"
+                        defaultChecked={settings.showPkgDetails}
+                        className="peer h-6 w-12 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-orange-500 focus:outline-none"
+                      />
+                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-6"></span>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      name="showPkgDetails"
-                      value="true"
-                      defaultChecked={settings.showPkgDetails}
-                      className="peer h-6 w-12 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-orange-500 focus:outline-none"
-                    />
-                    <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-6"></span>
+
+                  {/* Logo Toggle */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 group transition-all hover:bg-slate-50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-slate-900 uppercase tracking-tight italic">Show Company Logo on Invoice</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                        If enabled, your logo will be printed at the top-left of every PDF invoice.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        name="showLogo"
+                        value="true"
+                        defaultChecked={settings.showLogo}
+                        className="peer h-6 w-12 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-primary-600 focus:outline-none"
+                      />
+                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-6"></span>
+                    </div>
                   </div>
+
+                  {/* Logo Path */}
+                  <Input
+                    label="Logo Filename (in public/ folder)"
+                    name="logoUrl"
+                    defaultValue={settings.logoUrl || "logo.png"}
+                    placeholder="e.g. logo.png"
+                    icon={<Globe size={18} />}
+                  />
                 </div>
               </CardContent>
             </Card>

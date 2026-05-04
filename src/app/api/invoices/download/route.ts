@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        const { invoiceId } = body;
+        const { invoiceId, includeLogo = true } = body;
 
         if (!invoiceId) {
             return NextResponse.json({ error: "invoiceId is required" }, { status: 400 });
@@ -89,7 +89,9 @@ export async function POST(req: NextRequest) {
             bankAccountNo: "16470200011150 ",
             bankIfsc: "FDRL0001647",
             bankAccountName: "JEZZY ENTERPRISES",
-            showPkgDetails: true
+            showPkgDetails: true,
+            showLogo: false,
+            logoUrl: "logo.png"
         };
 
         const gstType = invoice.gstType || "CGST_SGST";
@@ -102,9 +104,10 @@ export async function POST(req: NextRequest) {
         } else {
             igst = taxVal;
         }
-        const grandTotalRaw = invoice.grandTotal.toNumber();
-        const rounded = Math.round(grandTotalRaw);
-        const roundOff = rounded - grandTotalRaw;
+        const grandTotal = invoice.grandTotal.toNumber();
+        const rawGrandTotal = subTotal + taxVal;
+        const rounded = grandTotal;
+        const roundOff = Number((grandTotal - rawGrandTotal).toFixed(2));
 
         // Init PDF
         const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -113,11 +116,26 @@ export async function POST(req: NextRequest) {
 
 
         // --- COMPANY HEADER (LEFT) ---
+        let companyX = LEFT_MARGIN;
+        
+        if (settings.showLogo) {
+            try {
+                const logoFileName = settings.logoUrl || "logo.png";
+                const logoPath = path.join(process.cwd(), "public", logoFileName);
+                if (fs.existsSync(logoPath)) {
+                    const ext = path.extname(logoFileName).slice(1).toUpperCase() || "PNG";
+                    const logoData = fs.readFileSync(logoPath).toString("base64");
+                    doc.addImage(logoData, ext, LEFT_MARGIN, 10, 30, 20);
+                    companyX = LEFT_MARGIN + 35;
+                }
+            } catch (err) {
+                console.error("[LOGO_ERROR]", err);
+            }
+        }
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
         doc.setTextColor(...TEXT_BLACK);
-        // Position company name to the right of logo if logo exists, or at margin
-        const companyX = LEFT_MARGIN;
         doc.text(settings.companyName.toUpperCase(), companyX, 16);
 
         doc.setFont("helvetica", "normal");

@@ -3,18 +3,19 @@
 import { useActionState, useEffect } from "react";
 import { createVendorAction, updateVendorAction } from "../actions";
 
-export function useVendorForm(vendor?: any, onSuccess?: () => void) {
-    const isEdit = !!vendor;
+export function useVendorForm(vendor?: any, onSuccess?: (data?: any) => void) {
+    const isEdit = !!(vendor && vendor.id);
 
     const [state, formAction, pending] = useActionState(
         async (prevState: any, formData: FormData) => {
             try {
+                let result;
                 if (isEdit) {
-                    await updateVendorAction(vendor.id, formData);
+                    result = await updateVendorAction(vendor.id, formData);
                 } else {
-                    await createVendorAction(formData);
+                    result = await createVendorAction(formData);
                 }
-                return { success: true };
+                return { success: true, data: result };
             } catch (err: any) {
                 return { error: err.message || "An error occurred" };
             }
@@ -24,11 +25,12 @@ export function useVendorForm(vendor?: any, onSuccess?: () => void) {
 
     useEffect(() => {
         if (state?.success && !pending) {
-            onSuccess?.();
+            onSuccess?.(state.data);
             const form = document.getElementById("vendor-form") as HTMLFormElement;
             form?.reset();
         }
     }, [state, pending, onSuccess]);
+
 
     return {
         formAction,

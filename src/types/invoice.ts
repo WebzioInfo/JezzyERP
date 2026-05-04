@@ -26,8 +26,9 @@ export type Invoice = {
   subTotal: number;
   taxTotal: number;
   grandTotal: number;
-  amountPaid: number;
   status: string;
+  allocations?: { amount: number }[];
+
   logistics?: Logistics;
   notes?: string | null;
   client?: Client;

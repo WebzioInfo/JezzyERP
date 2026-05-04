@@ -138,9 +138,10 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">Quantity Unit</label>
                                     <select
                                         name="unit"
-                                        defaultValue={product?.unit || "NOS"}
+                                        defaultValue={product?.unit || ""}
                                         className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold italic"
                                     >
+                                        <option value="">-- No Default Unit --</option>
                                         <option value="NOS">NOS (Numbers)</option>
                                         <option value="KGS">KGS (Kilograms)</option>
                                         <option value="PCS">PCS (Pieces)</option>
@@ -151,6 +152,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                         <option value="UNT">UNT (Units)</option>
                                         <option value="DRM">DRM (Drums)</option>
                                         <option value="BAG">BAG</option>
+                                        <option value="ROLL">ROLL (Rolls)</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -171,9 +173,10 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">Kind of Pkgs (Default)</label>
                                     <select
                                         name="pkgType"
-                                        defaultValue={product?.pkgType || "BOX"}
+                                        defaultValue={product?.pkgType || ""}
                                         className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold italic uppercase"
                                     >
+                                        <option value="">-- No Default Pkg --</option>
                                         <option value="BOX">BOX</option>
                                         <option value="BAG">BAG</option>
                                         <option value="PKT">PACKET</option>

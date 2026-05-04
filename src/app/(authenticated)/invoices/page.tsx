@@ -17,6 +17,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { LiveSearch } from "@/components/common/LiveSearch";
 
 interface PageProps {
+
   searchParams: Promise<{ status?: string; q?: string }>;
 }
 
@@ -75,6 +76,8 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   const total = counts.reduce((a, c) => a + c._count.status, 0);
   countMap[""] = total;
   countMap["TRASH"] = trashCount;
+
+
 
   return (
     <div className="space-y-8 animate-fade-up">

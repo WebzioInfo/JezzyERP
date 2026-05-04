@@ -11,6 +11,7 @@ interface Props {
 
 
 export default function InvoicePreview({ invoice }: Props) {
+  const includeLogo = true; // Default for preview
   const showGST = invoice.gstType !== "NO_GST";
 
   const billing = {
@@ -75,14 +76,16 @@ export default function InvoicePreview({ invoice }: Props) {
       {/* HEADER WITH LOGO & TITLE */}
       <div className="flex justify-between items-start mb-10 pb-8 border-b border-slate-100">
         <div className="flex items-start gap-5">
-          <Image
-            src="/logo.png"
-            alt="Company Logo"
-            width={128}
-            height={80}
-            className="object-contain"
-            priority
-          />
+          {includeLogo && (
+            <Image
+              src="/logo.png"
+              alt="Company Logo"
+              width={128}
+              height={80}
+              className="object-contain"
+              priority
+            />
+          )}
           <div className="space-y-1">
             <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">JEZZY Enterprises</h2>
             <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">

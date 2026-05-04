@@ -6,7 +6,7 @@ import { CheckCircle2, Clock } from "lucide-react";
 import { InvoiceStatus } from "@prisma/client";
 
 export async function OperationalMetrics() {
-    const [invoiceCount, pendingInvoices, statusCounts] = await Promise.all([
+    const [invoiceCount, pendingInvoices, statusCounts, ledgerAgg, expenseAgg] = await Promise.all([
         db.invoice.count({ where: { deletedAt: null } }),
         db.invoice.findMany({
             where: { deletedAt: null, status: { in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIAL] } },
@@ -25,10 +25,40 @@ export async function OperationalMetrics() {
             where: { deletedAt: null },
             _count: { status: true },
         }),
+        // 4. Ledger Net Balance (Credit - Debit to Client Accounts)
+        (async () => {
+            const [credits, debits] = await Promise.all([
+                (db as any).ledgerEntry.aggregate({
+                    where: { creditAccount: { type: 'CLIENT' } },
+                    _sum: { amount: true }
+                }),
+                (db as any).ledgerEntry.aggregate({
+                    where: { debitAccount: { type: 'CLIENT' } },
+                    _sum: { amount: true }
+                })
+            ]);
+            return { credits: Number(credits._sum.amount || 0), debits: Number(debits._sum.amount || 0) };
+        })(),
+
+        // 5. Monthly Expenses (Safe Check for stale Prisma Client)
+        (db as any).expense ? (db as any).expense.aggregate({
+            where: {
+                date: {
+                    gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+                }
+            },
+            _sum: { amount: true },
+        }) : Promise.resolve({ _sum: { amount: 0 } }),
     ]);
+
 
     const statusMap: Record<string, number> = {};
     statusCounts.forEach((s) => { statusMap[s.status] = s._count.status; });
+
+    const netBalance = ledgerAgg.credits - ledgerAgg.debits;
+
+
+    const totalExpenses = expenseAgg._sum.amount?.toNumber() || 0;
 
     return (
         <div className="space-y-8">
@@ -44,6 +74,43 @@ export async function OperationalMetrics() {
                         <StatusRow label="PAID" count={statusMap["PAID"] || 0} color="#10B981" total={invoiceCount} />
                         <StatusRow label="OVERDUE" count={statusMap["OVERDUE"] || 0} color="#EF4444" total={invoiceCount} />
                         <StatusRow label="PARTIAL" count={statusMap["PARTIAL"] || 0} color="#F59E0B" total={invoiceCount} />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Financial Snapshot */}
+            <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
+                <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-5">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-slate-800 uppercase italic tracking-tight">Ledger Insights</h3>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="space-y-6">
+                        {/* Net Account Balance */}
+                        <div className="p-4 rounded-2xl bg-slate-900 text-white relative overflow-hidden shadow-xl">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary-500" />
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Net Client Ledger</p>
+                            <h4 className="text-xl font-black font-display tracking-tight">
+                                {formatCurrency(Math.abs(netBalance))}
+                            </h4>
+                            <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${netBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {netBalance >= 0 ? 'Net Advance Pool' : 'Net Outstanding Debt'}
+                            </p>
+                        </div>
+
+                        {/* Monthly Expenses */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Monthly Expenses</p>
+                                <h4 className="text-lg font-black text-slate-800">
+                                    {formatCurrency(totalExpenses)}
+                                </h4>
+                            </div>
+                            <div className="px-3 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-black border border-red-100">
+                                OUTFLOW
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

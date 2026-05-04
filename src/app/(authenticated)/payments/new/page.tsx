@@ -3,65 +3,77 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useActionState, Suspense } from "react";
 import { recordPaymentAction } from "@/features/billing/actions/billing";
-import { 
-  ArrowLeft, CreditCard, Calendar, 
-  Hash, FileText, Loader2, CheckCircle2, 
-  AlertCircle, Info
+import {
+  ArrowLeft, CreditCard, Calendar, Hash, FileText,
+  Loader2, CheckCircle2, AlertCircle, Info, Users,
+  TrendingUp, Banknote, Smartphone, Building2, Receipt,
+  Sparkles, ShieldCheck, CircleDollarSign,
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/utils/financials";
+import { cn } from "@/utils";
 
-/**
- * Main form component for recording a payment.
- */
+const PAYMENT_METHODS = [
+  { value: "CASH",   label: "Cash",        icon: Banknote,      color: "emerald" },
+  { value: "UPI",    label: "UPI",         icon: Smartphone,    color: "violet" },
+  { value: "BANK_TRANSFER",    label: "Bank Transfer",icon: Building2,    color: "blue" },
+  { value: "CHEQUE", label: "Cheque",      icon: Receipt,       color: "amber" },
+];
+
+
 function PaymentForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const invoiceId = searchParams.get("invoiceId");
-  
+  const initialClientId = searchParams.get("clientId");
+
   const [invoice, setInvoice] = useState<any>(null);
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId || "");
+  const [selectedMethod, setSelectedMethod] = useState("BANK_TRANSFER");
+  const [amount, setAmount] = useState("");
+
   const [loading, setLoading] = useState(true);
 
-  // ── Fetch Invoice Preview (Simple Client-Side Fetch) ──
   useEffect(() => {
-    if (!invoiceId) {
-      setLoading(false);
-      return;
-    }
-
-    async function fetchInvoice() {
+    async function fetchData() {
       try {
-        const res = await fetch(`/api/invoices/${invoiceId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setInvoice(data);
+        if (invoiceId) {
+          const res = await fetch(`/api/invoices/${invoiceId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setInvoice(data);
+            setSelectedClientId(data.clientId);
+            const paid = data.allocations?.reduce((s: number, a: any) => s + Number(a.amount), 0) || 0;
+            setAmount(String(Math.max(0, Number(data.grandTotal) - paid)));
+          }
         }
+        const cRes = await fetch("/api/clients");
+        if (cRes.ok) setClients(await cRes.json());
       } catch (err) {
-        console.error("Failed to fetch invoice", err);
+        console.error("Failed to fetch data", err);
       } finally {
         setLoading(false);
       }
     }
-    fetchInvoice();
+    fetchData();
   }, [invoiceId]);
 
   const [state, formAction, pending] = useActionState(
     async (prevState: any, formData: FormData) => {
-      const amount = parseFloat(formData.get("amount") as string);
       const data = {
-        invoiceId: invoiceId!,
-        amount,
+        clientId: (formData.get("clientId") as string) || selectedClientId,
+        invoiceId: invoiceId || null,
+        amount: parseFloat(formData.get("amount") as string),
         method: formData.get("method") as string,
         reference: formData.get("reference") as string,
         notes: formData.get("notes") as string,
         paidAt: formData.get("paidAt") as string,
       };
-
       const res = await recordPaymentAction(data as any);
-      if (res && 'error' in res) return { error: res.error };
-      if (res && 'success' in res) {
-        // Show success and redirect
-        router.push(`/invoices/${invoiceId}?success=payment_recorded`);
+      if (res && "error" in res) return { error: res.error };
+      if (res && "success" in res) {
+        router.push(`/payments?success=payment_recorded`);
         router.refresh();
         return { success: true };
       }
@@ -70,215 +82,353 @@ function PaymentForm() {
     null
   );
 
-  if (!invoiceId) {
-    return (
-      <div className="card p-12 text-center max-w-lg mx-auto mt-12 bg-slate-50 border-2 border-dashed border-slate-200">
-        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-           <AlertCircle className="w-8 h-8 text-slate-400" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-800">Missing Invoice Link</h2>
-        <p className="text-sm text-slate-400 mt-2 mb-8">
-           Payments must be recorded against a specific invoice. Usually, you would click "Record Payment" from an invoice's detail page.
-        </p>
-        <Link href="/invoices">
-           <button className="btn-primary gap-2">
-              <FileText className="w-4 h-4" /> Go to Invoices
-           </button>
-        </Link>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
-       <div className="flex flex-col items-center justify-center p-20 gap-4">
-          <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
-          <p className="text-sm font-medium text-slate-500 italic">Verifying invoice details...</p>
-       </div>
+      <div className="flex flex-col items-center justify-center py-32 gap-6">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-3xl bg-primary-50 flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
+          </div>
+          <div className="absolute -top-1 -right-1 w-6 h-6 bg-primary-500 rounded-full animate-pulse" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-black text-slate-700 uppercase tracking-widest">Loading</p>
+          <p className="text-xs text-slate-400 font-medium mt-1">Pre-fetching financial data...</p>
+        </div>
+      </div>
     );
   }
 
-  const balanceDue = invoice ? invoice.grandTotal - invoice.amountPaid : 0;
+  const amountPaid = invoice?.allocations?.reduce((s: number, a: any) => s + Number(a.amount), 0) || 0;
+  const grandTotal = invoice ? Number(invoice.grandTotal) : 0;
+  const balanceDue = grandTotal - amountPaid;
+  const enteredAmount = parseFloat(amount) || 0;
+  const remainingAfter = balanceDue - enteredAmount;
+  const willBeFullyPaid = enteredAmount >= balanceDue && balanceDue > 0;
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-3xl mx-auto pb-20">
+    <div className="space-y-8 max-w-5xl mx-auto pb-20 animate-in fade-in duration-500">
+
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
-        <Link 
-          href={`/invoices/${invoiceId}`} 
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors font-semibold group"
+        <Link
+          href={invoiceId ? `/invoices/${invoiceId}` : "/payments"}
+          className="flex items-center gap-3 text-slate-500 hover:text-slate-900 transition-all font-black text-xs uppercase tracking-widest group"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Invoice {invoice?.invoiceNo}
+          <div className="w-10 h-10 glass clay-card flex items-center justify-center rounded-2xl group-hover:bg-primary-50 group-hover:text-primary-600 transition-all border-white/50">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          </div>
+          {invoiceId ? `Invoice ${invoice?.invoiceNo}` : "Payments"}
         </Link>
-        <div className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-xs font-bold uppercase tracking-widest border border-primary-200 shadow-sm">
-           New Payment Record
+        <div className={cn(
+          "px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border",
+          invoiceId
+            ? "bg-primary-50 text-primary-700 border-primary-200"
+            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+        )}>
+          {invoiceId ? "Invoice Payment" : "Direct Advance"}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* ── Left Column: Form ── */}
-        <div className="space-y-6">
-          <div className="card p-0 overflow-hidden shadow-lg border-primary-100 ring-4 ring-primary-500/5">
-            <div className="bg-primary-600 p-6 text-white relative">
-                <div className="absolute right-0 top-0 p-4 opacity-10">
-                   <CreditCard className="w-16 h-16" />
-                </div>
-                <h3 className="text-xl font-bold font-display">Record Collection</h3>
-                <p className="text-primary-100 text-xs mt-1">Enter the details of the incoming funds</p>
+      {/* ── Page Title ── */}
+      <div>
+        <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase leading-none">
+          Record <span className="text-primary-600">Collection</span>
+        </h1>
+        <p className="text-slate-400 mt-3 text-sm font-bold uppercase tracking-widest">
+          {invoiceId ? `Applying payment to invoice ${invoice?.invoiceNo}` : "Unallocated advance — linked on next invoice"}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+        {/* ── LEFT: Form (3 cols) ── */}
+        <div className="lg:col-span-3 space-y-6">
+
+          {/* Error Banner */}
+          {state?.error && (
+            <div className="p-5 rounded-3xl bg-rose-50 border border-rose-200 flex items-start gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-rose-900 uppercase tracking-tight">Entry Error</p>
+                <p className="text-sm text-rose-700 mt-1">{state.error}</p>
+              </div>
             </div>
-            
-            <form action={formAction} className="p-6 space-y-6">
-              {state?.error && (
-                <div className="p-4 rounded-xl bg-danger-50 border border-danger-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                  <AlertCircle className="w-5 h-5 text-danger-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-danger-800 italic">Entry Error</p>
-                    <p className="text-sm text-danger-700 mt-0.5">{state.error}</p>
+          )}
+
+          <form action={formAction} className="space-y-6">
+
+            {/* Client Field */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-6 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-primary-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary-600" />
+                </div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Receiving From</p>
+              </div>
+
+              {invoiceId ? (
+                <div className="h-14 px-5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-200 flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-slate-500" />
                   </div>
+                  <span className="text-sm font-black text-slate-900 uppercase tracking-tight">{invoice?.client?.name}</span>
+                  <span className="ml-auto text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-lg">Locked to Invoice</span>
+                  <input type="hidden" name="clientId" value={invoice?.clientId} />
+                </div>
+              ) : (
+                <div className="relative">
+                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <select
+                    name="clientId"
+                    required
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full h-14 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 appearance-none focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all"
+                  >
+                    <option value="">Select a Client...</option>
+                    {clients.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
+            </div>
 
-              {/* Amount & Date Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div className="space-y-1.5">
-                    <label className="label">Amount Received (₹)</label>
-                    <div className="relative">
-                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
-                       <input 
-                        type="number" 
-                        name="amount" 
-                        step="0.01"
-                        required
-                        defaultValue={balanceDue > 0 ? balanceDue : ""}
-                        placeholder="0.00"
-                        className="input-field pl-8 font-bold text-slate-900 text-base"
-                       />
-                    </div>
-                 </div>
-                 <div className="space-y-1.5">
-                    <label className="label">Payment Date</label>
-                    <div className="relative">
-                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                       <input 
-                        type="date" 
-                        name="paidAt" 
-                        required
-                        defaultValue={new Date().toISOString().split('T')[0]}
-                        className="input-field pl-10"
-                       />
-                    </div>
-                 </div>
+            {/* Amount & Date */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-6 space-y-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <CircleDollarSign className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Payment Details</p>
               </div>
 
-              {/* Method & Reference */}
-              <div className="space-y-4 pt-2 border-t border-slate-100">
-                 <div className="space-y-1.5">
-                    <label className="label">Payment Method</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                       {['CASH', 'UPI', 'BANK', 'CHEQUE'].map(m => (
-                          <label key={m} className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer group hover:border-primary-500/30 ${m === 'BANK' ? 'bg-primary-50 border-primary-500' : 'bg-white border-slate-100'}`}>
-                             <input type="radio" name="method" value={m} className="sr-only" defaultChecked={m === 'BANK'} />
-                             <span className={`text-[10px] font-bold uppercase tracking-widest ${m === 'BANK' ? 'text-primary-700' : 'text-slate-400 group-hover:text-slate-600'}`}>{m}</span>
-                          </label>
-                       ))}
-                    </div>
-                 </div>
-                 
-                 <div className="space-y-1.5">
-                    <label className="label">Reference / UTR / Cheque No.</label>
-                    <div className="relative">
-                       <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                       <input 
-                        type="text" 
-                        name="reference" 
-                        placeholder="e.g. UPI-1234567890"
-                        className="input-field pl-10"
-                       />
-                    </div>
-                 </div>
-              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Amount Received (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">₹</span>
+                  <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full h-16 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-2xl font-black text-slate-900 tabular-nums focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all"
+                  />
+                  {invoiceId && balanceDue > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAmount(String(balanceDue))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 transition-colors"
+                    >
+                      Full Balance
+                    </button>
+                  )}
+                </div>
 
-              <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                 <label className="label">Internal Notes (Optional)</label>
-                 <textarea 
-                  name="notes" 
-                  rows={2}
-                  placeholder="e.g. Partial payment for October supplies"
-                  className="input-field resize-none"
-                 />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={pending}
-                className="btn-primary w-full h-12 text-base gap-2 rounded-2xl shadow-xl shadow-primary-500/20 active:scale-95 transition-transform"
-                style={{ background: "linear-gradient(135deg, #16A34A, #15803D)" }}
-              >
-                {pending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Recording...
-                  </>
-                ) : (
-                  <>
-                    Confirm Payment <CheckCircle2 className="w-5 h-5" />
-                  </>
+                {/* Live Preview */}
+                {invoiceId && enteredAmount > 0 && (
+                  <div className={cn(
+                    "mt-3 px-4 py-3 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-wide transition-all",
+                    willBeFullyPaid
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                      : "bg-amber-50 border border-amber-200 text-amber-700"
+                  )}>
+                    {willBeFullyPaid ? (
+                      <><CheckCircle2 className="w-4 h-4 shrink-0" /> Invoice will be marked as <span className="font-black">PAID</span></>
+                    ) : (
+                      <><Info className="w-4 h-4 shrink-0" /> {formatCurrency(Math.max(0, remainingAfter))} will remain — marked as <span className="font-black">PARTIAL</span></>
+                    )}
+                  </div>
                 )}
-              </button>
-            </form>
-          </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Payment Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="date"
+                    name="paidAt"
+                    required
+                    defaultValue={new Date().toISOString().split("T")[0]}
+                    className="w-full h-14 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-6 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center">
+                  <CreditCard className="w-4 h-4 text-violet-600" />
+                </div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">Payment Method</p>
+              </div>
+
+              <input type="hidden" name="method" value={selectedMethod} />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {PAYMENT_METHODS.map(({ value, label, icon: Icon, color }) => {
+                  const active = selectedMethod === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSelectedMethod(value)}
+                      className={cn(
+                        "flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-300",
+                        active
+                          ? `border-primary-500 bg-primary-50 shadow-lg shadow-primary-500/10 scale-[1.02]`
+                          : "border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                        active ? "bg-primary-600 text-white shadow-md shadow-primary-600/30" : "bg-white text-slate-400 border border-slate-100"
+                      )}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-widest transition-colors",
+                        active ? "text-primary-700" : "text-slate-400"
+                      )}>{label}</span>
+                      {active && <CheckCircle2 className="w-3 h-3 text-primary-500" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Reference / UTR / Cheque No. <span className="text-slate-300">(Optional)</span></label>
+                <div className="relative">
+                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="reference"
+                    placeholder={selectedMethod === "UPI" ? "e.g. UPI-1234567890" : selectedMethod === "CHEQUE" ? "e.g. CHQ-00128" : "e.g. NEFT-XXXX"}
+                    className="w-full h-14 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-6 space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Internal Notes <span className="text-slate-300">(Optional)</span></label>
+              <textarea
+                name="notes"
+                rows={3}
+                placeholder="e.g. Partial payment for October supplies..."
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder:text-slate-300 resize-none focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all"
+              />
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={pending || !amount || parseFloat(amount) <= 0}
+              className={cn(
+                "w-full h-16 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-2xl",
+                pending || !amount || parseFloat(amount) <= 0
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                  : "bg-slate-900 text-white hover:bg-primary-600 hover:shadow-primary-500/20 hover:scale-[1.01] active:scale-[0.99]"
+              )}
+            >
+              {pending ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Recording Collection...</>
+              ) : (
+                <><Sparkles className="w-5 h-5" /> Confirm Payment</>
+              )}
+            </button>
+          </form>
         </div>
 
-        {/* ── Right Column: Context ── */}
-        <div className="space-y-6">
-          {/* Invoice Summary Card */}
-          <div className="card border-0 bg-slate-900 text-white relative overflow-hidden ring-4 ring-slate-100">
-             <div className="absolute top-0 right-0 p-6 opacity-10">
-                <FileText className="w-32 h-32 rotate-12" />
-             </div>
-             <div className="relative z-10">
-               <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-6">Linked Invoice</h4>
-               <div className="space-y-4">
-                  <div>
-                    <p className="text-3xl font-bold tracking-tight">{invoice?.invoiceNo}</p>
-                    <p className="text-sm text-slate-400 mt-1">{invoice?.client.name}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-                     <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Total Billed</p>
-                        <p className="text-lg font-bold">{formatCurrency(invoice?.grandTotal)}</p>
-                     </div>
-                     <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Total Paid</p>
-                        <p className="text-lg font-bold text-success-400">{formatCurrency(invoice?.amountPaid)}</p>
-                     </div>
-                  </div>
+        {/* ── RIGHT: Context (2 cols) ── */}
+        <div className="lg:col-span-2 space-y-6">
 
-                  <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Balance Remaining</p>
-                     <p className="text-2xl font-black text-warning-400 italic">
-                        {formatCurrency(balanceDue)}
-                     </p>
-                  </div>
-               </div>
-             </div>
-          </div>
+          {/* Invoice / Advance Card */}
+          {invoiceId ? (
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-6 opacity-5">
+                <FileText className="w-40 h-40" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">Linked Invoice</p>
 
-          {/* Help Card */}
-          <div className="card border-0 bg-sky-50 p-6 border-l-4 border-sky-500">
-             <div className="flex gap-4">
-                <Info className="w-6 h-6 text-sky-600 shrink-0" />
-                <div className="space-y-2">
-                   <h5 className="font-bold text-sky-900 text-sm">Beginner Tip</h5>
-                   <p className="text-xs text-sky-700 leading-relaxed">
-                      Entering an amount **equal to or greater** than the Balance Remaining will automatically mark the invoice as **PAID**. 
-                      <br /><br />
-                      Smaller amounts will mark the invoice as **PARTIAL** to help you track outstanding dues.
-                   </p>
+              <p className="text-4xl font-black italic tracking-tighter">{invoice?.invoiceNo}</p>
+              <p className="text-sm text-slate-400 font-bold mt-1 uppercase tracking-tight">{invoice?.client?.name}</p>
+
+              <div className="mt-8 space-y-3">
+                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Billed</span>
+                  <span className="text-sm font-black tabular-nums">{formatCurrency(grandTotal)}</span>
                 </div>
-             </div>
+                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Already Paid</span>
+                  <span className="text-sm font-black tabular-nums text-emerald-400">{formatCurrency(amountPaid)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Balance Due</span>
+                  <span className="text-xl font-black tabular-nums italic text-amber-400">{formatCurrency(balanceDue)}</span>
+                </div>
+              </div>
+
+              {enteredAmount > 0 && (
+                <div className={cn(
+                  "mt-4 p-4 rounded-2xl border transition-all",
+                  willBeFullyPaid
+                    ? "bg-emerald-500/10 border-emerald-500/20"
+                    : "bg-amber-500/10 border-amber-500/20"
+                )}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">After This Payment</p>
+                  <p className={cn("text-2xl font-black italic tabular-nums tracking-tighter", willBeFullyPaid ? "text-emerald-400" : "text-amber-400")}>
+                    {willBeFullyPaid ? "₹ 0.00" : formatCurrency(Math.max(0, remainingAfter))}
+                  </p>
+                  <p className="text-[10px] font-bold mt-1 uppercase tracking-widest opacity-50">
+                    {willBeFullyPaid ? "Invoice fully settled" : "Remaining balance"}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-emerald-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-6 opacity-10">
+                <TrendingUp className="w-40 h-40" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-200 mb-4">Direct Collection</p>
+              <p className="text-3xl font-black italic tracking-tighter">On-Account Advance</p>
+              <p className="text-sm text-emerald-100 mt-3 leading-relaxed">
+                This payment will be stored as an unallocated credit and can be applied to future invoices.
+              </p>
+            </div>
+          )}
+
+          {/* How it works card */}
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center">
+                <Info className="w-4 h-4 text-sky-600" />
+              </div>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500">How It Works</p>
+            </div>
+            <div className="space-y-3">
+              {[
+                { icon: CheckCircle2, color: "text-emerald-500", text: "Full payment → Invoice marked PAID" },
+                { icon: TrendingUp, color: "text-amber-500", text: "Partial payment → Invoice marked PARTIAL" },
+                { icon: ShieldCheck, color: "text-primary-500", text: "All transactions recorded in ledger" },
+              ].map(({ icon: Icon, color, text }, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", color)} />
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -289,10 +439,10 @@ function PaymentForm() {
 export default function NewPaymentPage() {
   return (
     <Suspense fallback={
-       <div className="flex flex-col items-center justify-center p-20 gap-4">
-          <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
-          <p className="text-sm font-medium text-slate-500 italic">Pre-fetching payment forms...</p>
-       </div>
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Loading Payment Form...</p>
+      </div>
     }>
       <PaymentForm />
     </Suspense>

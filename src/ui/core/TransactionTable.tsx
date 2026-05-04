@@ -46,8 +46,8 @@ const Row = React.memo(({ item, index, products }: { item: any; index: number; p
                                         hsn: prod.hsn || "",
                                         rate: Number(prod.sellingRate || prod.purchaseRate || 0),
                                         taxPercent: Number(prod.gstRate || 18),
-                                        unit: prod.unit || "NOS",
-                                        pkgType: prod.pkgType || "BOX",
+                                        unit: prod.unit ?? "",
+                                        pkgType: prod.pkgType ?? "",
                                         qtyPerBox: Number(prod.qtyPerBox || 0)
                                     });
                                 }

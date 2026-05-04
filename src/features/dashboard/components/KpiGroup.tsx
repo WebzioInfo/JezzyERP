@@ -1,76 +1,77 @@
 import { db } from "@/db/prisma/client";
 import { formatCurrency } from "@/utils/financials";
-import { TrendingUp, IndianRupee, AlertTriangle, Users } from "lucide-react";
+import { 
+    TrendingUp, 
+    IndianRupee, 
+    AlertTriangle, 
+    Users, 
+    Wallet, 
+    Building2,
+    Briefcase,
+    TrendingDown
+} from "lucide-react";
 import { Card } from "@/ui/core/Card";
-import { InvoiceStatus } from "@prisma/client";
+import { FinanceService } from "@/features/billing/services/FinanceService";
 
 export async function KpiGroup() {
-    const [
-        clientCount,
-        productCount,
-        revenueAgg,
-        overdueAgg,
-        monthlyRevenue,
-    ] = await Promise.all([
-        db.client.count({ where: { deletedAt: null } }),
-        db.product.count({ where: { deletedAt: null } }),
-        db.invoice.aggregate({
-            where: { deletedAt: null, status: { in: [InvoiceStatus.PAID, InvoiceStatus.PARTIAL] } },
-            _sum: { grandTotal: true },
-        }),
-        db.invoice.aggregate({
-            where: { deletedAt: null, status: { in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.DRAFT] } },
-            _sum: { grandTotal: true },
-        }),
-        db.invoice.aggregate({
-            where: {
-                deletedAt: null,
-                status: { in: [InvoiceStatus.PAID, InvoiceStatus.PARTIAL] },
-                date: {
-                    gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-                },
-            },
-            _sum: { grandTotal: true },
-        }),
-    ]);
+    const accounts = await (db.account as any).findMany();
+    
+    // Calculate balances per type using FinanceService logic
+    // In a real high-load scenario, we would use a more optimized batch query
+    // but for now, we'll aggregate from the DB records.
+    
+    const clientAccounts = accounts.filter((a: any) => a.type === 'CLIENT');
+    const supplierAccounts = accounts.filter((a: any) => a.type === 'SUPPLIER');
+    const liquidAccounts = accounts.filter((a: any) => ['BANK', 'CASH'].includes(a.type));
+    const equityAccounts = accounts.filter((a: any) => a.type === 'EQUITY');
 
-    const totalRevenue = revenueAgg._sum.grandTotal?.toNumber() || 0;
-    const totalOutstanding = overdueAgg._sum.grandTotal?.toNumber() || 0;
-    const thisMonthRevenue = monthlyRevenue._sum.grandTotal?.toNumber() || 0;
+    // Helper to get sum of balances for a set of accounts
+    const sumBalances = async (accList: any[]) => {
+        const balances = await Promise.all(accList.map(a => FinanceService.getAccountBalance(a.id)));
+        return balances.reduce((sum, b) => sum + b, 0);
+    };
+
+    const [receivables, payables, liquidCash, equity] = await Promise.all([
+        sumBalances(clientAccounts),
+        sumBalances(supplierAccounts),
+        sumBalances(liquidAccounts),
+        sumBalances(equityAccounts)
+    ]);
 
     return (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 animate-in stagger-1">
             <KpiCard
-                label="Cumulative Revenue"
-                value={formatCurrency(totalRevenue)}
-                icon={<TrendingUp className="w-6 h-6" />}
-                color="primary"
-                subtitle="All-time verified payments"
-            />
-            <KpiCard
-                label="MOM Performance"
-                value={formatCurrency(thisMonthRevenue)}
-                icon={<IndianRupee className="w-6 h-6" />}
-                color="accent"
-                subtitle="Current month trajectory"
+                label="Liquid Liquidity"
+                value={formatCurrency(liquidCash)}
+                icon={<Wallet className="w-6 h-6" />}
+                color="emerald"
+                subtitle="Bank + Petty Cash"
             />
             <KpiCard
                 label="Total Receivables"
-                value={formatCurrency(totalOutstanding)}
-                icon={<AlertTriangle className="w-6 h-6" />}
-                color="danger"
-                subtitle="Action required on debt"
+                value={formatCurrency(Math.abs(receivables))}
+                icon={<TrendingUp className="w-6 h-6" />}
+                color="primary"
+                subtitle="From active clients"
             />
             <KpiCard
-                label="Active Partners"
-                value={clientCount.toString()}
-                icon={<Users className="w-6 h-6" />}
-                color="emerald"
-                subtitle={`${productCount} items in inventory`}
+                label="Total Payables"
+                value={formatCurrency(Math.abs(payables))}
+                icon={<TrendingDown className="w-6 h-6" />}
+                color="danger"
+                subtitle="Due to suppliers"
+            />
+            <KpiCard
+                label="Owner Equity"
+                value={formatCurrency(Math.abs(equity))}
+                icon={<Briefcase className="w-6 h-6" />}
+                color="accent"
+                subtitle="Founder capital"
             />
         </div>
     );
 }
+
 
 function KpiCard({ label, value, icon, color, subtitle }: {
     label: string; value: string; icon: React.ReactNode; color: "primary" | "accent" | "danger" | "emerald"; subtitle: string;

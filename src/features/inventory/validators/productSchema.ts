@@ -12,9 +12,9 @@ export const productSchema = z.object({
   purchaseRate: coerceRate,
   sellingRate: coerceRate,
   gstRate: z.coerce.number().min(0, "GST rate must be positive"),
-  unit: z.string().optional().default("NOS"),
+  unit: z.string().nullish().transform(v => v || ""),
   notes: z.string().optional().nullable(),
-  pkgType: z.string().optional().default("BOX"),
+  pkgType: z.string().nullish().transform(v => v || ""),
   qtyPerBox: z.coerce.number().min(0).default(0),
   active: z.boolean().optional().default(true),
 });
