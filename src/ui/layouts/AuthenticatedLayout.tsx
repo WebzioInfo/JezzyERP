@@ -218,7 +218,7 @@ export default function AuthenticatedLayout({
   }, []);
 
   if (!isMounted) {
-    return <SidebarSkeleton />; 
+    return <SidebarSkeleton />;
   }
 
 
@@ -326,7 +326,7 @@ function SidebarContent({
   };
 
   return (
-    <div className="flex-1 bg-primary-100 flex flex-col py-8 overflow-hidden">
+    <div className="flex-1 flex flex-col py-8 overflow-hidden">
       {!isMobile && !sidebarCollapsed && (
         <div className="px-8 mb-10 flex items-center gap-4 animate-reveal">
           <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-2xl border border-white/20 overflow-hidden shrink-0">

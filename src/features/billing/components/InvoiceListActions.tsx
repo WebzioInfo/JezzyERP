@@ -33,19 +33,29 @@ export function InvoiceListActions({ invoiceId, isTrashed = false }: InvoiceList
       const response = await fetch("/api/invoices/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: invoiceId }),
+        body: JSON.stringify({ invoiceId }),
       });
 
       if (!response.ok) throw new Error("Download failed");
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+      
+      // Extract filename from Content-Disposition header
+      const disposition = response.headers.get("Content-Disposition");
+      let filename = `Invoice_${invoiceId}.pdf`;
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) filename = match[1];
+      }
+
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Invoice_${invoiceId}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(url);
       success("Invoice downloaded successfully.");
     } catch (err) {
       error("Failed to download invoice.");

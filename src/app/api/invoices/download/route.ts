@@ -29,7 +29,10 @@ export async function POST(req: NextRequest) {
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        const { invoiceId, includeLogo = true } = body;
+        let { invoiceId, id, includeLogo = true } = body;
+        
+        // Support both id and invoiceId for compatibility
+        if (!invoiceId && id) invoiceId = id;
 
         if (!invoiceId) {
             return NextResponse.json({ error: "invoiceId is required" }, { status: 400 });
@@ -544,8 +547,8 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const clientName = (invoice.client?.name || "JEZZY").split(" ")[0].toUpperCase();
-        const safeFileName = `${clientName}_${invoice.invoiceNo}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
+        const clientName = (invoice.client?.name || "CLIENT").split(" ")[0].toUpperCase();
+        const safeFileName = `JEZZY_${invoice.invoiceNo}_${clientName}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
 
         return new NextResponse(finalBuffer, {
             status: 200,

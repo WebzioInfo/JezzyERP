@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { InvoiceListActions } from "@/features/billing/components/InvoiceListActions";
+import { InvoicesHeaderActions } from "@/features/billing/components/InvoicesHeaderActions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
 import { Input } from "@/ui/core/Input";
@@ -87,12 +88,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">Invoices</h1>
           <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">Manage and track your primary revenue stream</p>
         </div>
-        <Link href="/invoices/new">
-          <Button variant="secondary" size="lg" className="italic shadow-xl shadow-accent-500/20">
-            <Plus className="w-5 h-5 mr-1" />
-            Issue New Invoice
-          </Button>
-        </Link>
+        <InvoicesHeaderActions />
       </div>
       <Card className="border-0 shadow-sm ring-1 ring-slate-200/60 overflow-hidden rounded-[2.5rem] animate-in stagger-2">
         <CardContent className="p-6">

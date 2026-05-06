@@ -107,6 +107,7 @@ model User {
   updatedAt     DateTime   @updatedAt
   deletedAt     DateTime?
   createdAudits AuditLog[] @relation("UserAudits")
+  createdExports ExportLog[] @relation("UserExports")
 
   @@index([role])
   @@index([deletedAt])
@@ -647,4 +648,21 @@ model Expense {
 
   @@index([date])
   @@map("expenses")
+}
+
+model ExportLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  exportType   String   // e.g., INVOICE_ZIP, INVOICE_MERGED_PDF
+  format       String   // PDF, THERMAL, ORIGINAL
+  invoiceCount Int
+  filters      Json?    // Store filters used for this export
+  status       String   @default("COMPLETED") // COMPLETED, FAILED, PROCESSING
+  createdAt    DateTime @default(now())
+
+  user         User?    @relation("UserExports", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("export_logs")
 }
