@@ -331,8 +331,9 @@ export class InvoicePdfService {
             } catch (err) { console.error("[MERGE_ERROR]", err); }
         }
 
-        const clientName = (invoice.client?.name || "CLIENT").split(" ")[0].toUpperCase();
-        const safeFileName = `JEZZY_${invoice.invoiceNo}_${clientName}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
+        const seqNum = String(invoice.sequenceNumber || 1).padStart(2, '0');
+        const clientName = (invoice.client?.name || (invoice as any).billingName || "CLIENT").split(" ")[0].toUpperCase();
+        const safeFileName = `JEZZY_${seqNum}_${clientName}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
 
         return { buffer: finalBuffer, fileName: safeFileName };
     }

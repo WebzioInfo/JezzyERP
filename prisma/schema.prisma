@@ -649,7 +649,7 @@ model CompanySetting {
   currency        String   @default("INR")
   showPkgDetails  Boolean  @default(true)
   showLogo        Boolean  @default(false)
-  logoUrl         String   @default("logo.png")
+  logoUrl         String?  @default("logo.png")
   updatedAt       DateTime @updatedAt
 
   @@map("company_settings")

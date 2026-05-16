@@ -55,7 +55,9 @@ const Row = React.memo(({ item, index, products }: { item: any; index: number; p
                         >
                             <option value="">-- Catalog --</option>
                             {products.map(p => (
-                                <option key={p.id} value={p.id}>{p.description}</option>
+                                <option key={p.id} value={p.id}>
+                                    {p.description} [Rate: {formatCurrency(Number(p.sellingRate || p.purchaseRate || 0))}]
+                                </option>
                             ))}
                         </select>
                         <input

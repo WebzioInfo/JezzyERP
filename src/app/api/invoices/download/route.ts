@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
             where: { id: invoiceId, deletedAt: null },
             select: {
                 id: true,
+                sequenceNumber: true,
                 invoiceNo: true,
                 date: true,
                 gstType: true,
@@ -547,8 +548,9 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const clientName = (invoice.client?.name || "CLIENT").split(" ")[0].toUpperCase();
-        const safeFileName = `JEZZY_${invoice.invoiceNo}_${clientName}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
+        const seqNum = String(invoice.sequenceNumber || 1).padStart(2, '0');
+        const clientName = (invoice.client?.name || invoice.billingName || "CLIENT").split(" ")[0].toUpperCase();
+        const safeFileName = `JEZZY_${seqNum}_${clientName}.pdf`.replace(/[/\\?%*:|"<>]/g, '-');
 
         return new NextResponse(finalBuffer, {
             status: 200,

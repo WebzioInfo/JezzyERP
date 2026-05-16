@@ -60,7 +60,7 @@ const LineItemRow = React.memo(({
                         <option value="">-- Load from Catalog --</option>
                         {products.map(p => (
                             <option key={p.id} value={p.id}>
-                                {p.description}
+                                {p.description} [Rate: {formatCurrency(Number(p.sellingRate || p.purchaseRate || 0))}]
                             </option>
                         ))}
                     </select>
