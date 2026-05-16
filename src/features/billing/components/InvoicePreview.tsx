@@ -11,7 +11,7 @@ interface Props {
 
 
 export default function InvoicePreview({ invoice }: Props) {
-  const includeLogo = true; // Default for preview
+  const includeLogo = false; // Hidden as requested
   const showGST = invoice.gstType !== "NO_GST";
 
   const billing = {
