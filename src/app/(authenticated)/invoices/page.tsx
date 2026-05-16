@@ -54,6 +54,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       orderBy: { invoiceNo: "desc" },
       select: {
         id: true,
+        sequenceNumber: true,
         invoiceNo: true,
         date: true,
         grandTotal: true,
@@ -168,7 +169,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all">
                             <FileText size={18} className="text-slate-400 group-hover:text-primary-600" />
                          </div>
-                         <p className="font-extrabold text-slate-900 text-base tracking-tight">{inv.invoiceNo}</p>
+                         <p className="font-extrabold text-slate-900 text-base tracking-tight" title={inv.invoiceNo}>{String(inv.sequenceNumber || 1).padStart(2, '0')}</p>
                       </div>
                     </td>
                     <td className="px-8 py-6">
