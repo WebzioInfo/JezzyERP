@@ -154,13 +154,11 @@ export function InvoiceActions({
                 </Link>
             )}
 
-            {status === "DRAFT" && (
-                <Link href={`/invoices/${invoiceId}/edit`} className="w-full lg:w-auto flex-1 flex">
-                    <button className="w-full h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
-                        <Edit className="w-4 h-4 text-indigo-500" /> Modify
-                    </button>
-                </Link>
-            )}
+            <Link href={`/invoices/${invoiceId}/edit`} className="w-full lg:w-auto flex-1 flex">
+                <button className="w-full h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                    <Edit className="w-4 h-4 text-indigo-500" /> Modify
+                </button>
+            </Link>
 
             <button
                 onClick={handlePrint}
