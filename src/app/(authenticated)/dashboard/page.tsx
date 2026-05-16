@@ -14,7 +14,10 @@ import {
   Target,
   CheckCircle2,
   ArrowDownUp,
-  Loader2
+  Loader2,
+  Package,
+  Building2,
+  BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/utils";
@@ -45,7 +48,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { totalInvoices, totalClients, totalProducts, totalReceivable, recentTransactions } = data || {};
+  const { totalInvoices, totalClients, totalProducts, totalStock, totalReceivable, recentTransactions } = data || {};
 
   return (
     <div className="space-y-12 pb-12">
@@ -99,7 +102,8 @@ export default function DashboardPage() {
         <MetricCard
           icon={<Target className="w-7 h-7" />}
           label="Products in Stock"
-          value={totalProducts?.toString()}
+          value={totalStock?.toLocaleString() || "0"}
+          badge={`${totalProducts || 0} SKUs`}
           dark
         />
       </div>
@@ -146,12 +150,46 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden group">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Command Post</h4>
-            <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-[0.1em]">
-              Access real-time business intelligence and automated ledger reconciliation protocols.
-            </p>
-            <button className="mt-8 text-[9px] font-black uppercase tracking-widest text-primary-600 hover:text-primary-800 transition-colors">Launch Full Suite →</button>
+          <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden group">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Quick Actions Command Post</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <Link href="/invoices/new" className="flex">
+                <button className="w-full p-4 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-primary-100 shadow-sm active:scale-95">
+                  <Plus className="w-5 h-5 text-primary-600" />
+                  New Invoice
+                </button>
+              </Link>
+              <Link href="/quotations/new" className="flex">
+                <button className="w-full p-4 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-amber-100 shadow-sm active:scale-95">
+                  <FileText className="w-5 h-5 text-amber-600" />
+                  New Quotation
+                </button>
+              </Link>
+              <Link href="/payments/new" className="flex">
+                <button className="w-full p-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-emerald-100 shadow-sm active:scale-95">
+                  <Wallet className="w-5 h-5 text-emerald-600" />
+                  Capture Funds
+                </button>
+              </Link>
+              <Link href="/products" className="flex">
+                <button className="w-full p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-purple-100 shadow-sm active:scale-95">
+                  <Package className="w-5 h-5 text-purple-600" />
+                  Catalog SKUs
+                </button>
+              </Link>
+              <Link href="/clients" className="flex">
+                <button className="w-full p-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-indigo-100 shadow-sm active:scale-95">
+                  <Building2 className="w-5 h-5 text-indigo-600" />
+                  Active Entities
+                </button>
+              </Link>
+              <Link href="/reports" className="flex">
+                <button className="w-full p-4 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border border-rose-100 shadow-sm active:scale-95">
+                  <BarChart3 className="w-5 h-5 text-rose-600" />
+                  System Reports
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

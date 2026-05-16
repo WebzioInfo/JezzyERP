@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifySessionCookie } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/'];
 const API_ROUTES_PREFIX = '/api';
@@ -17,7 +17,8 @@ export async function middleware(req: NextRequest) {
     }
 
     // 1. Verify Session
-    const session = await verifySessionCookie();
+    const token = req.cookies.get('jezzy_session')?.value;
+    const session = token ? await verifyToken(token) : null;
 
     // 2. Route Guarding Logic
     if (!session && !isPublicRoute) {

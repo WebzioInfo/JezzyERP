@@ -8,10 +8,11 @@ export async function GET(req: NextRequest) {
         const session = await verifySessionVerified();
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const [totalInvoices, totalClients, totalProducts, outstandingInvoices, recentTransactions] = await Promise.all([
+        const [totalInvoices, totalClients, totalProducts, stockResult, outstandingInvoices, recentTransactions] = await Promise.all([
             db.invoice.count(),
             db.client.count(),
             db.product.count(),
+            db.stock.aggregate({ _sum: { quantity: true } }),
             (db.invoice as any).findMany({
                 where: { status: { in: ['SENT', 'PARTIAL', 'OVERDUE'] }, deletedAt: null },
                 select: {
@@ -27,10 +28,13 @@ export async function GET(req: NextRequest) {
             return sum + (Number(inv.grandTotal) - allocated);
         }, 0);
 
+        const totalStock = Number(stockResult._sum.quantity || 0);
+
         return NextResponse.json({
             totalInvoices,
             totalClients,
             totalProducts,
+            totalStock,
             totalReceivable,
             recentTransactions
         });

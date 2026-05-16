@@ -34,7 +34,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex justify-end">
+            <div className="w-full">
                 <InvoiceActions 
                     invoiceId={invoice.id} 
                     status={invoice.status} 

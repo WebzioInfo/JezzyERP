@@ -32,6 +32,28 @@ async function main() {
 
   console.log(`User seeded: ${user.email} (ID: ${user.id})`)
 
+  const aliEmail = 'ali@jezzy.com'
+  const aliPassword = 'ali123'
+  const aliHashedPassword = await bcrypt.hash(aliPassword, 10)
+
+  console.log(`Seeding user: ${aliEmail}...`)
+
+  const aliUser = await prisma.user.upsert({
+    where: { email: aliEmail },
+    update: {
+      passwordHash: aliHashedPassword,
+      role: 'ADMIN'
+    },
+    create: {
+      email: aliEmail,
+      name: 'Ali',
+      passwordHash: aliHashedPassword,
+      role: 'ADMIN'
+    }
+  })
+
+  console.log(`User seeded: ${aliUser.email} (ID: ${aliUser.id})`)
+
   // --- Seed Company Settings ---
   console.log('Seeding company settings...')
   const settings = await prisma.companySetting.upsert({

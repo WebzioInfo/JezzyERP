@@ -34,6 +34,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
+import { logoutAction } from "@/features/auth/actions/auth";
 
 import { cn } from "@/utils";
 
@@ -467,11 +468,11 @@ function SidebarContent({
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   className="absolute bottom-full left-0 w-full mb-2 z-50"
                 >
-                  <form action="/api/auth/logout" method="POST">
+                  <form action={logoutAction}>
                     <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all group overflow-hidden relative">
                       <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                       <Power className="w-4 h-4 text-red-400 group-hover:text-white" />
-                      <span>Terminate Protocol</span>
+                      <span>Logout</span>
                     </button>
                   </form>
                 </motion.div>
@@ -488,10 +489,10 @@ function SidebarContent({
                   exit={{ opacity: 0, x: 20 }}
                   className="absolute bottom-0 left-full ml-4 z-50 w-48"
                 >
-                  <form action="/api/auth/logout" method="POST">
+                  <form action={logoutAction}>
                     <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all">
                       <Power className="w-4 h-4 text-red-400" />
-                      <span>Terminate</span>
+                      <span>Logout</span>
                     </button>
                   </form>
                 </motion.div>

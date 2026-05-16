@@ -79,7 +79,9 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
 
                 // Automated GST Selection:
                 // Per request: Kerala = CGST_SGST, Others = IGST
-                if (client.state?.toLowerCase() === "kerala") {
+                const stateStr = client.state?.trim().toLowerCase() || "";
+                const isKerala = stateStr === "kerala" || stateStr.includes("kerala") || stateStr === "kl";
+                if (isKerala) {
                     store.setField("gstType", "CGST_SGST");
                 } else {
                     store.setField("gstType", "IGST");
@@ -90,13 +92,15 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
 
     // Also watch for manual billing address state changes
     useEffect(() => {
-        const currentState = store.billingAddress?.state?.toLowerCase();
-        if (currentState === "kerala") {
+        const stateStr = store.billingAddress?.state?.trim().toLowerCase() || "";
+        if (!stateStr) return;
+        const isKerala = stateStr === "kerala" || stateStr.includes("kerala") || stateStr === "kl";
+        if (isKerala) {
             if (store.gstType !== "CGST_SGST") store.setField("gstType", "CGST_SGST");
-        } else if (currentState) {
+        } else {
             if (store.gstType !== "IGST") store.setField("gstType", "IGST");
         }
-    }, [store.billingAddress?.state, store.gstType]);
+    }, [store.billingAddress?.state]);
 
     const handleSubmit = async () => {
         setError(null);

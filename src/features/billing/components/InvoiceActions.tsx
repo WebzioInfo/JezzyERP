@@ -132,67 +132,65 @@ export function InvoiceActions({
     };
 
     return (
-        <div className="flex flex-wrap items-center gap-6">
-            <div className="flex flex-wrap items-center gap-4">
-                {status === "DRAFT" && (
-                    <button
-                        onClick={handleMarkSent}
-                        disabled={isPending}
-                        className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98] disabled:opacity-50"
-                    >
-                        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 text-primary-500" />}
-                        Mark as Sent
-                    </button>
-                )}
-
-                {status !== "PAID" && status !== "DRAFT" && (
-                    <Link href={`/payments/new?invoiceId=${invoiceId}`}>
-                        <button
-                            className="h-14 px-8 bg-emerald-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-3 active:scale-[0.98]"
-                        >
-                            <CheckCircle2 className="w-4 h-4" /> Record Settlement
-                        </button>
-                    </Link>
-                )}
-
-                {status === "DRAFT" && (
-                    <Link href={`/invoices/${invoiceId}/edit`}>
-                        <button className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98]">
-                            <Edit className="w-4 h-4 text-indigo-500" /> Modify
-                        </button>
-                    </Link>
-                )}
-
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:justify-between gap-3 w-full bg-slate-900/5 p-2.5 rounded-[2.5rem] border border-slate-200/60 backdrop-blur-md shadow-xl">
+            {status === "DRAFT" && (
                 <button
-                    onClick={handlePrint}
-                    disabled={isDownloading}
-                    className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3 active:scale-[0.98] disabled:opacity-50"
-                >
-                    {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4 text-slate-400" />}
-                    {isDownloading ? "Preparing…" : "Print Protocol"}
-                </button>
-
-                <button
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="h-14 px-8 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-slate-900/10 hover:bg-primary-600 transition-all flex items-center gap-3 active:scale-[0.98] disabled:opacity-70"
-                >
-                    {isDownloading
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <FileDown className="w-4 h-4" />
-                    }
-                    {isDownloading ? "Generating…" : "Download Ledger"}
-                </button>
-
-                <button
-                    onClick={handleTrash}
+                    onClick={handleMarkSent}
                     disabled={isPending}
-                    className="h-14 px-6 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all ml-auto active:scale-90 group"
-                    title="Terminate Record"
+                    className="w-full lg:w-auto flex-1 h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
                 >
-                    <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 text-primary-500" />}
+                    Mark as Sent
                 </button>
-            </div>
+            )}
+
+            {status !== "PAID" && status !== "DRAFT" && (
+                <Link href={`/payments/new?invoiceId=${invoiceId}`} className="w-full lg:w-auto flex-1 flex">
+                    <button
+                        className="w-full h-14 px-6 bg-emerald-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                    >
+                        <CheckCircle2 className="w-4 h-4" /> Record Settlement
+                    </button>
+                </Link>
+            )}
+
+            {status === "DRAFT" && (
+                <Link href={`/invoices/${invoiceId}/edit`} className="w-full lg:w-auto flex-1 flex">
+                    <button className="w-full h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                        <Edit className="w-4 h-4 text-indigo-500" /> Modify
+                    </button>
+                </Link>
+            )}
+
+            <button
+                onClick={handlePrint}
+                disabled={isDownloading}
+                className="w-full lg:w-auto flex-1 h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+            >
+                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4 text-slate-400" />}
+                {isDownloading ? "Preparing…" : "Print Protocol"}
+            </button>
+
+            <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="w-full lg:w-auto flex-1 h-14 px-6 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-slate-900/10 hover:bg-primary-600 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70"
+            >
+                {isDownloading
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <FileDown className="w-4 h-4" />
+                }
+                {isDownloading ? "Generating…" : "Download Ledger"}
+            </button>
+
+            <button
+                onClick={handleTrash}
+                disabled={isPending}
+                className="w-full lg:w-16 h-14 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl flex items-center justify-center transition-all active:scale-95 group col-span-2 md:col-span-1 border border-red-100"
+                title="Terminate Record"
+            >
+                <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </button>
         </div>
     );
 }

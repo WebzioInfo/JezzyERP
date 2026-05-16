@@ -3,7 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { env } from "./env";
 
-const SECRET_KEY = new TextEncoder().encode(env.JWT_SECRET);
+const SECRET_KEY = new TextEncoder().encode(env.JWT_SECRET || "jezzy_erp_premium_secure_secret_at_least_32_chars");
 const SESSION_COOKIE_NAME = "jezzy_session";
 
 export interface SessionPayload {
@@ -31,12 +31,7 @@ export async function createSessionCookie(payload: SessionPayload) {
     });
 }
 
-export const verifySessionCookie = cache(async (): Promise<SessionPayload | null> => {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-    if (!token) return null;
-
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
     try {
         const { payload } = await jwtVerify(token, SECRET_KEY, {
             algorithms: ["HS256"],
@@ -45,6 +40,15 @@ export const verifySessionCookie = cache(async (): Promise<SessionPayload | null
     } catch (error) {
         return null;
     }
+}
+
+export const verifySessionCookie = cache(async (): Promise<SessionPayload | null> => {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+    if (!token) return null;
+
+    return await verifyToken(token);
 });
 
 export async function destroySessionCookie() {
