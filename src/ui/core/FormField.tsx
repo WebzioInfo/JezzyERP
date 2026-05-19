@@ -26,7 +26,7 @@ export const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
                     <input
                         ref={ref}
                         className={cn(
-                            "w-full h-12 bg-slate-50 border-0 rounded-2xl text-sm font-bold shadow-inner ring-1 ring-slate-200 transition-all duration-300",
+                            "w-full h-12 bg-slate-50 border-0 rounded-2xl text-sm font-bold text-slate-900 shadow-inner ring-1 ring-slate-200 transition-all duration-300",
                             "focus:ring-2 focus:ring-primary-500/20 focus:bg-white focus:outline-none",
                             "placeholder:text-slate-300 placeholder:italic",
                             icon ? "pl-11 pr-4" : "px-4",

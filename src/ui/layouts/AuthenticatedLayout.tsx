@@ -293,7 +293,17 @@ export default function AuthenticatedLayout({
         />
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 scroll-smooth" data-lenis-prevent>
           <div className="max-w-7xl mx-auto w-full">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

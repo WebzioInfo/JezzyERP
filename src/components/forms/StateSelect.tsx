@@ -26,7 +26,7 @@ export function StateSelect({ label, error, icon, className, defaultValue, ...pr
         )}
         <select
           className={cn(
-            "flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none focus:border-0 hover:ring-slate-300 appearance-none",
+            "flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none focus:border-0 hover:ring-slate-300 appearance-none",
             icon ? "pl-11" : "pl-4",
             error && "ring-red-500 focus:ring-red-500/20",
             className

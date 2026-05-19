@@ -53,7 +53,7 @@ const LineItemRow = React.memo(({
                 <div className="relative">
                     <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
                     <select
-                        className="flex w-full rounded-xl border-0 bg-slate-100/50 pl-10 pr-4 py-2.5 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold"
+                        className="flex w-full rounded-xl border-0 bg-slate-100/50 pl-10 pr-4 py-2.5 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold text-slate-900"
                         onChange={e => handleProductSelect(index, e.target.value)}
                         value={item.productId || ""}
                     >
@@ -127,7 +127,7 @@ const LineItemRow = React.memo(({
                 <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">GST %</label>
                     <select
-                        className="flex h-10 w-full rounded-xl border-0 bg-slate-50 px-2 py-1 text-xs font-bold shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none text-center"
+                        className="flex h-10 w-full rounded-xl border-0 bg-slate-50 px-2 py-1 text-xs font-bold shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none text-center text-slate-900"
                         value={item.taxPercent}
                         onChange={e => updateItem(index, "taxPercent", parseFloat(e.target.value) || 0)}
                     >
@@ -156,7 +156,7 @@ const LineItemRow = React.memo(({
             <div className="col-span-1">
                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1 truncate">Kind of Pkg</label>
                <select
-                    className="flex h-10 w-full rounded-xl border-0 bg-slate-50 px-1 py-1 text-[10px] font-bold shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none text-center uppercase"
+                    className="flex h-10 w-full rounded-xl border-0 bg-slate-50 px-1 py-1 text-[10px] font-bold shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none text-center uppercase text-slate-900"
                     value={item.pkgType || "BOX"}
                     onChange={e => updateItem(index, "pkgType", e.target.value)}
                 >

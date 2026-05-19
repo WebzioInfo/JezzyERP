@@ -283,12 +283,23 @@ export function ProductTable({ products }: ProductTableProps) {
             <Card className="border-0 shadow-none p-4 bg-transparent overflow-hidden rounded-3xl">
                 <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-8 px-0 py-6">
                     <div className="text-center lg:text-left">
+                        <CardTitle className="text-4xl font-black text-slate-900 font-display italic tracking-tight">Inventory Catalog</CardTitle>
+                        <CardDescription className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-[0.3em] italic">High-value product records & master identifiers</CardDescription>
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-center justify-end gap-4 w-full">
+                    <div className="flex flex-col md:flex-row items-center justify-end gap-4 w-full lg:w-max">
+                        <div className="relative w-full md:w-80">
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 pointer-events-none" />
+                            <Input
+                                placeholder="Search catalog..."
+                                className="pl-14 h-16 w-full"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="w-full md:w-max h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                            className="w-full md:w-max h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shrink-0"
                         >
                             <PlusCircle className="w-5 h-5" />
                             <span>Add Item</span>

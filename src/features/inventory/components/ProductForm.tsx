@@ -139,7 +139,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     <select
                                         name="unit"
                                         defaultValue={product?.unit || ""}
-                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold italic"
+                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold text-slate-900 italic"
                                     >
                                         <option value="">-- No Default Unit --</option>
                                         <option value="NOS">NOS (Numbers)</option>
@@ -160,7 +160,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     <select
                                         name="gstRate"
                                         defaultValue={product?.gstRate || 18}
-                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold italic"
+                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold text-slate-900 italic"
                                     >
                                         <option value="0">0%</option>
                                         <option value="5">5%</option>
@@ -174,7 +174,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     <select
                                         name="pkgType"
                                         defaultValue={product?.pkgType || ""}
-                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold italic uppercase"
+                                        className="flex h-14 w-full rounded-2xl border-0 bg-slate-100/50 px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none font-bold text-slate-900 italic uppercase"
                                     >
                                         <option value="">-- No Default Pkg --</option>
                                         <option value="BOX">BOX</option>
@@ -207,7 +207,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                                     defaultValue={product?.notes}
                                     placeholder="Add technical specs, shipping notes, or internal details..."
                                     rows={4}
-                                    className="flex w-full rounded-2xl border-0 bg-slate-100/50 px-6 py-4 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 font-medium placeholder:text-slate-400"
+                                    className="flex w-full rounded-2xl border-0 bg-slate-100/50 px-6 py-4 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 font-medium text-slate-900 placeholder:text-slate-400"
                                 />
                             </div>
                         </div>

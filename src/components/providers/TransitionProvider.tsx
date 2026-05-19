@@ -34,17 +34,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
 
     return (
         <LazyMotion features={domAnimation}>
-            <AnimatePresence mode="wait">
-                <m.div
-                    key={pathname}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                    {children}
-                </m.div>
-            </AnimatePresence>
+            {children}
         </LazyMotion>
     );
 }
