@@ -77,6 +77,43 @@ export class LoanService {
         });
     }
 
+    static async repayLoan(loanId: string, paymentMethod: 'CASH' | 'BANK') {
+        return await db.$transaction(async (tx: any) => {
+            const loan = await tx.loan.findUnique({ where: { id: loanId } });
+            if (!loan || loan.status !== 'ACTIVE') throw new Error("Invalid loan");
+
+            await tx.loan.update({
+                where: { id: loanId },
+                data: { status: 'CLOSED' }
+            });
+
+            const financialAccount = paymentMethod === 'BANK'
+                ? await FinanceService.getSystemAccount(AccountType.BANK)
+                : await FinanceService.getSystemAccount(AccountType.CASH);
+
+            if (loan.type === 'TAKEN') {
+                await FinanceService.recordTransaction(tx, {
+                    debitAccountId: loan.accountId,
+                    creditAccountId: financialAccount!.id,
+                    amount: loan.amount,
+                    referenceType: 'LOAN_REPAYMENT',
+                    referenceId: loan.id,
+                    description: `Repayment of Loan taken from ${loan.partyName}`
+                });
+            } else {
+                await FinanceService.recordTransaction(tx, {
+                    debitAccountId: financialAccount!.id,
+                    creditAccountId: loan.accountId,
+                    amount: loan.amount,
+                    referenceType: 'LOAN_RECOVERY',
+                    referenceId: loan.id,
+                    description: `Recovery of Loan given to ${loan.partyName}`
+                });
+            }
+            return serializePrisma(loan);
+        });
+    }
+
     static async getLoans() {
         const loans = await (db as any).loan.findMany({
             orderBy: { date: 'desc' }

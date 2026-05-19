@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import apiClient from "@/lib/apiClient";
 import { convertQuotationToInvoiceAction, updateQuotationStatusAction } from "@/features/billing/actions/quotations";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/ui/core/Button";
@@ -17,8 +18,42 @@ interface QuotationActionsProps {
 
 export function QuotationActions({ quotationId, status, convertedInvoiceId }: QuotationActionsProps) {
     const [isPending, startTransition] = useTransition();
+    const [isDownloading, setIsDownloading] = useState(false);
     const { success, error } = useToast();
     const router = useRouter();
+
+    const handleDownload = async () => {
+        setIsDownloading(true);
+        try {
+            const res = await apiClient.post("/api/quotations/download", {
+                quotationId
+            }, {
+                responseType: 'blob'
+            });
+
+            // Derive filename from Content-Disposition header or fallback
+            const disposition = (res.headers as any)["content-disposition"] || "";
+            const fileNameMatch = disposition.match(/filename="?([^"]+)"?/);
+            const fileName = fileNameMatch ? fileNameMatch[1] : `quotation-${quotationId}.pdf`;
+
+            const url = URL.createObjectURL(res.data);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            success("Quotation PDF downloaded successfully.");
+        } catch (err: any) {
+            console.error("[DOWNLOAD_ERROR]", err);
+            const errorMsg = err.response?.data?.error || "Failed to generate PDF. Please try again.";
+            error(errorMsg);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     const handleUpdateStatus = (newStatus: QuotationStatus) => {
         startTransition(async () => {
@@ -107,8 +142,9 @@ export function QuotationActions({ quotationId, status, convertedInvoiceId }: Qu
                 </Link>
             )}
 
-            <Button variant="secondary" className="h-10 px-4 gap-2 border-slate-200">
-                <FileDown className="w-4 h-4" /> PDF
+            <Button onClick={handleDownload} disabled={isDownloading} variant="secondary" className="h-10 px-4 gap-2 border-slate-200">
+                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                PDF
             </Button>
         </div>
     );

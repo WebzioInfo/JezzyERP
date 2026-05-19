@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { CompanyService } from "@/features/settings/services/CompanyService";
 import {
   Building2, Save, Landmark, Globe, Mail, Phone,
-  MapPin, ShieldCheck, CheckCircle2, Info, CreditCard
+  MapPin, ShieldCheck, CheckCircle2, Info, CreditCard, Briefcase
 } from "lucide-react";
 import { updateCompanySettingsAction } from "@/features/settings/actions/settings";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/ui/core/Card";
 import { Input } from "@/ui/core/Input";
 import { Button } from "@/ui/core/Button";
 import { StateSelect } from "@/components/forms/StateSelect";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   const session = await verifySessionCookie();
@@ -304,6 +305,28 @@ export default async function SettingsPage() {
               </CardContent>
             </Card>
 
+            {/* Founder Equity Card */}
+            <Card className="bg-purple-900 border-0 p-8 relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-700">
+                <Briefcase className="w-40 h-40 text-white" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Founder Profile</h3>
+                <p className="text-purple-200 text-xs mt-2 mb-6 font-medium">
+                  Manage owner equity, capital contributions, and withdrawals.
+                </p>
+                <Link href="/accounts/equity">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full font-black tracking-widest uppercase italic bg-white text-purple-900 hover:bg-purple-50 h-14"
+                  >
+                    Manage Equity
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+
             {/* Action Card */}
             <Card className="bg-slate-900 border-0 p-8 relative overflow-hidden group">
               <div className="absolute right-0 top-0 p-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-700">
@@ -320,7 +343,7 @@ export default async function SettingsPage() {
                   type="submit"
                   variant="secondary"
                   size="lg"
-                  className="w-full font-black tracking-widest uppercase italic"
+                  className="w-full font-black tracking-widest uppercase italic h-14"
                 >
                   <Save className="w-5 h-5" />
                   Commit Changes

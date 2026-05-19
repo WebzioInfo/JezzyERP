@@ -12,6 +12,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import Link from "next/link";
+import { LoanRepayButton } from "@/features/billing/components/LoanRepayButton";
 
 export default async function LoansPage() {
   const session = await verifySessionCookie();
@@ -121,6 +122,9 @@ export default async function LoansPage() {
                         loan.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
                       )}>{loan.status}</span>
                     </div>
+                    {loan.status === 'ACTIVE' && (
+                      <LoanRepayButton loanId={loan.id} />
+                    )}
                   </CardContent>
                 </Card>
               ))

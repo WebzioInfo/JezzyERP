@@ -28,3 +28,22 @@ export async function recordLoanAction(data: {
         return { success: false, error: error.message };
     }
 }
+
+export async function repayLoanAction(loanId: string, paymentMethod: 'CASH' | 'BANK') {
+    const session = await verifySessionCookie();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        const loan = await LoanService.repayLoan(loanId, paymentMethod);
+        
+        revalidatePath('/loans');
+        revalidatePath('/dashboard');
+        revalidatePath('/transactions');
+        revalidatePath('/accounts');
+
+        return { success: true, data: loan };
+    } catch (error: any) {
+        console.error("[LOAN_REPAY_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
