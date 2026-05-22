@@ -22,5 +22,19 @@ export function handleActionError(error: any) {
     return { error: "Validation failed", fields: error.errors };
   }
   
+  // Handle Prisma Unique Constraint Violations gracefully
+  if (error?.code === 'P2002') {
+    const target = error.meta?.target;
+    const targetStr = Array.isArray(target) ? target.join(', ') : (target || 'field');
+    
+    if (targetStr.includes('sku')) {
+      return { error: "A product with this SKU already exists in your catalog. SKUs must be unique." };
+    }
+    if (targetStr.includes('invoiceNo')) {
+      return { error: "This Invoice Number is already in use." };
+    }
+    return { error: `A record with this unique value already exists (${targetStr}).` };
+  }
+  
   return { error: error.message || "An unexpected error occurred" };
 }

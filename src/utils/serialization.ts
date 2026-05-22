@@ -22,12 +22,9 @@ export function serializePrisma<T>(data: T): any {
 
   // Handle Objects
   if (typeof data === "object") {
-    // Check for Prisma Decimal (robust detection for minified builds)
-    const isDecimal = data && 
-      typeof (data as any).toNumber === "function" && 
-      Array.isArray((data as any).d) && 
-      typeof (data as any).s === "number" && 
-      typeof (data as any).e === "number";
+    // Check for Prisma Decimal (robust detection)
+    const isDecimal = data && typeof (data as any).toNumber === "function" && 
+      (data.constructor?.name === "Decimal" || ((data as any).d && (data as any).e !== undefined));
 
     if (isDecimal) {
       return (data as any).toNumber();

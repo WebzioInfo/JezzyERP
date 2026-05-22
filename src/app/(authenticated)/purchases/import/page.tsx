@@ -30,7 +30,13 @@ export default function PurchaseImportPage() {
     email: "",
     phone: "",
     pin: "",
-    state: ""
+    state: "",
+    documentType: "TAX INVOICE",
+    cgst: 0,
+    sgst: 0,
+    igst: 0,
+    subTotal: 0,
+    grandTotal: 0
   });
   const [vendors, setVendors] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -90,40 +96,69 @@ export default function PurchaseImportPage() {
 
       const { data } = await res.json();
 
-      // Transform items to match component state
-      const mappedItems = data.items.map((i: any) => ({
-        ...i,
-        unit: "Nos", // Defaulting as OCR might miss unit
-        taxPercent: 18, // Standard assumption if not found
-        pkgCount: 1,
-        pkgType: "STANDARD"
+      // Transform items to match component state, unwrapping the .value
+      const mappedItems = (data.items || []).map((i: any) => ({
+        description: i.description?.value ?? i.description ?? "",
+        descriptionConfidence: i.description?.confidence ?? 0.8,
+        hsn: i.hsn?.value ?? i.hsn ?? "",
+        hsnConfidence: i.hsn?.confidence ?? 0.8,
+        qty: i.qty?.value ?? i.qty ?? 0,
+        qtyConfidence: i.qty?.confidence ?? 0.8,
+        rate: i.rate?.value ?? i.rate ?? 0,
+        rateConfidence: i.rate?.confidence ?? 0.8,
+        amount: i.amount?.value ?? i.amount ?? 0,
+        amountConfidence: i.amount?.confidence ?? 0.8,
+        unit: i.unit?.value ?? i.unit ?? "Nos",
+        unitConfidence: i.unit?.confidence ?? 0.8,
+        pkgCount: i.pkgCount?.value ?? i.pkgCount ?? 1,
+        pkgCountConfidence: i.pkgCount?.confidence ?? 0.8,
+        pkgType: i.pkgType?.value ?? i.pkgType ?? "STANDARD",
+        pkgTypeConfidence: i.pkgType?.confidence ?? 0.8,
+        taxPercent: i.taxPercent?.value ?? i.taxPercent ?? 18,
+        taxPercentConfidence: i.taxPercent?.confidence ?? 0.8
       }));
 
       setExtractedData(mappedItems);
 
       setVendorData({
-        name: data.vendorName || "Identified Vendor",
-        gstin: data.vendorGst,
-        date: data.date || new Date().toISOString().split("T")[0],
-        purchaseNo: data.invoiceNo || `EXT-${Math.floor(1000 + Math.random() * 9000)}`,
-        ewayBill: data.ewayBill || "",
-        address: data.vendorAddress || "",
-        email: data.vendorEmail || "",
-        phone: data.vendorPhone || "",
-        pin: data.vendorPin || "",
-        state: data.vendorState || ""
+        name: data.vendorName?.value ?? data.vendorName ?? "Identified Vendor",
+        gstin: data.vendorGst?.value ?? data.vendorGst ?? "",
+        date: data.date?.value ?? data.date ?? new Date().toISOString().split("T")[0],
+        purchaseNo: data.invoiceNo?.value ?? data.invoiceNo ?? `EXT-${Math.floor(1000 + Math.random() * 9000)}`,
+        ewayBill: data.ewayBill?.value ?? data.ewayBill ?? "",
+        address: data.vendorAddress?.value ?? data.vendorAddress ?? "",
+        email: data.vendorEmail?.value ?? data.vendorEmail ?? "",
+        phone: data.vendorPhone?.value ?? data.vendorPhone ?? "",
+        pin: data.vendorPin?.value ?? data.vendorPin ?? "",
+        state: data.vendorState?.value ?? data.vendorState ?? "",
+        documentType: data.documentType?.value ?? data.documentType ?? "TAX INVOICE",
+        cgst: data.cgst?.value ?? data.cgst ?? 0,
+        sgst: data.sgst?.value ?? data.sgst ?? 0,
+        igst: data.igst?.value ?? data.igst ?? 0,
+        subTotal: data.subTotal?.value ?? data.subTotal ?? 0,
+        grandTotal: data.grandTotal?.value ?? data.grandTotal ?? 0
       });
 
       // Automatically find matching vendor in our database
-      if (data.vendorGst || data.vendorName) {
+      let matchFound = false;
+      const vendorGst = data.vendorGst?.value;
+      const vendorName = data.vendorName?.value;
+      
+      if (vendorGst || vendorName) {
         const match = vendors.find(v => 
-          (data.vendorGst && v.gst === data.vendorGst) || 
-          (data.vendorName && v.name.toLowerCase().includes(data.vendorName.toLowerCase()))
+          (vendorGst && v.gst === vendorGst) || 
+          (vendorName && v.name.toLowerCase().includes(vendorName.toLowerCase()))
         );
         if (match) {
+          matchFound = true;
           setSelectedVendorId(match.id);
           setVendorData(prev => ({ ...prev, name: match.name }));
+          setShowNewVendorForm(false);
         }
+      }
+
+      if (!matchFound) {
+        setShowNewVendorForm(true);
       }
     } catch (err: any) {
       console.error("AI Extraction Error:", err);
@@ -277,7 +312,12 @@ export default function PurchaseImportPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Receipt className="text-indigo-400 w-5 h-5" />
-                      <CardTitle className="text-white text-lg m-0 italic">Review Extracted Data</CardTitle>
+                      <CardTitle className="text-white text-lg m-0 italic flex items-center gap-2">
+                        Review Extracted Data
+                        <span className="text-[10px] bg-indigo-500/30 px-2 py-1 rounded-md text-indigo-200 border border-indigo-400/30">
+                          {vendorData.documentType}
+                        </span>
+                      </CardTitle>
                     </div>
                     <Button
                       variant="ghost"
@@ -304,9 +344,9 @@ export default function PurchaseImportPage() {
                       <tbody>
                         {extractedData.map((item, idx) => (
                           <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                            <td className="px-4 py-3">
+                            <td className={`px-4 py-3 ${item.descriptionConfidence < 0.8 ? 'bg-orange-50/30' : ''}`}>
                               <input
-                                className="w-full bg-transparent font-bold text-slate-900 focus:outline-none"
+                                className={`w-full bg-transparent font-bold text-slate-900 focus:outline-none ${item.descriptionConfidence < 0.8 ? 'ring-1 ring-orange-400/50 rounded px-1' : ''}`}
                                 value={item.description}
                                 onChange={(e) => handleUpdateItem(idx, "description", e.target.value)}
                               />
@@ -314,7 +354,7 @@ export default function PurchaseImportPage() {
                             </td>
                             <td className="px-4 py-3">
                               <input
-                                className="w-16 bg-slate-50 text-center font-mono text-[10px] py-1 rounded"
+                                className={`w-16 bg-slate-50 text-center font-mono text-[10px] py-1 rounded ${item.hsnConfidence < 0.8 ? 'ring-1 ring-orange-400/50' : ''}`}
                                 value={item.hsn}
                                 onChange={(e) => handleUpdateItem(idx, "hsn", e.target.value)}
                               />
@@ -322,7 +362,7 @@ export default function PurchaseImportPage() {
                             <td className="px-4 py-3 text-center">
                               <div className="flex items-center justify-center gap-1">
                                 <input
-                                  className="w-12 text-center font-black"
+                                  className={`w-12 text-center font-black ${item.qtyConfidence < 0.8 ? 'ring-1 ring-orange-400/50 rounded' : ''}`}
                                   value={item.qty}
                                   onChange={(e) => handleUpdateItem(idx, "qty", Number(e.target.value))}
                                 />
@@ -331,19 +371,19 @@ export default function PurchaseImportPage() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <input
-                                className="w-16 text-right font-black"
+                                className={`w-16 text-right font-black ${item.rateConfidence < 0.8 ? 'ring-1 ring-orange-400/50 rounded' : ''}`}
                                 value={item.rate}
                                 onChange={(e) => handleUpdateItem(idx, "rate", Number(e.target.value))}
                               />
                             </td>
                             <td className="px-4 py-3 text-center">
                               <input
-                                className="w-10 text-center bg-indigo-50 text-indigo-700 font-black rounded"
+                                className={`w-10 text-center bg-indigo-50 text-indigo-700 font-black rounded ${item.pkgCountConfidence < 0.8 ? 'ring-1 ring-orange-400/50' : ''}`}
                                 value={item.pkgCount}
                                 onChange={(e) => handleUpdateItem(idx, "pkgCount", Number(e.target.value))}
                               />
                             </td>
-                            <td className="px-4 py-3 text-right font-black text-slate-900">
+                            <td className={`px-4 py-3 text-right font-black text-slate-900 ${item.amountConfidence < 0.8 ? 'bg-orange-50/30' : ''}`}>
                               ₹{calculateTotal(item).toLocaleString()}
                             </td>
                           </tr>
@@ -383,8 +423,11 @@ export default function PurchaseImportPage() {
                       <label className="text-[9px] font-black uppercase text-slate-400">Invoice Date</label>
                       <input 
                         type="date"
-                        className="w-full bg-slate-50 border-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500"
+                        className="w-full bg-slate-50 border-0 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                         value={vendorData.date}
+                        onClick={(e) => {
+                          try { (e.target as HTMLInputElement).showPicker(); } catch (err) {}
+                        }}
                         onChange={(e) => setVendorData(prev => ({ ...prev, date: e.target.value }))}
                       />
                     </div>
@@ -413,54 +456,55 @@ export default function PurchaseImportPage() {
                     </select>
                     
                     <div className="flex items-center gap-2 pt-2">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setShowNewVendorForm(true)}
-                            className="text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50"
-                        >
-                            <Plus size={12} className="mr-1" />
-                            Not in list? Add New Vendor
-                        </Button>
+                        {!showNewVendorForm ? (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setShowNewVendorForm(true)}
+                                className="text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50"
+                            >
+                                <Plus size={12} className="mr-1" />
+                                Not in list? Add New Vendor
+                            </Button>
+                        ) : (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setShowNewVendorForm(false)}
+                                className="text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100"
+                            >
+                                <CloseIcon size={12} className="mr-1" />
+                                Cancel New Vendor
+                            </Button>
+                        )}
                     </div>
+                    
+                    {showNewVendorForm && (
+                        <div className="mt-6 border border-indigo-100 rounded-3xl overflow-hidden shadow-sm">
+                            <VendorForm 
+                                vendor={{ 
+                                    name: vendorData.name, 
+                                    gst: vendorData.gstin,
+                                    address1: vendorData.address,
+                                    email: vendorData.email,
+                                    phone: vendorData.phone,
+                                    pinCode: vendorData.pin,
+                                    state: vendorData.state
+                                }}
+                                onSuccess={(newVendor) => {
+                                    setShowNewVendorForm(false);
+                                    success("New vendor onboarded successfully!");
+                                    refreshVendors(newVendor?.id);
+                                }}
+                                onCancel={() => setShowNewVendorForm(false)}
+                            />
+                        </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
-
-          {/* New Vendor Modal Overlay */}
-          {showNewVendorForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-4xl shadow-3xl">
-                    <Button 
-                        variant="ghost" 
-                        className="absolute right-6 top-6 z-10 text-white/50 hover:text-white"
-                        onClick={() => setShowNewVendorForm(false)}
-                    >
-                        <CloseIcon size={24} />
-                    </Button>
-                    <VendorForm 
-                        vendor={{ 
-                            name: vendorData.name, 
-                            gst: vendorData.gstin,
-                            address1: vendorData.address,
-                            email: vendorData.email,
-                            phone: vendorData.phone,
-                            pinCode: vendorData.pin,
-                            state: vendorData.state
-                        }}
-                        onSuccess={(newVendor) => {
-                            setShowNewVendorForm(false);
-                            success("New vendor onboarded successfully!");
-                            refreshVendors(newVendor?.id);
-                        }}
-                        onCancel={() => setShowNewVendorForm(false)}
-                    />
-
-                </div>
-            </div>
-          )}
 
           {/* Actions Sidebar */}
           <div className="lg:col-span-4 space-y-6 sticky top-24">
@@ -478,15 +522,35 @@ export default function PurchaseImportPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-indigo-200">
                     <span>Taxable Value</span>
-                    <span>₹{extractedData.reduce((acc, i) => acc + (i.qty * i.rate), 0).toLocaleString()}</span>
+                    <span>₹{(vendorData.subTotal || extractedData.reduce((acc, i) => acc + (i.qty * i.rate), 0)).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-indigo-200">
-                    <span>Total Tax (18%)</span>
-                    <span>₹{extractedData.reduce((acc, i) => acc + (i.qty * i.rate * 0.18), 0).toLocaleString()}</span>
-                  </div>
+                  {vendorData.cgst > 0 && (
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                      <span>CGST</span>
+                      <span>₹{vendorData.cgst.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {vendorData.sgst > 0 && (
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                      <span>SGST</span>
+                      <span>₹{vendorData.sgst.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {vendorData.igst > 0 && (
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                      <span>IGST</span>
+                      <span>₹{vendorData.igst.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {vendorData.cgst === 0 && vendorData.sgst === 0 && vendorData.igst === 0 && (
+                     <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-indigo-200">
+                      <span>Total Tax (Estimated 18%)</span>
+                      <span>₹{extractedData.reduce((acc, i) => acc + (i.qty * i.rate * 0.18), 0).toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="pt-4 border-t border-white/10 flex justify-between items-end">
                     <span className="text-[10px] font-black uppercase text-indigo-100">Grand Total</span>
-                    <span className="text-3xl font-black italic">₹{extractedData.reduce((acc, i) => acc + calculateTotal(i), 0).toLocaleString()}</span>
+                    <span className="text-3xl font-black italic">₹{(vendorData.grandTotal || extractedData.reduce((acc, i) => acc + calculateTotal(i), 0)).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -516,13 +580,27 @@ export default function PurchaseImportPage() {
               </CardContent>
             </Card>
 
+            {vendorData.documentType === "PROFORMA INVOICE" && (
+              <Card className="bg-red-50 border-red-200 border-l-4 border-l-red-500">
+                <CardContent className="p-4 flex items-start gap-4">
+                  <AlertTriangle className="text-red-600 mt-1 shrink-0" size={20} />
+                  <div>
+                    <h4 className="text-xs font-black text-red-900 uppercase italic">Proforma Invoice Detected</h4>
+                    <p className="text-[10px] font-bold text-red-800 leading-relaxed uppercase tracking-tighter mt-1">
+                      This is a Proforma Invoice, not a Tax Invoice. Confirm with your supplier before converting into a final stock purchase.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-amber-50 border-amber-200 border-l-4 border-l-amber-500">
               <CardContent className="p-4 flex items-start gap-4">
                 <AlertTriangle className="text-amber-600 mt-1 shrink-0" size={20} />
                 <div>
                   <h4 className="text-xs font-black text-amber-900 uppercase italic">Confirm Details</h4>
                   <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-tighter mt-1">
-                    Please ensure the IGST/CGST split matches your supplier's bill before committing to stock.
+                    Please ensure the IGST/CGST split matches your supplier's bill before committing to stock. Highlighted fields require review.
                   </p>
                 </div>
               </CardContent>

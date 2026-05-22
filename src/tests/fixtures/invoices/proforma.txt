@@ -1,0 +1,17 @@
+PROFORMA INVOICE
+S L V PET INDUSTRIES
+GSTIN: 29AKJPT9330R1Z0
+State Name: Karnataka, Code: 29
+Invoice No: PR/2026-27/006
+Invoice Date: 2-May-26
+
+SI No. Description of Goods HSN/SAC Quantity Rate per Amount
+1 PET PREFORM 690 ( 55 MM ) JAR( CLEAR PLANE)
+39239090 1,200 Nos 110.40 Nos 1,32,480.00
+(40 Bags)
+GREEN
+
+CGST 9% 11,923.20
+SGST 9% 11,923.20
+
+Grand Total 1,56,326.40

@@ -79,7 +79,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <MetricCard
           icon={<Receipt className="w-7 h-7" />}
           label="Total Receivable"
@@ -98,13 +98,6 @@ export default function DashboardPage() {
           label="Invoices Issued"
           value={totalInvoices?.toString()}
           color="amber"
-        />
-        <MetricCard
-          icon={<Target className="w-7 h-7" />}
-          label="Products in Stock"
-          value={totalStock?.toLocaleString() || "0"}
-          badge={`${totalProducts || 0} SKUs`}
-          dark
         />
       </div>
 

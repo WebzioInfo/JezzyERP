@@ -136,6 +136,9 @@ export function VendorForm({ vendor, onSuccess, onCancel }: VendorFormProps) {
                                     placeholder="560001"
                                     icon={<Hash size={20} />}
                                     maxLength={6}
+                                    pattern="[0-9]{6}"
+                                    title="Please enter a valid 6-digit PIN code"
+                                    inputMode="numeric"
                                     className="font-mono"
                                 />
                                 <div className="md:col-span-3">
