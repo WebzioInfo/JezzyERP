@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  X, Download, FileText, Calendar, Filter, 
-  Loader2, CheckCircle2, AlertCircle, Printer, Zap 
+import { createPortal } from "react-dom";
+import {
+  X, Download, FileText, Calendar, Filter,
+  Loader2, CheckCircle2, AlertCircle, Printer, Zap
 } from "lucide-react";
 import { Button } from "@/ui/core/Button";
 import { Card } from "@/ui/core/Card";
@@ -47,9 +48,13 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
   const [status, setStatus] = useState("");
   const [gstType, setGstType] = useState("");
   const [format, setFormat] = useState("ORIGINAL");
-  
+
   const [clients, setClients] = useState<any[]>([]);
-  const [preview, setPreview] = useState<{ count: number; estimatedSize: string } | null>(null);
+  const [preview, setPreview] = useState<{ 
+    count: number; 
+    estimatedSize: string; 
+    invoices?: { id: string; invoiceNo: string; grandTotal: number | string; client?: { name: string } }[] 
+  } | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { success, error, info } = useToast();
@@ -105,8 +110,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
       const res = await fetch("/api/invoices/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          range, startDate, endDate, clientId, status, gstType, format 
+        body: JSON.stringify({
+          range, startDate, endDate, clientId, status, gstType, format
         }),
       });
 
@@ -121,7 +126,7 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      
+
       success("Export completed! Your ZIP file is ready.");
       onClose();
     } catch (err) {
@@ -131,12 +136,15 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
     }
   };
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
-      
+
       <Card className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl border-0 overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between mb-8">
@@ -154,8 +162,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 italic">Date Range</label>
-                <select 
-                  value={range} 
+                <select
+                  value={range}
                   onChange={(e) => setRange(e.target.value)}
                   className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 transition-all outline-none"
                 >
@@ -167,8 +175,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
                 <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Start Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold"
@@ -176,8 +184,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-1">End Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold"
@@ -188,8 +196,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 italic">Client Filter</label>
-                <select 
-                  value={clientId} 
+                <select
+                  value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 transition-all outline-none"
                 >
@@ -201,8 +209,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 italic">Status</label>
-                  <select 
-                    value={status} 
+                  <select
+                    value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                   >
@@ -211,8 +219,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 italic">GST Type</label>
-                  <select 
-                    value={gstType} 
+                  <select
+                    value={gstType}
                     onChange={(e) => setGstType(e.target.value)}
                     className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                   >
@@ -238,8 +246,8 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
                         onClick={() => setFormat(opt.value)}
                         className={cn(
                           "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left group",
-                          isActive 
-                            ? "bg-primary-50/50 border-primary-500 shadow-lg shadow-primary-500/10" 
+                          isActive
+                            ? "bg-primary-50/50 border-primary-500 shadow-lg shadow-primary-500/10"
                             : "bg-white border-slate-100 hover:border-slate-200"
                         )}
                       >
@@ -262,7 +270,7 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
               {/* Preview Stats */}
               <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all duration-700" />
-                
+
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="space-y-1">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Pre-Export Audit</p>
@@ -281,7 +289,25 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/10 px-3 py-1.5 rounded-full w-fit">
+                {!isLoadingPreview && preview?.invoices && preview.invoices.length > 0 && (
+                  <div className="mt-4 relative z-10 bg-slate-800/50 rounded-xl max-h-32 overflow-y-auto custom-scrollbar p-3">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Documents included ({preview.invoices.length}{preview.count > preview.invoices.length ? ` of ${preview.count}` : ''})</p>
+                    <ul className="space-y-2">
+                      {preview.invoices.map((inv) => (
+                        <li key={inv.id} className="flex items-center justify-between text-xs">
+                          <span className="text-slate-300 font-medium truncate w-1/3">{inv.invoiceNo}</span>
+                          <span className="text-slate-400 truncate w-1/3 text-left text-[10px]">{inv.client?.name || "Unknown"}</span>
+                          <span className="text-slate-300 font-bold text-right w-1/3">₹{Number(inv.grandTotal).toLocaleString('en-IN')}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {preview.count > preview.invoices.length && (
+                      <p className="text-[9px] text-slate-500 mt-2 text-center italic">+ {preview.count - preview.invoices.length} more documents</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-4 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-primary-500 bg-primary-500/10 px-3 py-1.5 rounded-full w-fit relative z-10">
                   <CheckCircle2 size={10} />
                   Ready for Synchronized Compression
                 </div>
@@ -290,14 +316,14 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
           </div>
 
           <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <button 
+            <button
               onClick={onClose}
               disabled={isExporting}
               className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50"
             >
               Cancel Protocol
             </button>
-            <Button 
+            <Button
               onClick={handleExport}
               disabled={isExporting || !preview || preview.count === 0}
               size="lg"
@@ -318,6 +344,7 @@ export function BulkExportModal({ isOpen, onClose }: BulkExportModalProps) {
           </div>
         </div>
       </Card>
-    </div>
+    </div>,
+    document.body
   );
 }

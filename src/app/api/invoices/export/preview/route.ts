@@ -45,12 +45,26 @@ export async function GET(req: NextRequest) {
 
         const count = await db.invoice.count({ where });
         
+        const invoices = await db.invoice.findMany({
+            where,
+            select: {
+                id: true,
+                invoiceNo: true,
+                date: true,
+                grandTotal: true,
+                client: { select: { name: true } }
+            },
+            orderBy: { date: 'desc' },
+            take: 100
+        });
+
         // Estimation: Roughly 150KB per PDF (based on current implementation)
         const estimatedSizeMB = (count * 0.15).toFixed(2);
 
         return NextResponse.json({ 
             count, 
             estimatedSize: `${estimatedSizeMB} MB`,
+            invoices,
             filtersApplied: where
         });
     } catch (err: any) {
