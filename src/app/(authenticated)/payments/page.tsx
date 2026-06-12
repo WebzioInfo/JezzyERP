@@ -93,7 +93,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
           </p>
         </div>
 
-        <Link href="/invoices">
+        <Link href="/payments/new">
           <button className="h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
             <Plus className="w-5 h-5" />
             <span>Record Payment</span>

@@ -10,12 +10,18 @@ export async function recordLoanAction(data: {
     amount: number;
     paymentMethod: 'CASH' | 'BANK';
     notes?: string;
+    date?: string;
+    interestRate?: number;
 }) {
     const session = await verifySessionCookie();
     if (!session) throw new Error("Unauthorized");
 
     try {
-        const loan = await LoanService.recordLoan(data);
+        const payload = {
+            ...data,
+            date: data.date ? new Date(data.date) : undefined,
+        };
+        const loan = await LoanService.recordLoan(payload);
         
         revalidatePath('/loans');
         revalidatePath('/dashboard');
@@ -29,12 +35,13 @@ export async function recordLoanAction(data: {
     }
 }
 
-export async function repayLoanAction(loanId: string, paymentMethod: 'CASH' | 'BANK') {
+export async function repayLoanAction(loanId: string, paymentMethod: 'CASH' | 'BANK', dateStr?: string) {
     const session = await verifySessionCookie();
     if (!session) throw new Error("Unauthorized");
 
     try {
-        const loan = await LoanService.repayLoan(loanId, paymentMethod);
+        const date = dateStr ? new Date(dateStr) : undefined;
+        const loan = await LoanService.repayLoan(loanId, paymentMethod, date);
         
         revalidatePath('/loans');
         revalidatePath('/dashboard');
@@ -53,12 +60,18 @@ export async function updateLoanAction(loanId: string, data: {
     amount: number;
     paymentMethod: 'CASH' | 'BANK';
     notes?: string;
+    date?: string;
+    interestRate?: number;
 }) {
     const session = await verifySessionCookie();
     if (!session) throw new Error("Unauthorized");
 
     try {
-        const loan = await LoanService.updateLoan(loanId, data);
+        const payload = {
+            ...data,
+            date: data.date ? new Date(data.date) : undefined
+        };
+        const loan = await LoanService.updateLoan(loanId, payload);
         
         revalidatePath('/loans');
         revalidatePath('/dashboard');

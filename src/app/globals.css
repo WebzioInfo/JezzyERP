@@ -64,6 +64,10 @@
 /* ==========================================
    BASE STYLES
    ========================================== */
+html {
+  font-size: 87.5%;
+}
+
 body {
   background-color: #F8FAFC;
   color: var(--color-slate-900);

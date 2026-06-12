@@ -15,7 +15,8 @@ import {
   FileText,
   ChevronRight,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Edit3
 } from "lucide-react";
 import { Card, CardContent } from "@/ui/core/Card";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
@@ -249,6 +250,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
                             <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Method</th>
                             <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Reference</th>
                             <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Amount</th>
+                            <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Action</th>
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -268,6 +270,13 @@ export default async function ClientDetailPage({ params }: PageProps) {
                                </td>
                                <td className="px-8 py-6 text-right">
                                   <span className="text-sm font-black text-emerald-600 italic tracking-tighter tabular-nums">{formatCurrency(pay.amount)}</span>
+                               </td>
+                               <td className="px-8 py-6 text-right">
+                                  <Link href={`/payments/${pay.id}/edit`}>
+                                     <button className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-primary-50 hover:text-primary-600 transition-all ml-auto">
+                                        <Edit3 className="w-4 h-4" />
+                                     </button>
+                                  </Link>
                                </td>
                             </tr>
                          ))}

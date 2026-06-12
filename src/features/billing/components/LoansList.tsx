@@ -36,6 +36,7 @@ interface Loan {
   date: string;
   notes?: string | null;
   paymentMethod: "CASH" | "BANK" | "UNKNOWN";
+  interestRate?: any;
 }
 
 interface LoansListProps {
@@ -214,13 +215,21 @@ export function LoansList({ loans: initialLoans, advances }: LoansListProps) {
                       <h4 className="text-2xl font-black text-slate-900 tabular-nums tracking-tighter">{formatCurrency(Number(loan.amount))}</h4>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600">
-                      {loan.paymentMethod === 'BANK' ? (
-                        <Building2 className="w-3.5 h-3.5 text-blue-500" />
-                      ) : (
-                        <Banknote className="w-3.5 h-3.5 text-emerald-500" />
+                    <div className="flex items-center gap-2">
+                      {loan.interestRate && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-100 rounded-xl text-rose-600">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">{Number(loan.interestRate)}% INT</span>
+                        </div>
                       )}
-                      <span className="text-[9px] font-black uppercase tracking-widest">{loan.paymentMethod}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600">
+                        {loan.paymentMethod === 'BANK' ? (
+                          <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                        ) : (
+                          <Banknote className="w-3.5 h-3.5 text-emerald-500" />
+                        )}
+                        <span className="text-[9px] font-black uppercase tracking-widest">{loan.paymentMethod}</span>
+                      </div>
                     </div>
                   </div>
 

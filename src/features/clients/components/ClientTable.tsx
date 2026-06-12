@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import {
     Table,
     TableBody,
@@ -53,7 +54,9 @@ const ClientTableRow = ({ client, onEdit }: { client: Client, onEdit: (client: C
                         <Building2 className="w-5 h-5 text-primary-500" />
                     </div>
                     <div className="min-w-0">
-                        <p className="font-extrabold text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate">{client.name}</p>
+                        <Link href={`/clients/${client.id}`} className="hover:underline">
+                            <p className="font-extrabold text-slate-900 group-hover:text-primary-600 transition-colors uppercase tracking-tight truncate">{client.name}</p>
+                        </Link>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Corporate ID: {client.id.slice(-8)}</p>
                     </div>
                 </div>
@@ -173,7 +176,9 @@ const ClientMobileCard = ({ client, onEdit }: { client: Client, onEdit: (client:
                         <Building2 className="w-6 h-6 text-primary-500" />
                     </div>
                     <div>
-                        <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">{client.name}</h4>
+                        <Link href={`/clients/${client.id}`} className="hover:underline block">
+                            <h4 className="font-extrabold text-slate-900 uppercase tracking-tight">{client.name}</h4>
+                        </Link>
                         <div className="flex items-center gap-2 mt-1">
                             {client.gst && (
                                 <span className="bg-slate-900 text-white text-[9px] font-black px-1.5 py-0.5 rounded tracking-widest">

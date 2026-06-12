@@ -43,6 +43,8 @@ export default function NewLoanPage() {
         amount: parseFloat(formData.get("amount") as string),
         paymentMethod: selectedMethod,
         notes: formData.get("notes") as string,
+        date: formData.get("date") as string,
+        interestRate: formData.get("interestRate") ? parseFloat(formData.get("interestRate") as string) : undefined,
       };
 
       const res = await recordLoanAction(data);
@@ -179,6 +181,34 @@ export default function NewLoanPage() {
                   placeholder="0.00"
                   className="w-full h-20 pl-12 pr-6 bg-slate-50 border border-slate-200 rounded-3xl text-3xl font-black text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all tabular-nums placeholder:text-slate-200 italic"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Transaction Date</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    name="date"
+                    defaultValue={new Date().toISOString().split("T")[0]}
+                    required
+                    className="w-full h-16 px-6 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Interest Rate (%) <span className="opacity-50">(Optional)</span></label>
+                <div className="relative">
+                  <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">%</span>
+                  <input
+                    type="number"
+                    name="interestRate"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="w-full h-16 pl-6 pr-12 bg-slate-50 border border-slate-200 rounded-3xl text-lg font-black text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all tabular-nums"
+                  />
+                </div>
               </div>
             </div>
           </div>

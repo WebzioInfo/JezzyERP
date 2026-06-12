@@ -28,9 +28,9 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'sidebar-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
-        expandedSections: state.expandedSections 
+        expandedSections: state.expandedSections
       }),
     }
   )

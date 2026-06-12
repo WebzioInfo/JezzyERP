@@ -213,3 +213,37 @@ export async function getClientUnallocatedBalanceAction(clientId: string) {
         return handleActionError(error);
     }
 }
+
+export async function updatePaymentAction(paymentId: string, data: {
+    amount?: number;
+    method?: PaymentMethod;
+    reference?: string;
+    notes?: string;
+    paidAt?: string;
+}) {
+    const session = await verifySessionVerified();
+    if (!session) throw new Error("Unauthorized");
+
+    try {
+        const payment = await db.payment.update({
+            where: { id: paymentId },
+            data: {
+                amount: data.amount,
+                method: data.method,
+                reference: data.reference,
+                notes: data.notes,
+                paidAt: data.paidAt ? new Date(data.paidAt) : undefined,
+            }
+        });
+
+        if (payment.invoiceId) revalidatePath(`/invoices/${payment.invoiceId}`);
+        if (payment.clientId) revalidatePath(`/clients/${payment.clientId}`);
+        revalidatePath("/invoices");
+        revalidatePath("/dashboard");
+        revalidatePath("/payments");
+
+        return { success: true, paymentId: payment.id };
+    } catch (error: any) {
+        return handleActionError(error);
+    }
+}

@@ -22,6 +22,8 @@ export class LoanService {
         amount: number;
         paymentMethod: 'CASH' | 'BANK';
         notes?: string;
+        date?: Date;
+        interestRate?: number;
     }) {
         return await db.$transaction(async (tx: any) => {
             // 1. Create/Find Loan Account for this specific loan
@@ -42,7 +44,9 @@ export class LoanService {
                     partyName: data.partyName,
                     amount: data.amount,
                     notes: data.notes,
-                    accountId: loanAccount.id
+                    accountId: loanAccount.id,
+                    date: data.date,
+                    interestRate: data.interestRate
                 }
             });
 
@@ -59,7 +63,8 @@ export class LoanService {
                     amount: data.amount,
                     referenceType: 'LOAN_TAKEN',
                     referenceId: loan.id,
-                    description: `Loan of ${data.amount} taken from ${data.partyName}`
+                    description: `Loan of ${data.amount} taken from ${data.partyName}`,
+                    date: data.date
                 });
             } else {
                 // Loan Given: Loan Asset increases (Debit), Cash decreases (Credit)
@@ -69,7 +74,8 @@ export class LoanService {
                     amount: data.amount,
                     referenceType: 'LOAN_GIVEN',
                     referenceId: loan.id,
-                    description: `Loan of ${data.amount} given to ${data.partyName}`
+                    description: `Loan of ${data.amount} given to ${data.partyName}`,
+                    date: data.date
                 });
             }
 
@@ -77,7 +83,7 @@ export class LoanService {
         });
     }
 
-    static async repayLoan(loanId: string, paymentMethod: 'CASH' | 'BANK') {
+    static async repayLoan(loanId: string, paymentMethod: 'CASH' | 'BANK', repayDate?: Date) {
         return await db.$transaction(async (tx: any) => {
             const loan = await tx.loan.findUnique({ where: { id: loanId } });
             if (!loan || loan.status !== 'ACTIVE') throw new Error("Invalid loan");
@@ -98,7 +104,8 @@ export class LoanService {
                     amount: loan.amount,
                     referenceType: 'LOAN_REPAYMENT',
                     referenceId: loan.id,
-                    description: `Repayment of Loan taken from ${loan.partyName}`
+                    description: `Repayment of Loan taken from ${loan.partyName}`,
+                    date: repayDate
                 });
             } else {
                 await FinanceService.recordTransaction(tx, {
@@ -107,7 +114,8 @@ export class LoanService {
                     amount: loan.amount,
                     referenceType: 'LOAN_RECOVERY',
                     referenceId: loan.id,
-                    description: `Recovery of Loan given to ${loan.partyName}`
+                    description: `Recovery of Loan given to ${loan.partyName}`,
+                    date: repayDate
                 });
             }
             return serializePrisma(loan);
@@ -126,6 +134,8 @@ export class LoanService {
         amount: number;
         paymentMethod: 'CASH' | 'BANK';
         notes?: string;
+        date?: Date;
+        interestRate?: number;
     }) {
         return await db.$transaction(async (tx: any) => {
             const loan = await tx.loan.findUnique({ where: { id: loanId } });
@@ -152,7 +162,9 @@ export class LoanService {
                     partyName: data.partyName,
                     amount: data.amount,
                     notes: data.notes,
-                    accountId: targetAccountId
+                    accountId: targetAccountId,
+                    date: data.date,
+                    interestRate: data.interestRate
                 }
             });
 
@@ -176,7 +188,8 @@ export class LoanService {
                             debitAccountId: financialAccount!.id,
                             creditAccountId: targetAccountId,
                             amount: data.amount,
-                            description: `Loan of ${data.amount} taken from ${data.partyName}`
+                            description: `Loan of ${data.amount} taken from ${data.partyName}`,
+                            date: data.date
                         }
                     });
                 } else {
@@ -186,7 +199,8 @@ export class LoanService {
                             debitAccountId: targetAccountId,
                             creditAccountId: financialAccount!.id,
                             amount: data.amount,
-                            description: `Loan of ${data.amount} given to ${data.partyName}`
+                            description: `Loan of ${data.amount} given to ${data.partyName}`,
+                            date: data.date
                         }
                     });
                 }
