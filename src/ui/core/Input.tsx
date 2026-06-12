@@ -13,24 +13,24 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ({ className, type, label, error, icon, ...props }, ref) => {
         return (
-            <div className="w-full space-y-2 relative">
+            <div className="w-full space-y-1.5 relative">
                 {label && (
-                    <label className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-500 ml-1">
+                    <label className="block text-xs font-medium text-slate-700">
                         {label}
                     </label>
                 )}
                 <div className="relative group">
                     {icon && (
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
                             {icon}
                         </div>
                     )}
                     <input
                         type={type}
                         className={cn(
-                            "input-minimal flex w-full h-14 text-base font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none transition-all duration-300",
-                            icon ? "pl-14" : "pl-6",
-                            error && "ring-2 ring-red-500/20 bg-red-50/10",
+                            "flex w-full rounded-md border border-slate-300 bg-white text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 h-10",
+                            icon ? "pl-10 pr-3" : "px-3",
+                            error && "border-red-500 focus-visible:ring-red-500",
                             className
                         )}
                         ref={ref}
@@ -43,7 +43,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         {...props}
                     />
                 </div>
-                {error && <p className="mt-1 text-[10px] font-bold text-red-500 tracking-tight ml-1 animate-reveal">{error}</p>}
+                {error && <p className="text-[11px] font-medium text-red-500 tracking-tight">{error}</p>}
             </div>
         )
     }

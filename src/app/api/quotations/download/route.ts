@@ -192,19 +192,26 @@ export async function POST(req: NextRequest) {
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.setTextColor(...TEXT_BLACK);
-            doc.text(addr.name || "N/A", x, currentY);
-            currentY += 5;
+            
+            const nameLines = doc.splitTextToSize(addr.name || "N/A", 65);
+            doc.text(nameLines, x, currentY);
+            currentY += (nameLines.length * 5);
 
             doc.setFont("helvetica", "normal");
             doc.setFontSize(8.5);
             doc.setTextColor(...TEXT_GRAY);
             if (addr.address1) {
-                doc.text(addr.address1, x, currentY);
-                currentY += 4.5;
+                const add1Lines = doc.splitTextToSize(addr.address1, 65);
+                doc.text(add1Lines, x, currentY);
+                currentY += (add1Lines.length * 4.5);
             }
             if (addr.address2 || addr.pinCode) {
-                doc.text(`${addr.address2 || ""}${addr.address2 && addr.pinCode ? ", " : ""}${addr.pinCode || ""}`, x, currentY);
-                currentY += 4.5;
+                const combined = `${addr.address2 || ""}${addr.address2 && addr.pinCode ? ", " : ""}${addr.pinCode || ""}`;
+                if (combined.trim()) {
+                    const add2Lines = doc.splitTextToSize(combined, 65);
+                    doc.text(add2Lines, x, currentY);
+                    currentY += (add2Lines.length * 4.5);
+                }
             }
             if (addr.gst) {
                 doc.text(`GSTIN: ${addr.gst}`, x, currentY);
@@ -459,16 +466,17 @@ export async function POST(req: NextRequest) {
         doc.text(`Estimated Amount (in words):`, LEFT_MARGIN, y);
         y += 5;
         doc.setFont("helvetica", "normal");
-        doc.text(`INR ${numberToWords(rounded)}`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
+        const amtWordsLines = doc.splitTextToSize(`INR ${numberToWords(rounded)}`, W - LEFT_MARGIN - RIGHT_MARGIN);
+        doc.text(amtWordsLines, LEFT_MARGIN, y);
+        y += (amtWordsLines.length * 5) + 5;
 
-        y += 10;
         doc.setFont("helvetica", "bold");
         doc.text(`Tax Amount (in words):`, LEFT_MARGIN, y);
         y += 5;
         doc.setFont("helvetica", "normal");
-        doc.text(`INR ${numberToWords(taxVal)}`, LEFT_MARGIN, y, { maxWidth: W - LEFT_MARGIN - RIGHT_MARGIN });
-
-        y += 15;
+        const taxWordsLines = doc.splitTextToSize(`INR ${numberToWords(taxVal)}`, W - LEFT_MARGIN - RIGHT_MARGIN);
+        doc.text(taxWordsLines, LEFT_MARGIN, y);
+        y += (taxWordsLines.length * 5) + 10;
 
         // --- BANK DETAILS & SIGNATURE ---
         const bottomY = y;

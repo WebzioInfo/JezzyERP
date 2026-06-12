@@ -111,6 +111,7 @@ model User {
   deletedAt     DateTime?
   createdAudits AuditLog[] @relation("UserAudits")
   createdExports ExportLog[] @relation("UserExports")
+  createdMigrations MigrationBatch[] @relation("UserMigrations")
 
   @@index([role])
   @@index([deletedAt])
@@ -683,4 +684,44 @@ model ExportLog {
   @@index([userId])
   @@index([createdAt])
   @@map("export_logs")
+}
+
+model MigrationBatch {
+  id           String   @id @default(cuid())
+  companyId    String   @default("jezzy-enterprises")
+  module       String   // e.g., "CLIENTS", "PRODUCTS", "INVOICES"
+  status       String   @default("PENDING") // PENDING, COMPLETED, PARTIAL, FAILED, ROLLED_BACK
+  totalRecords Int      @default(0)
+  successCount Int      @default(0)
+  errorCount   Int      @default(0)
+  fileUrl      String?
+  mappingConfig Json?
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String?
+
+  user         User?    @relation("UserMigrations", fields: [userId], references: [id])
+  logs         MigrationLog[]
+
+  @@index([module])
+  @@index([status])
+  @@map("migration_batches")
+}
+
+model MigrationLog {
+  id               String   @id @default(cuid())
+  batchId          String
+  sourceRow        Int
+  destinationId    String?  
+  destinationModel String?  
+  status           String   // SUCCESS, ERROR
+  message          String?  @db.Text
+  rawData          Json?    
+
+  batch            MigrationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([status])
+  @@map("migration_logs")
 }

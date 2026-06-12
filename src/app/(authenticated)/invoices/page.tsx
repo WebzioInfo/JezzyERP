@@ -11,19 +11,17 @@ import {
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { InvoiceListActions } from "@/features/billing/components/InvoiceListActions";
 import { InvoicesHeaderActions } from "@/features/billing/components/InvoicesHeaderActions";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/core/Card";
+import { Card, CardContent } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
-import { Input } from "@/ui/core/Input";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { LiveSearch } from "@/components/common/LiveSearch";
 
 interface PageProps {
-
   searchParams: Promise<{ status?: string; q?: string }>;
 }
 
 const STATUS_TABS = [
-  { label: "All Records", value: "" },
+  { label: "All", value: "" },
   { label: "Draft", value: "DRAFT" },
   { label: "Sent", value: "SENT" },
   { label: "Paid", value: "PAID" },
@@ -79,21 +77,20 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   countMap[""] = total;
   countMap["TRASH"] = trashCount;
 
-
-
   return (
-    <div className="space-y-8 animate-fade-up">
+    <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 animate-in stagger-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">Invoices</h1>
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">Manage and track your primary revenue stream</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Invoices</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage and track your invoices</p>
         </div>
         <InvoicesHeaderActions />
       </div>
-      <Card className="border-0 shadow-sm ring-1 ring-slate-200/60 overflow-hidden rounded-[2.5rem] animate-in stagger-2">
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-6 items-center">
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-center">
              <LiveSearch 
                placeholder="Search by Invoice # or Client Name..." 
                className="flex-1 w-full"
@@ -108,16 +105,16 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                       key={tab.value}
                       href={`/invoices?${tab.value ? `status=${tab.value}` : ""}${searchQuery ? `&q=${searchQuery}` : ""}`}
                       className={cn(
-                        "px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all inline-flex items-center gap-2",
+                        "px-3 py-1.5 rounded-md text-sm font-medium transition-all inline-flex items-center gap-2 border",
                         isActive 
-                          ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10" 
-                          : "text-slate-500 hover:bg-slate-100 border border-transparent hover:border-slate-200"
+                          ? "bg-slate-900 text-white border-slate-900" 
+                          : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
                       )}
                     >
                       {tab.label}
                       <span className={cn(
-                        "min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px] font-bold",
-                        isActive ? "bg-white/10 text-white" : "bg-slate-100 text-slate-400"
+                        "min-w-[1.25rem] h-5 px-1 rounded-full flex items-center justify-center text-xs",
+                        isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                       )}>
                         {count}
                       </span>
@@ -131,78 +128,62 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
 
       {/* ── List Content ── */}
       <ErrorBoundary name="Invoice Table">
-        <Card className="border-0 shadow-2xl ring-1 ring-slate-200 overflow-hidden rounded-[2.5rem] animate-in stagger-3">
+        <Card className="overflow-hidden">
         {invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-slate-400 bg-slate-50/30">
-            <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center shadow-xl shadow-slate-200/50 mb-6">
-               <FileText className="w-10 h-10 opacity-20" />
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4">
+               <FileText className="w-6 h-6 text-slate-300" />
             </div>
-            <p className="font-black text-slate-900 text-xl italic uppercase tracking-tight">Zero Records Found</p>
-            <p className="text-xs text-slate-500 mt-2 mb-10 font-bold uppercase tracking-widest italic opacity-60">
-              {searchQuery || statusFilter ? "Adjustment of search filters required" : "Begin by generating your first document"}
+            <p className="font-medium text-slate-900 text-base">No invoices found</p>
+            <p className="text-sm text-slate-500 mt-1 mb-6">
+              {searchQuery || statusFilter ? "Adjust your search filters to find what you're looking for." : "Create your first invoice to get started."}
             </p>
             <Link href="/invoices/new">
-               <Button variant="primary" size="lg" className="italic px-8">
-                  <Plus className="w-5 h-5 mr-1" />
-                  Initiate First Invoice
+               <Button variant="primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Invoice
                </Button>
             </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-900">
-                  <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Reference</th>
-                  <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Entity Details</th>
-                  <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hidden sm:table-cell">Timeline</th>
-                  <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Valuation</th>
-                  <th className="text-center px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Policy</th>
-                  <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Execution</th>
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Invoice #</th>
+                  <th className="text-left px-4 py-3 font-medium">Client</th>
+                  <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Date</th>
+                  <th className="text-right px-4 py-3 font-medium">Amount</th>
+                  <th className="text-center px-4 py-3 font-medium">Status</th>
+                  <th className="text-right px-4 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
                 {invoices.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-all group">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all">
-                            <FileText size={18} className="text-slate-400 group-hover:text-primary-600" />
-                         </div>
-                         <p className="font-extrabold text-slate-900 text-base tracking-tight" title={inv.invoiceNo}>{String(inv.sequenceNumber || 1).padStart(2, '0')}</p>
-                      </div>
+                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {String(inv.sequenceNumber || 1).padStart(2, '0')}
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 py-3">
                       <Link 
                         href={`/clients/${inv.client.id}`}
-                        className="group/client inline-flex flex-col hover:text-primary-600 transition-colors"
+                        className="font-medium text-slate-900 hover:text-primary-600 transition-colors inline-flex items-center gap-1"
                       >
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-black text-slate-800 tracking-tight group-hover/client:text-primary-600 transition-colors">{inv.client.name}</p>
-                          <ArrowUpRight size={12} className="opacity-0 group-hover/client:opacity-100 transition-all text-primary-500" />
-                        </div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Corporate Client</p>
+                        {inv.client.name}
                       </Link>
                     </td>
-                    <td className="px-8 py-6 hidden sm:table-cell">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
-                           <Calendar className="w-3.5 h-3.5 text-primary-500" />
-                           {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(inv.date))}
-                         </div>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Registration Date</p>
-                      </div>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                       <span className="text-slate-500">
+                         {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(inv.date))}
+                       </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
-                      <p className="text-lg font-black text-slate-900 italic tracking-tighter">{formatCurrency(inv.grandTotal.toNumber())}</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Inclusive of GST</p>
+                    <td className="px-4 py-3 text-right font-medium text-slate-900">
+                      {formatCurrency(inv.grandTotal.toNumber())}
                     </td>
-                    <td className="px-8 py-6 text-center">
-                      <div className="flex justify-center scale-110">
-                        <StatusBadge status={inv.status} />
-                      </div>
+                    <td className="px-4 py-3 text-center">
+                      <StatusBadge status={inv.status} />
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-4 py-3 text-right">
                       <InvoiceListActions 
                         invoiceId={inv.id} 
                         isTrashed={statusFilter === "TRASH"} 

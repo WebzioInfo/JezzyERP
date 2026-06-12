@@ -229,11 +229,11 @@ export default function AuthenticatedLayout({
       {/* ── Sidebar (Desktop) ── */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-50 p-4 relative",
+          "hidden lg:flex flex-col transition-all duration-300 z-50 relative bg-slate-50 border-r border-slate-200",
           !sidebarCollapsed ? "w-(--sidebar-width)" : "w-(--sidebar-collapsed-width)"
         )}
       >
-        <div className="glass clay-card h-full flex flex-col overflow-hidden border-0 shadow-2xl shadow-primary-900/5">
+        <div className="h-full flex flex-col overflow-hidden">
           <React.Suspense fallback={<SidebarSkeleton />}>
             <SidebarContent sidebarCollapsed={sidebarCollapsed} pathname={pathname} />
           </React.Suspense>
@@ -242,9 +242,9 @@ export default function AuthenticatedLayout({
         {/* Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="absolute -right-3 top-24 w-8 h-8 glass clay-card flex items-center justify-center text-slate-400 shadow-xl hover:text-primary-600 transition-all z-50 hover:scale-110 active:scale-90 border-white/50"
+          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm z-50 transition-all"
         >
-          {sidebarCollapsed ? <ChevronRightIcon size={16} /> : <ChevronLeft size={16} />}
+          {sidebarCollapsed ? <ChevronRightIcon size={14} /> : <ChevronLeft size={14} />}
         </button>
       </aside>
 
@@ -264,20 +264,20 @@ export default function AuthenticatedLayout({
       {/* ── Mobile Sidebar ── */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 w-(--sidebar-width) p-4 z-70 transition-transform duration-500 cubic-bezier(0.34,1.56,0.64,1) lg:hidden",
+          "fixed top-0 bottom-0 left-0 w-(--sidebar-width) z-70 transition-transform duration-300 bg-slate-50 border-r border-slate-200 lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="glass clay-card h-full flex flex-col overflow-hidden border-0">
-          <div className="flex items-center justify-between p-6 border-b border-primary-100/10 shrink-0">
+        <div className="h-full flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-xl bg-linear-to-br from-primary-600 to-primary-900 flex items-center justify-center shadow-lg border border-white/20">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-md bg-slate-900 flex items-center justify-center">
+                <Building2 className="w-4 h-4 text-white" />
               </div>
-              <span className="font-black tracking-tighter text-2xl font-display text-primary-600 uppercase">JEZZY</span>
+              <span className="font-semibold text-sm text-slate-900 tracking-tight">JEZZY ERP</span>
             </div>
-            <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
-              <X size={18} />
+            <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+              <X size={16} />
             </button>
           </div>
           <div className="overflow-y-auto flex-1 custom-scrollbar" data-lenis-prevent>
@@ -287,7 +287,7 @@ export default function AuthenticatedLayout({
       </aside>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-white">
         <Header
           onMenuClick={() => setMobileMenuOpen(true)}
         />
@@ -339,14 +339,12 @@ function SidebarContent({
   return (
     <div className="flex-1 flex flex-col py-8 overflow-hidden">
       {!isMobile && !sidebarCollapsed && (
-        <div className="px-8 mb-10 flex items-center gap-4 animate-reveal">
-          <div className="relative w-12 h-12 rounded-2xl bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-2xl border border-white/20 overflow-hidden shrink-0">
-            <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            <Building2 className="w-6 h-6 text-white" />
+        <div className="px-6 mb-8 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-md bg-slate-900 flex items-center justify-center shrink-0">
+            <Building2 className="w-4 h-4 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="font-black text-slate-900 text-2xl leading-none tracking-tighter font-display uppercase italic">JEZZY <span className="text-primary-600">ERP</span></p>
-            <p className="text-[9px] font-black text-primary-500 uppercase tracking-[0.4em] mt-2 bg-primary-50 px-2 py-0.5 rounded-full inline-block">Enterprise</p>
+            <p className="font-semibold text-slate-900 text-sm tracking-tight">JEZZY ERP</p>
           </div>
         </div>
       )}
@@ -372,19 +370,15 @@ function SidebarContent({
               {!sidebarCollapsed && (
                 <button
                   onClick={() => toggleSection(section.label)}
-                  className="w-full flex items-center justify-between px-4 mb-3 rounded-2xl hover:bg-slate-300 py-1 group/label"
+                  className="w-full flex items-center justify-between px-4 mb-2 rounded-md hover:bg-slate-200 py-1.5 group/label"
                 >
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-2 group-hover/label:text-primary-500  transition-colors">
-                    <span className={cn(
-                      "w-1.5 h-1.5 rounded-full transition-all",
-                      isExpanded ? "bg-primary-500" : "bg-slate-300"
-                    )} />
+                  <p className="text-xs font-semibold text-slate-500 flex items-center gap-2 group-hover/label:text-slate-700 transition-colors">
                     {section.label}
                   </p>
                   <ChevronRightIcon
-                    size={10}
+                    size={14}
                     className={cn(
-                      "text-slate-300 transition-transform duration-300 group-hover/label:text-primary-400",
+                      "text-slate-400 transition-transform duration-300",
                       isExpanded ? "rotate-90" : "rotate-0"
                     )}
                   />
@@ -417,29 +411,25 @@ function SidebarContent({
                               }
                             }}
                             className={cn(
-                              "group flex items-center gap-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
+                              "group flex items-center gap-3 rounded-md transition-all duration-200 relative overflow-hidden",
                               active
-                                ? "bg-primary-600 text-white shadow-xl shadow-primary-600/20 py-3.5"
-                                : "text-slate-500 hover:bg-white hover:shadow-lg hover:shadow-primary-900/5 hover:text-primary-600 py-3",
+                                ? "bg-slate-200 text-slate-900 py-2 font-medium"
+                                : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 py-2",
                               sidebarCollapsed ? "justify-center px-0" : "px-4"
                             )}
                             title={sidebarCollapsed ? item.name : ""}
                           >
-                            {active && (
-                              <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                            )}
                             {isLoading ? (
-                              <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
+                              <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
                             ) : (
                               <item.icon
                                 className={cn(
-                                  "h-5 w-5 shrink-0 transition-all group-hover:scale-110",
-                                  active ? "text-white" : "text-slate-400 group-hover:text-primary-500"
+                                  "h-4 w-4 shrink-0 transition-all",
+                                  active ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"
                                 )}
                               />
                             )}
-                            {!sidebarCollapsed && <span className="flex-1 truncate text-xs font-black uppercase tracking-widest">{item.name}</span>}
-                            {!sidebarCollapsed && active && <ChevronRightIcon size={14} className="opacity-50" />}
+                            {!sidebarCollapsed && <span className="flex-1 truncate text-sm">{item.name}</span>}
                           </Link>
                         </li>
                       );
@@ -458,16 +448,15 @@ function SidebarContent({
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className={cn(
-                "w-full glass p-4 flex items-center gap-4 border rounded-2xl transition-all duration-300",
-                isProfileMenuOpen ? "border-primary-500 bg-white/60 shadow-2xl" : "border-white/50 shadow-xl shadow-primary-900/5 hover:bg-white/40"
+                "w-full p-3 flex items-center gap-3 rounded-md transition-all duration-200",
+                isProfileMenuOpen ? "bg-slate-200" : "hover:bg-slate-200/50"
               )}
             >
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black shadow-sm text-primary-600 border border-white">EA</div>
+              <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-xs font-medium text-white">EA</div>
               <div className="min-w-0 text-left flex-1">
-                <p className="text-[11px] font-black text-slate-900 truncate uppercase tracking-tight">JEZZY Admin</p>
-                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Master Node</p>
+                <p className="text-sm font-medium text-slate-900 truncate">JEZZY Admin</p>
+                <p className="text-xs text-slate-500 truncate">Master Node</p>
               </div>
-              <ChevronRight className={cn("w-3.5 h-3.5 text-slate-300 transition-transform duration-300", isProfileMenuOpen && "rotate-90 text-primary-500")} />
             </button>
 
             <AnimatePresence>
@@ -550,43 +539,39 @@ function Header({
   const { title, subtitle } = getPageInfo();
 
   return (
-    <header className="h-(--header-height) shrink-0 flex items-center justify-between px-8 bg-transparent  sticky top-0 z-40 transition-all">
-      <div className="flex items-center gap-6">
+    <header className="h-14 shrink-0 flex items-center justify-between px-6 bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="lg:hidden w-11 h-11 glass clay-card flex items-center justify-center text-slate-500 hover:text-primary-600 transition-all"
+          className="lg:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] opacity-60">
-            <span>{subtitle}</span>
-            <ChevronRight size={10} className="opacity-30" />
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 leading-tight tracking-tighter font-display uppercase italic">{title}</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-500">{subtitle}</span>
+          <span className="text-slate-300">/</span>
+          <h1 className="text-sm font-semibold text-slate-900">{title}</h1>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 md:gap-8">
-        <div className="hidden md:flex items-center gap-3 glass px-5 py-3 rounded-2xl w-80 transition-all focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:bg-white group border-white/50 shadow-xl shadow-primary-900/5">
-          <Search size={18} className="text-slate-300 group-focus-within:text-primary-500 transition-colors" />
+      <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md w-64 focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-300 transition-all">
+          <Search size={14} className="text-slate-400" />
           <input
             placeholder="Search system..."
-            className="bg-transparent border-none text-[13px] focus:ring-0 placeholder:text-slate-300 w-full font-bold text-slate-600"
+            className="bg-transparent border-none text-sm focus:ring-0 placeholder:text-slate-400 w-full text-slate-900 focus:outline-none"
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="w-12 h-12 glass clay-card flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all relative group border-white/50 shadow-xl shadow-primary-900/5">
-            <Bell size={20} />
-            <span className="absolute top-3.5 right-3.5 w-2.5 h-2.5 bg-accent-500 rounded-full border-2 border-white group-hover:scale-125 transition-all shadow-lg shadow-accent-500/30" />
+        <div className="flex items-center gap-2">
+          <button className="w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors relative">
+            <Bell size={16} />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
           </button>
 
-          <Link href="/settings" className="w-12 h-12 glass clay-card flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all overflow-hidden group border-white/50 shadow-xl shadow-primary-900/5">
-            <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
-              <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500" />
-            </div>
+          <Link href="/settings" className="w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+            <Settings size={16} />
           </Link>
         </div>
       </div>

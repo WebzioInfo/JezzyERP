@@ -71,7 +71,7 @@ export default function InvoicePreview({ invoice }: Props) {
 
 
   return (
-    <div className="bg-white p-12 text-sm max-w-4xl mx-auto border shadow-sm print:shadow-none print:border-0" style={{ fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+    <div className="bg-white p-12 text-sm max-w-4xl mx-auto border shadow-sm print:shadow-none print:border-0 print-safe-container" style={{ fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
 
       {/* HEADER WITH LOGO & TITLE */}
       <div className="flex justify-between items-start mb-10 pb-8 border-b border-slate-100">
@@ -200,7 +200,7 @@ export default function InvoicePreview({ invoice }: Props) {
                 : (pkgCount > 0 ? `${pkgCount} ${pkgType}` : "-");
 
               return (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
+                <tr key={i} className="hover:bg-slate-50 transition-colors page-break-avoid">
                   <td className="p-4 text-center border-r border-slate-100 font-bold text-slate-400">{i + 1}</td>
                   <td className="p-4 border-r border-slate-100 text-center text-slate-900 uppercase">
                     {pkgDisplay}
@@ -225,7 +225,7 @@ export default function InvoicePreview({ invoice }: Props) {
       </div>
 
       {/* TOTALS & WORDS */}
-      <div className="grid grid-cols-2 gap-12 mb-12">
+      <div className="grid grid-cols-2 gap-12 mb-12 page-break-avoid">
         <div className="space-y-6">
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 italic">Sum in Narrative</p>
@@ -283,7 +283,7 @@ export default function InvoicePreview({ invoice }: Props) {
       </div>
 
       {/* BANK DETAILS & SIGNATURE */}
-      <div className="grid grid-cols-2 gap-12 text-[10px] items-end border-t border-slate-100 pt-12">
+      <div className="grid grid-cols-2 gap-12 text-[10px] items-end border-t border-slate-100 pt-12 page-break-avoid">
         <div>
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2 italic">
             <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" />

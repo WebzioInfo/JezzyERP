@@ -19,23 +19,23 @@ export default async function ClientsPage({ searchParams }: PageProps) {
     return (
         <div className="space-y-12 animate-in fade-in duration-700 pb-20">
             {/* Page Header (Informational) */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
-                <div className="max-w-2xl">
-                    <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic">
-                        Relationship <span className="text-primary-600">Master</span>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+                        Clients
                     </h1>
-                    <p className="text-slate-500 mt-4 text-lg font-medium leading-relaxed italic">
-                        Enterprise-grade directory for managing corporate identities, billing protocols, and taxation endpoints.
+                    <p className="text-slate-500 mt-1 text-sm">
+                        Manage your customer database and billing profiles.
                     </p>
                 </div>
 
-                <div className="hidden lg:flex items-center gap-6 bg-white px-8 py-6 rounded-[2.5rem] border border-slate-200/40 shadow-2xl transition-all hover:border-primary-100/50">
-                    <div className="w-16 h-16 bg-primary-50 rounded-3xl flex items-center justify-center shadow-inner">
-                        <Building2 className="h-8 w-8 text-primary-600" />
+                <div className="hidden lg:flex items-center gap-4 bg-white px-4 py-3 rounded-md border border-slate-200 shadow-sm">
+                    <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Index Density</div>
-                        <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter italic">{clients.length} <span className="text-sm font-bold text-slate-300 not-italic uppercase tracking-widest ml-1">Nodes</span></div>
+                        <div className="text-xs font-medium text-slate-500 mb-0.5">Total Clients</div>
+                        <div className="text-xl font-semibold text-slate-900 leading-none">{clients.length}</div>
                     </div>
                 </div>
             </div>
