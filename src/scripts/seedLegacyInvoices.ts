@@ -9,11 +9,11 @@ async function runDatabaseSeed() {
   console.log("================ STARTING LEGACY DATABASE SEEDING ================\n");
 
   // Clean cache file to force fresh extraction using our high-precision template parser
-  const cachePath = path.resolve(process.cwd(), "old data invoices", "extracted_cache.json");
-  if (fs.existsSync(cachePath)) {
-    console.log("Removing outdated extraction cache file...");
-    fs.unlinkSync(cachePath);
-  }
+  // const cachePath = path.resolve(process.cwd(), "old data invoices", "extracted_cache.json");
+  // if (fs.existsSync(cachePath)) {
+  //   console.log("Removing outdated extraction cache file...");
+  //   fs.unlinkSync(cachePath);
+  // }
 
   // Pre-seed Cleanup: delete all previous OCR seeded records to avoid partial draft duplicates
   console.log("Cleaning up previous OCR seeded records from database...");

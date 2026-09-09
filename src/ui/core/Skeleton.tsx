@@ -57,15 +57,15 @@ export function SidebarSkeleton() {
 
 export function KpiSkeleton() {
     return (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="glass clay-card p-8 border-0">
-                    <div className="flex items-center justify-between mb-6">
-                        <Skeleton className="w-12 h-12 rounded-2xl" />
+                <div key={i} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+                    <div className="flex items-center justify-between mb-4">
                         <Skeleton className="h-3 w-20" />
+                        <Skeleton className="w-8 h-8 rounded-md" />
                     </div>
-                    <div className="space-y-2 pb-2">
-                        <Skeleton className="h-8 w-32" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-6 w-32" />
                         <Skeleton className="h-3 w-24" />
                     </div>
                 </div>
@@ -76,13 +76,13 @@ export function KpiSkeleton() {
 
 export function ChartSkeleton() {
     return (
-        <div className="glass clay-card p-8 border-0 min-h-[400px] flex flex-col">
-            <div className="flex items-center justify-between mb-8">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs min-h-[400px] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
                 <div className="space-y-2">
-                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-5 w-48" />
                     <Skeleton className="h-3 w-64" />
                 </div>
-                <Skeleton className="h-10 w-32 rounded-xl" />
+                <Skeleton className="h-8 w-28 rounded-md" />
             </div>
             <div className="flex-1 flex items-end gap-2 pb-4">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (

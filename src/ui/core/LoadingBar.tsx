@@ -25,7 +25,7 @@ export function LoadingBar() {
           animate={{ width: "100%", opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed top-0 left-0 h-1 bg-linear-to-r from-primary-500 via-primary-600 to-accent-500 z-[99999] shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+          className="fixed top-0 left-0 h-1 bg-slate-900 z-[99999]"
         />
       )}
     </AnimatePresence>

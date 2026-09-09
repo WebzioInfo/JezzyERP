@@ -175,25 +175,25 @@ export default async function SettingsPage() {
             </Card>
 
             {/* Display & Billing Preferences */}
-            <Card className="border-orange-100 shadow-2xl shadow-orange-500/5 ring-1 ring-orange-500/10">
-              <CardHeader className="bg-linear-to-r from-orange-600 to-amber-600 rounded-t-4xl text-white">
+            <Card>
+              <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                    <ShieldCheck className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <ShieldCheck size={20} />
                   </div>
                   <div>
-                    <CardTitle className="text-white mt-0">Display Preferences</CardTitle>
-                    <CardDescription className="text-orange-100">Controls how your invoices look</CardDescription>
+                    <CardTitle>Display Preferences</CardTitle>
+                    <CardDescription>Controls how your invoices look</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-8">
+              <CardContent className="p-6 pt-6">
                 <div className="space-y-6">
                   {/* Pkg Details Toggle */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-orange-50 border border-orange-100 group transition-all hover:bg-orange-100/50">
-                    <div className="space-y-1">
-                      <p className="text-sm font-black text-orange-900 uppercase tracking-tight italic">Show "No. & Kind of Pkgs" Column</p>
-                      <p className="text-[10px] font-bold text-orange-700/70 uppercase tracking-widest leading-relaxed">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200/80">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium text-slate-900">Show "No. & Kind of Pkgs" Column</p>
+                      <p className="text-xs text-slate-500">
                         Enable this to display physical packaging details (e.g. 10 BOXES) on your PDF invoices.
                       </p>
                     </div>
@@ -203,9 +203,9 @@ export default async function SettingsPage() {
                         name="showPkgDetails"
                         value="true"
                         defaultChecked={settings.showPkgDetails}
-                        className="peer h-6 w-12 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-orange-500 focus:outline-none"
+                        className="peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-200 transition-colors checked:bg-slate-900 focus:outline-none"
                       />
-                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-6"></span>
+                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></span>
                     </div>
                   </div>
 
@@ -245,22 +245,22 @@ export default async function SettingsPage() {
           {/* ── Right Column: Bank & Action ── */}
           <div className="lg:col-span-5 space-y-8">
             {/* Bank Settlement */}
-            <Card className="border-primary-100 shadow-2xl shadow-primary-500/5 ring-1 ring-primary-500/10">
-              <CardHeader className="bg-primary-600 rounded-t-4xl">
+            <Card>
+              <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                    <Landmark className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <Landmark size={20} />
                   </div>
                   <div>
-                    <CardTitle className="text-white mt-0">Bank Settlement</CardTitle>
-                    <CardDescription className="text-primary-100">Verified account for payments</CardDescription>
+                    <CardTitle>Bank Settlement</CardTitle>
+                    <CardDescription>Verified account for payments</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-6">
-                <div className="bg-primary-50 p-4 rounded-2xl border border-primary-100 border-l-4 border-l-primary-500 flex gap-3 mb-6">
-                  <Info className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
-                  <p className="text-[10px] leading-relaxed font-bold italic text-primary-800 uppercase tracking-wider">
+                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 flex gap-2.5 mb-6">
+                  <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-slate-600">
                     This information will be printed on all invoices to facilitate bank transfers.
                   </p>
                 </div>
@@ -306,57 +306,48 @@ export default async function SettingsPage() {
             </Card>
 
             {/* Founder Equity Card */}
-            <Card className="bg-purple-900 border-0 p-8 relative overflow-hidden group">
-              <div className="absolute right-0 top-0 p-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-700">
-                <Briefcase className="w-40 h-40 text-white" />
-              </div>
-              <div className="relative z-10">
-                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Founder Profile</h3>
-                <p className="text-purple-200 text-xs mt-2 mb-6 font-medium">
-                  Manage owner equity, capital contributions, and withdrawals.
-                </p>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <Briefcase size={20} />
+                  </div>
+                  <div>
+                    <CardTitle>Founder Profile</CardTitle>
+                    <CardDescription>Manage owner equity and capital contributions</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 pt-6">
                 <Link href="/accounts/equity">
                   <Button
                     type="button"
-                    variant="secondary"
-                    className="w-full font-black tracking-widest uppercase italic bg-white text-purple-900 hover:bg-purple-50 h-14"
+                    variant="outline"
+                    className="w-full"
                   >
                     Manage Equity
                   </Button>
                 </Link>
-              </div>
+              </CardContent>
             </Card>
 
             {/* Action Card */}
-            <Card className="bg-slate-900 border-0 p-8 relative overflow-hidden group">
-              <div className="absolute right-0 top-0 p-10 opacity-5 pointer-events-none group-hover:scale-125 transition-transform duration-700">
-                <CheckCircle2 className="w-40 h-40 text-white" />
-              </div>
-
-              <div className="relative z-10">
-                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Ready?</h3>
-                <p className="text-slate-400 text-xs mt-2 mb-8 font-medium">
-                  Applying these changes will update all company profile data and reflect on all future invoices immediately.
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <p className="text-xs text-slate-500">
+                  Applying these changes will update your company profile across all future invoices.
                 </p>
 
                 <Button
                   type="submit"
-                  variant="secondary"
+                  variant="primary"
                   size="lg"
-                  className="w-full font-black tracking-widest uppercase italic h-14"
+                  className="w-full"
                 >
-                  <Save className="w-5 h-5" />
-                  Commit Changes
+                  <Save className="w-4 h-4" />
+                  Save Changes
                 </Button>
-
-                <div className="mt-8 flex items-center gap-3 justify-center">
-                  <div className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">System Status: Ready</span>
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </div>
         </div>

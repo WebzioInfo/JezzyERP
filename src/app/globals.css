@@ -1,31 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  /* === TRENDING MODERN PALETTE === */
+  /* === CLEAN ENTERPRISE MINIMAL PALETTE === */
   
-  /* Primary: Deep Royal / Indigo */
-  --color-primary-50: #EEF2FF;
-  --color-primary-100: #E0E7FF;
-  --color-primary-200: #C7D2FE;
-  --color-primary-300: #A5B4FC;
-  --color-primary-400: #818CF8;
-  --color-primary-500: #6366F1;
-  --color-primary-600: #4F46E5;
-  --color-primary-700: #4338CA;
-  --color-primary-800: #3730A3;
-  --color-primary-900: #312E81;
+  /* Primary: Slate / Neutral */
+  --color-primary-50: #F8FAFC;
+  --color-primary-100: #F1F5F9;
+  --color-primary-200: #E2E8F0;
+  --color-primary-300: #CBD5E1;
+  --color-primary-400: #94A3B8;
+  --color-primary-500: #64748B;
+  --color-primary-600: #475569;
+  --color-primary-700: #334155;
+  --color-primary-800: #1E293B;
+  --color-primary-900: #0F172A;
 
-  /* Accent: Vibrant Gold / Amber */
-  --color-accent-50: #FFFBEB;
-  --color-accent-100: #FEF3C7;
-  --color-accent-200: #FDE68A;
-  --color-accent-300: #FCD34D;
-  --color-accent-400: #FBBF24;
-  --color-accent-500: #F59E0B;
-  --color-accent-600: #D97706;
-  --color-accent-700: #B45309;
+  /* Accent: Subtle Indigo */
+  --color-accent-50: #EEF2FF;
+  --color-accent-100: #E0E7FF;
+  --color-accent-200: #C7D2FE;
+  --color-accent-300: #A5B4FC;
+  --color-accent-400: #818CF8;
+  --color-accent-500: #6366F1;
+  --color-accent-600: #4F46E5;
+  --color-accent-700: #4338CA;
 
-  /* Neutral: Soft Slate / Gray */
+  /* Slate Neutrals */
   --color-slate-50: #F8FAFC;
   --color-slate-100: #F1F5F9;
   --color-slate-200: #E2E8F0;
@@ -44,21 +44,9 @@
   --font-display: var(--font-outfit), var(--font-inter), sans-serif;
 
   /* Layout Constants */
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 88px;
-  --header-height: 72px;
-
-  /* Shadows - Claymorphism */
-  --shadow-clay: 8px 8px 16px 0 rgba(0, 0, 0, 0.08), 
-                 inset 4px 4px 8px 0 rgba(255, 255, 255, 0.6), 
-                 inset -4px -4px 8px 0 rgba(0, 0, 0, 0.04);
-  
-  --shadow-clay-hover: 12px 12px 24px 0 rgba(0, 0, 0, 0.12), 
-                       inset 6px 6px 12px 0 rgba(255, 255, 255, 0.8), 
-                       inset -6px -6px 12px 0 rgba(0, 0, 0, 0.06);
-
-  --shadow-clay-inner: inset 2px 2px 4px 0 rgba(0, 0, 0, 0.06), 
-                       inset -2px -2px 4px 0 rgba(255, 255, 255, 0.8);
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 80px;
+  --header-height: 56px;
 }
 
 /* ==========================================

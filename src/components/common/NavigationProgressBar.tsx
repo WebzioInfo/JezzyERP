@@ -58,7 +58,7 @@ export function NavigationProgressBar() {
           className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-slate-100 overflow-hidden"
         >
           <motion.div
-            className="h-full bg-linear-to-r from-indigo-500 via-primary-600 to-indigo-700 shadow-[0_0_15px_rgba(79,70,229,0.5)]"
+            className="h-full bg-slate-900"
             initial={{ width: "0%" }}
             animate={{ width: `${progress}%` }}
             transition={{ type: "spring", stiffness: 50, damping: 20 }}

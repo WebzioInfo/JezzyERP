@@ -318,14 +318,18 @@ export class MigrationService {
               if (dup) throw new Error(`Invoice number '${first.invoiceNo}' is already taken.`);
             }
 
-            // Resolve sequence
-            const lastSequence = await tx.invoice.findFirst({
-              orderBy: { sequenceNumber: 'desc' },
-              select: { sequenceNumber: true },
-            });
-            const nextSequence = (lastSequence?.sequenceNumber || 0) + 1;
-
             let invoiceNo = first.invoiceNo;
+            let nextSequence;
+            const match = invoiceNo ? invoiceNo.match(/(?:JE[-/]B2B[-/]|JE[-/])(\d+)/i) : null;
+            if (match) {
+              nextSequence = parseInt(match[1], 10);
+            } else {
+              const lastSequence = await tx.invoice.findFirst({
+                orderBy: { sequenceNumber: 'desc' },
+                select: { sequenceNumber: true },
+              });
+              nextSequence = (lastSequence?.sequenceNumber || 0) + 1;
+            }
             if (!invoiceNo) {
               const settings = await tx.companySetting.findFirst();
               const prefix = settings?.invoicePrefix || "B2B";

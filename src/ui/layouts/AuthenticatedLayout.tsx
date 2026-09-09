@@ -224,12 +224,12 @@ export default function AuthenticatedLayout({
 
 
   return (
-    <div className="flex h-screen mesh-bg-soft overflow-hidden text-slate-900 font-sans">
+    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900 font-sans">
       <NavigationProgressBar />
       {/* ── Sidebar (Desktop) ── */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col transition-all duration-300 z-50 relative bg-slate-50 border-r border-slate-200",
+          "hidden lg:flex flex-col transition-all duration-300 z-50 relative bg-white border-r border-slate-200",
           !sidebarCollapsed ? "w-(--sidebar-width)" : "w-(--sidebar-collapsed-width)"
         )}
       >
@@ -350,9 +350,9 @@ function SidebarContent({
       )}
 
       {!isMobile && sidebarCollapsed && (
-        <div className="flex justify-center mb-10 animate-reveal">
-          <div className="relative w-12 h-12 rounded-full bg-linear-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center shadow-xl overflow-hidden">
-            <Building2 className="w-6 h-6 text-white" />
+        <div className="flex justify-center mb-8">
+          <div className="w-8 h-8 rounded-md bg-slate-900 flex items-center justify-center">
+            <Building2 className="w-4 h-4 text-white" />
           </div>
         </div>
       )}
@@ -468,9 +468,8 @@ function SidebarContent({
                   className="absolute bottom-full left-0 w-full mb-2 z-50"
                 >
                   <form action={logoutAction}>
-                    <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all group overflow-hidden relative">
-                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                      <Power className="w-4 h-4 text-red-400 group-hover:text-white" />
+                    <button className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-md font-medium text-xs flex items-center justify-center gap-2 hover:bg-rose-600 transition-colors">
+                      <Power className="w-3.5 h-3.5" />
                       <span>Logout</span>
                     </button>
                   </form>
@@ -486,11 +485,11 @@ function SidebarContent({
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="absolute bottom-0 left-full ml-4 z-50 w-48"
+                  className="absolute bottom-0 left-full ml-4 z-50 w-40"
                 >
                   <form action={logoutAction}>
-                    <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl hover:bg-red-600 transition-all">
-                      <Power className="w-4 h-4 text-red-400" />
+                    <button className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-md font-medium text-xs flex items-center justify-center gap-2 hover:bg-rose-600 transition-colors">
+                      <Power className="w-3.5 h-3.5" />
                       <span>Logout</span>
                     </button>
                   </form>
@@ -500,8 +499,8 @@ function SidebarContent({
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shadow-sm border transition-all",
-                isProfileMenuOpen ? "bg-primary-600 text-white border-primary-600 scale-110" : "bg-slate-100 text-primary-600 border-white hover:bg-primary-50"
+                "w-8 h-8 rounded-md flex items-center justify-center text-xs font-semibold border transition-colors",
+                isProfileMenuOpen ? "bg-slate-900 text-white border-slate-900" : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
               )}
             >
               EA

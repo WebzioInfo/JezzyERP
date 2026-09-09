@@ -12,9 +12,14 @@ async function reset() {
     const payments = await db.payment.deleteMany({});
     console.log(`- Deleted ${payments.count} payments.`);
 
-    // 3. Delete Ledger Entries created from invoices
+    // 3. Delete Ledger Entries created from invoices and payments
     const ledger = await db.ledgerEntry.deleteMany({
-      where: { referenceType: "INVOICE" }
+      where: {
+        OR: [
+          { referenceType: "INVOICE" },
+          { referenceType: "PAYMENT" }
+        ]
+      }
     });
     console.log(`- Deleted ${ledger.count} ledger entries.`);
 

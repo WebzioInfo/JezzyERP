@@ -6,7 +6,6 @@ import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { Card, CardHeader, CardContent } from "@/ui/core/Card";
 import { calculateInvoiceStatus } from "@/utils/financial-status";
 
-
 export async function RecentInvoices() {
     const rawInvoices = await (db.invoice as any).findMany({
         where: { deletedAt: null },
@@ -27,48 +26,46 @@ export async function RecentInvoices() {
         })
     }));
 
-
     return (
-        <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
-            <CardHeader className="bg-slate-900 rounded-t-4xl px-8 py-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-xl font-black text-white font-display uppercase italic tracking-tight">Recent Archives</h3>
-                        <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">Last 8 synchronization events</p>
-                    </div>
-                    <Link href="/invoices" className="p-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10">
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
+        <Card>
+            <CardHeader className="border-b border-slate-100 py-4 px-6 flex flex-row items-center justify-between">
+                <div>
+                    <h3 className="text-base font-semibold text-slate-900">Recent Invoices</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Last 8 generated invoices</p>
                 </div>
+                <Link href="/invoices" className="text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1">
+                    <span>View all</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
             </CardHeader>
-            <CardContent className="p-8">
-                <div className="space-y-3">
+            <CardContent className="p-6">
+                <div className="space-y-1">
                     {recentInvoices.length === 0 ? (
                         <EmptyState
-                            icon={<FileText className="w-10 h-10 text-slate-200" />}
+                            icon={<FileText className="w-8 h-8 text-slate-300" />}
                             title="No activity detected"
-                            description="Start by creating an invoice to populate your archives."
+                            description="Start by creating an invoice to populate your list."
                             action={{ label: "Create Invoice", href: "/invoices/new" }}
                         />
                     ) : (
                         recentInvoices.map((inv: any) => (
                             <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                                <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer border border-transparent hover:border-slate-100">
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
-                                            <FileText className="w-5 h-5 text-slate-400 group-hover:text-primary-600" />
+                                <div className="group flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center shrink-0 text-slate-500">
+                                            <FileText className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-black text-sm text-slate-900 uppercase tracking-tight truncate">{inv.invoiceNo}</p>
-                                            <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate">{inv.client.name}</p>
+                                            <p className="font-medium text-sm text-slate-900 truncate">{inv.invoiceNo}</p>
+                                            <p className="text-xs text-slate-500 truncate">{inv.client.name}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-6 shrink-0">
+                                    <div className="flex items-center gap-4 shrink-0">
                                         <div className="hidden sm:block">
                                             <StatusBadge status={inv.status} />
                                         </div>
-                                        <p className="font-black text-sm text-slate-900">{formatCurrency(inv.grandTotal.toNumber())}</p>
-                                        <ChevronRight className="w-5 h-5 text-slate-200 group-hover:text-primary-500 transition-all group-hover:translate-x-1" />
+                                        <p className="font-semibold text-sm text-slate-900">{formatCurrency(inv.grandTotal.toNumber())}</p>
+                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-600 transition-colors" />
                                     </div>
                                 </div>
                             </Link>
@@ -84,14 +81,14 @@ function EmptyState({ icon, title, description, action }: {
     icon: React.ReactNode; title: string; description: string; action?: { label: string; href: string };
 }) {
     return (
-        <div className="text-center py-10">
-            <div className="flex justify-center mb-3">{icon}</div>
-            <p className="font-semibold text-slate-600 text-sm">{title}</p>
-            <p className="text-xs text-slate-400 mt-1 mb-4">{description}</p>
+        <div className="text-center py-8">
+            <div className="flex justify-center mb-2">{icon}</div>
+            <p className="font-medium text-slate-700 text-sm">{title}</p>
+            <p className="text-xs text-slate-400 mt-0.5 mb-4">{description}</p>
             {action && (
                 <Link href={action.href}>
-                    <button className="h-10 px-6 rounded-xl bg-primary-600 text-white text-xs font-black uppercase tracking-widest flex items-center gap-2 mx-auto hover:bg-primary-700 transition-colors">
-                        {action.label} <ArrowRight className="w-4 h-4" />
+                    <button className="h-8 px-3 rounded-md bg-slate-900 text-white text-xs font-medium inline-flex items-center gap-1.5 hover:bg-slate-800 transition-colors">
+                        {action.label} <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                 </Link>
             )}

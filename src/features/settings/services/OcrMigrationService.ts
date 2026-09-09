@@ -315,7 +315,13 @@ export class OcrMigrationService {
     );
 
     // Resolve products & items to insert
-    const nextSequence = (await tx.invoice.count()) + 1;
+    let nextSequence;
+    const match = data.invoiceNo ? data.invoiceNo.match(/(?:JE[-/]B2B[-/]|JE[-/])(\d+)/i) : null;
+    if (match) {
+      nextSequence = parseInt(match[1], 10);
+    } else {
+      nextSequence = (await tx.invoice.count()) + 1;
+    }
     const itemsToCreate = [];
     const billingItems = [];
 
