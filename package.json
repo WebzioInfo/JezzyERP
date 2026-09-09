@@ -63,6 +63,18 @@
     "tailwindcss": "^4",
     "typescript": "^5.9.3"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "core-js",
+      "prisma",
+      "protobufjs",
+      "sharp",
+      "tesseract.js",
+      "unrs-resolver"
+    ]
+  },
   "description": "Jezzy ERP - Enterprise Resource Planning system for Jezzy Enterprises, built with Next.js.",
   "main": "index.js",
   "repository": {
