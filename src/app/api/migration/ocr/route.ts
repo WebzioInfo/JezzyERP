@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/prisma/client";
+import { Prisma } from "@prisma/client";
 import { verifySessionVerified } from "@/lib/auth-server";
 import { OcrMigrationService } from "@/features/settings/services/OcrMigrationService";
 import { MigrationService, DryRunRollback } from "@/features/settings/services/MigrationService";

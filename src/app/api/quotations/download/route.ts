@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        let { quotationId, id, includeLogo = true } = body;
+        const { id, includeLogo = true } = body;
+        let quotationId = body.quotationId;
         
         // Support both id and quotationId for compatibility
         if (!quotationId && id) quotationId = id;
@@ -355,7 +356,7 @@ export async function POST(req: NextRequest) {
             margin: { left: LEFT_MARGIN, right: RIGHT_MARGIN },
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         y = (doc as any).lastAutoTable.finalY + 5;
 
         // Sum and Totals Row inside the main table Area
@@ -413,7 +414,7 @@ export async function POST(req: NextRequest) {
             margin: { left: LEFT_MARGIN, right: RIGHT_MARGIN },
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         y = (doc as any).lastAutoTable.finalY + 8;
 
         // --- TOTALS (RIGHT) ---
@@ -515,7 +516,7 @@ export async function POST(req: NextRequest) {
             W / 2, 285, { align: "center" }
         );
 
-        let finalBuffer = Buffer.from(doc.output("arraybuffer"));
+        const finalBuffer = Buffer.from(doc.output("arraybuffer"));
 
         const seqNum = String(quotation.sequenceNumber || 1).padStart(2, '0');
         const clientName = (quotation.client?.name || quotation.billingName || "CLIENT").split(" ")[0].toUpperCase();

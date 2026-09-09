@@ -415,7 +415,7 @@ export class InvoiceService {
 
     // Handle sequenceNumber restoration
     // We try to restore to a positive one if it was negative, but we need to find a gap or just use the absolute value if it doesn't conflict
-    let restoredSequence = Math.abs(existing.sequenceNumber);
+    const restoredSequence = Math.abs(existing.sequenceNumber);
     
     // Check if the number or sequence is already taken
     const conflict = await invoiceRepo.model.findFirst({

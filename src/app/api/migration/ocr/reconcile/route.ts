@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
 
     const auditData = await MigrationService.reconcileBalances();
     return NextResponse.json({
-      success: true,
       ...auditData
     });
   } catch (error: any) {

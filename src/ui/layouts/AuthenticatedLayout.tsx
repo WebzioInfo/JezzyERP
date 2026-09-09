@@ -326,6 +326,7 @@ function SidebarContent({
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
+  const { expandedSections, toggleSection } = useUIStore();
 
   useEffect(() => {
     setNavigatingHref(null);
@@ -362,7 +363,6 @@ function SidebarContent({
         sidebarCollapsed ? "overflow-y-auto scrollbar-hide px-2" : "overflow-y-auto px-4 custom-scrollbar"
       )} data-lenis-prevent>
         {NAV_SECTIONS.map((section) => {
-          const { expandedSections, toggleSection } = useUIStore();
           const isExpanded = expandedSections.includes(section.label);
 
           return (

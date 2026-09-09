@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { range, startDate, endDate, clientId, status, gstType, format = 'ORIGINAL' } = body;
 
-        let where: any = { deletedAt: null };
+        const where: any = { deletedAt: null };
 
         // Date Filters (Same as preview)
         const now = new Date();

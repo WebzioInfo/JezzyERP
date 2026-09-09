@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/ui/core/Card";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { PurchaseTable } from "@/features/procurement/components/PurchaseTable";
 import { PurchaseService } from "@/features/procurement/services/PurchaseService";
 import { Zap, ArrowRight, ShieldCheck, TrendingUp, Building2, Search } from "lucide-react";
@@ -57,14 +58,14 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
                     </p>
 
                     <div className="mt-8 flex flex-wrap gap-4">
-                        <a
+                        <Link
                             href="/purchases/import"
                             className="h-16 px-10 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                         >
                             <Zap className="w-5 h-5" />
                             <span>AI Import Bill</span>
                             <ArrowRight className="w-5 h-5 opacity-50" />
-                        </a>
+                        </Link>
                     </div>
                 </div>
                 <div className="hidden lg:grid grid-cols-1 gap-4">

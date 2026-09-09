@@ -32,7 +32,7 @@ export function NavigationProgressBar() {
       ) {
         setIsNavigating(true);
         // Start progress
-        let interval = setInterval(() => {
+        const interval = setInterval(() => {
           setProgress(prev => {
             if (prev >= 90) {
               clearInterval(interval);

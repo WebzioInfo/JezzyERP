@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        let { invoiceId, id, includeLogo = true } = body;
+        const { id, includeLogo = true } = body;
+        let invoiceId = body.invoiceId;
         
         // Support both id and invoiceId for compatibility
         if (!invoiceId && id) invoiceId = id;
@@ -368,7 +369,7 @@ export async function POST(req: NextRequest) {
             margin: { left: LEFT_MARGIN, right: RIGHT_MARGIN },
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         y = (doc as any).lastAutoTable.finalY + 5;
 
         // Sum and Totals Row inside the main table Area
@@ -426,7 +427,7 @@ export async function POST(req: NextRequest) {
             margin: { left: LEFT_MARGIN, right: RIGHT_MARGIN },
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         y = (doc as any).lastAutoTable.finalY + 8;
 
         // --- TOTALS (RIGHT) ---

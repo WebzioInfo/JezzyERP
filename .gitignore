@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local migration & OCR data
+/old data invoices/
+extracted_cache.json
+eng.traineddata
+*.log
+scratch/

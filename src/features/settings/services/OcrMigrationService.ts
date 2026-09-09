@@ -672,6 +672,9 @@ export class OcrMigrationService {
     const customerMatch = text.match(/(?:M\/s|Customer Name|Client Name|Sold To|Bill To)\s*[:.]?\s*([A-Za-z0-9\s.]+)/i);
     const clientName = customerMatch ? customerMatch[1].trim() : "Legacy OCR Customer";
 
+    const roundMatch = text.match(/Rounding Off:\s*([+-]?[0-9.]+)/i);
+    const roundOff = roundMatch ? parseFloat(roundMatch[1]) : 0;
+
     return {
       clientName: this.cleanText(clientName, ["BILL TO", "SHIP TO", "BUYER", "CONSIGNEE", "CUSTOMER", "PARTY", "M/S"]),
       clientGst: this.cleanText(clientGst, ["GSTIN", "GST", "UIN", "NO", "NUMBER"]),
@@ -682,6 +685,7 @@ export class OcrMigrationService {
       date,
       ewayBill: null,
       vehicleNo: null,
+      roundOff,
       confidence: 85,
       items: [
         {

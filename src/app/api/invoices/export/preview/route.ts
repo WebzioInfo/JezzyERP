@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         const status = searchParams.get("status");
         const gstType = searchParams.get("gstType");
 
-        let where: any = { deletedAt: null };
+        const where: any = { deletedAt: null };
 
         // Date Filters
         const now = new Date();

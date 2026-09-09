@@ -713,7 +713,7 @@ export class MigrationService {
           _sum: { quantityChange: true }
         });
 
-        const derivedStock = Number(purchaseSums._sum.qty || 0) - Number(invoiceSums._sum.qty || 0) + Number(manualSums._sum.qty || manualSums._sum.quantityChange || 0);
+        const derivedStock = Number(purchaseSums._sum.qty || 0) - Number(invoiceSums._sum.qty || 0) + Number(manualSums._sum.quantityChange || 0);
         
         const currentStock = await tx.stock.findUnique({ where: { productId: p.id } });
         const actualStock = currentStock ? Number(currentStock.quantity) : 0;

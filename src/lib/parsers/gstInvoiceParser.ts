@@ -123,8 +123,8 @@ export function parseGstInvoice(text: string): Partial<ParsedDocument> {
         // Component B: "39239090 1,200 Nos 110.40 Nos 1,32,480.00" -> HSN Qty Unit Rate Per Amount
         const hsnStatsPattern = /^(\d{4,8})\s+([\d,.]+)\s+([a-zA-Z]+)\s+([\d,.]+)\s+([a-zA-Z]+)\s+([\d,.]+)$/;
         
-        let match1 = line.match(tallyPattern1);
-        let match2 = line.match(tallyPattern2);
+        const match1 = line.match(tallyPattern1);
+        const match2 = line.match(tallyPattern2);
         
         let desc = "", hsn = "", unit = "Nos";
         let qty: number | string = 0, rate: number | string = 0, amount: number | string = 0;
@@ -138,9 +138,9 @@ export function parseGstInvoice(text: string): Partial<ParsedDocument> {
             matched = true;
         } else {
             // Check for multi-line split
-            let slMatch = line.match(slDescPattern);
+            const slMatch = line.match(slDescPattern);
             if (slMatch && i + 1 < lines.length) {
-                let statsMatch = lines[i+1].trim().match(hsnStatsPattern);
+                const statsMatch = lines[i+1].trim().match(hsnStatsPattern);
                 if (statsMatch) {
                     desc = slMatch[2].trim();
                     [ , hsn, qty as any, unit, rate as any, , amount as any] = statsMatch;

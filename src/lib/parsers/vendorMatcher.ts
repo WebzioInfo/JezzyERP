@@ -12,7 +12,7 @@ export function matchVendor(extractedGst: string, extractedName: string, vendors
         const lowerExtracted = extractedName.toLowerCase().replace(/[^a-z0-9]/g, '');
         
         // Exact fuzzy
-        let nameMatch = vendors.find(v => {
+        const nameMatch = vendors.find(v => {
             const lowerV = v.name.toLowerCase().replace(/[^a-z0-9]/g, '');
             return lowerV === lowerExtracted || lowerV.includes(lowerExtracted) || lowerExtracted.includes(lowerV);
         });
