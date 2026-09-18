@@ -39,30 +39,54 @@ export class QuotationService {
     return await db.$transaction(async (tx) => {
       // 1. Get next sequence number for quotations
       const lastQuo = await tx.quotation.findFirst({
+        where: { sequenceNumber: { gt: 0 } },
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastQuo?.sequenceNumber || 0) + 1;
       
       // Indian FY runs April 1 -> March 31
-      const docDate = new Date(data.date);
+      const docDate = new Date(data.date || new Date());
       const year = docDate.getFullYear();
       const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
       const fyStartYear = month >= 3 ? year : year - 1;
       const fyEndYear = fyStartYear + 1;
       const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
-      const fyStart = new Date(fyStartYear, 3, 1);
-      const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
 
-      // Count quotations in this FY to get next sequence
-      const countThisFY = await tx.quotation.count({
-          where: {
-              date: { gte: fyStart, lte: fyEnd },
-              deletedAt: null
+      // Find all existing quotations in this financial year to determine highest sequence
+      const existingQuotations = await tx.quotation.findMany({
+        where: {
+          quotationNo: {
+            contains: fy
           }
+        },
+        select: { quotationNo: true }
       });
 
-      const seq = String(countThisFY + 1).padStart(2, '0');
-      const quoNo = `JE/QUO/${seq}/${fy}`;
+      let maxSeq = 0;
+      for (const quo of existingQuotations) {
+        const match = quo.quotationNo.match(/(?:JE[\/\-]QUO[\/\-]|\/)(\d+)(?:[\/\-]|$)/i);
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      }
+
+      let nextSeqNum = maxSeq + 1;
+      let quoNo = "";
+      while (true) {
+        const seqStr = String(nextSeqNum).padStart(2, '0');
+        const candidateNo = `JE/QUO/${seqStr}/${fy}`;
+        const exists = await tx.quotation.findFirst({
+          where: { quotationNo: candidateNo }
+        });
+        if (!exists) {
+          quoNo = candidateNo;
+          break;
+        }
+        nextSeqNum++;
+      }
 
       // 2. Create the quotation
       const quotation = await tx.quotation.create({
@@ -165,6 +189,7 @@ export class QuotationService {
 
       // 1. Get next invoice sequence
       const lastInv = await tx.invoice.findFirst({
+        where: { sequenceNumber: { gt: 0 } },
         orderBy: { sequenceNumber: "desc" },
       });
       const nextSeq = (lastInv?.sequenceNumber || 0) + 1;
@@ -175,20 +200,45 @@ export class QuotationService {
       const fyStartYear = month >= 3 ? year : year - 1;
       const fyEndYear = fyStartYear + 1;
       const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
-      const fyStart = new Date(fyStartYear, 3, 1);
-      const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
 
-      // Count invoices in this FY to get next sequence
-      const countThisFY = await tx.invoice.count({
-          where: {
-              date: { gte: fyStart, lte: fyEnd }
-          }
-      });
-
-      const seq = String(countThisFY + 1).padStart(2, '0');
       const settings = await tx.companySetting.findFirst();
       const prefix = settings?.invoicePrefix || "B2B";
-      const invNo = `JE/${prefix}/${seq}/${fy}`;
+
+      // Find all existing invoices in this financial year to determine highest sequence
+      const existingInvoices = await tx.invoice.findMany({
+        where: {
+          invoiceNo: {
+            contains: fy
+          }
+        },
+        select: { invoiceNo: true }
+      });
+
+      let maxSeq = 0;
+      for (const inv of existingInvoices) {
+        const match = inv.invoiceNo.match(/(?:JE[\/\-][A-Za-z0-9]+[\/\-]|\/)(\d+)(?:[\/\-]|$)/i);
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      }
+
+      let nextSeqNum = maxSeq + 1;
+      let invNo = "";
+      while (true) {
+        const seqStr = String(nextSeqNum).padStart(2, '0');
+        const candidateNo = `JE/${prefix}/${seqStr}/${fy}`;
+        const exists = await tx.invoice.findFirst({
+          where: { invoiceNo: candidateNo }
+        });
+        if (!exists) {
+          invNo = candidateNo;
+          break;
+        }
+        nextSeqNum++;
+      }
 
       // 2. Create the Invoice
       const invoice = await tx.invoice.create({

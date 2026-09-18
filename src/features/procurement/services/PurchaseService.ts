@@ -161,16 +161,50 @@ export class PurchaseService {
       const now = new Date();
       const month = now.getMonth();
       const year = now.getFullYear();
-      const fyStart = new Date(month >= 3 ? year : year - 1, 3, 1);
-      const fyEnd = new Date(month >= 3 ? year + 1 : year, 2, 31, 23, 59, 59);
-      const fyStr = month >= 3 ? `${year % 100}-${(year + 1) % 100}` : `${(year - 1) % 100}-${year % 100}`;
+      const fyStartYear = month >= 3 ? year : year - 1;
+      const fyEndYear = fyStartYear + 1;
+      const fyStr = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
 
-      const countThisFY = await tx.purchase.count({
-        where: { date: { gte: fyStart, lte: fyEnd }, deletedAt: null }
+      const lastPurchase = await tx.purchase.findFirst({
+        where: { sequenceNumber: { gt: 0 } },
+        orderBy: { sequenceNumber: 'desc' },
+        select: { sequenceNumber: true }
       });
-      
-      const nextSequence = countThisFY + 1;
-      const purchaseNo = `JE/PUR/${String(nextSequence).padStart(2, '0')}/${fyStr}`;
+      const nextSequence = (lastPurchase?.sequenceNumber || 0) + 1;
+
+      const existingPurchases = await tx.purchase.findMany({
+        where: {
+          purchaseNo: {
+            contains: fyStr
+          }
+        },
+        select: { purchaseNo: true }
+      });
+
+      let maxSeq = 0;
+      for (const p of existingPurchases) {
+        const match = p.purchaseNo.match(/(?:JE[\/\-]PUR[\/\-]|\/)(\d+)(?:[\/\-]|$)/i);
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      }
+
+      let nextSeqNum = maxSeq + 1;
+      let purchaseNo = "";
+      while (true) {
+        const candidateNo = `JE/PUR/${String(nextSeqNum).padStart(2, '0')}/${fyStr}`;
+        const exists = await tx.purchase.findFirst({
+          where: { purchaseNo: candidateNo }
+        });
+        if (!exists) {
+          purchaseNo = candidateNo;
+          break;
+        }
+        nextSeqNum++;
+      }
 
       // 4. Create Purchase Record
       const purchase = await tx.purchase.create({

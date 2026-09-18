@@ -39,6 +39,7 @@ export class InvoiceService {
     return await dbAny.$transaction(async (tx: any) => {
       // 2. Sequence Generation
       const lastSequence = await tx.invoice.findFirst({
+        where: { sequenceNumber: { gt: 0 } },
         orderBy: { sequenceNumber: 'desc' },
         select: { sequenceNumber: true },
       });
@@ -51,25 +52,47 @@ export class InvoiceService {
         const prefix = settings?.invoicePrefix || "B2B";
         
         // Indian FY runs April 1 -> March 31
-        const docDate = new Date(validatedData.date);
+        const docDate = new Date(validatedData.date || new Date());
         const year = docDate.getFullYear();
         const month = docDate.getMonth(); // 0-indexed; March = 2, April = 3
         const fyStartYear = month >= 3 ? year : year - 1;
         const fyEndYear = fyStartYear + 1;
         const fy = `${String(fyStartYear).slice(-2)}-${String(fyEndYear).slice(-2)}`;
-        const fyStart = new Date(fyStartYear, 3, 1);
-        const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
 
-        // Count invoices in this FY to get next sequence
-        const countThisFY = await tx.invoice.count({
-            where: {
-                date: { gte: fyStart, lte: fyEnd },
-                deletedAt: null
+        // Find all existing invoices in this financial year to determine highest sequence
+        const existingInvoices = await tx.invoice.findMany({
+          where: {
+            invoiceNo: {
+              contains: fy
             }
+          },
+          select: { invoiceNo: true }
         });
 
-        const seq = String(countThisFY + 1).padStart(2, '0');
-        invoiceNo = `JE/${prefix}/${seq}/${fy}`;
+        let maxSeq = 0;
+        for (const inv of existingInvoices) {
+          const match = inv.invoiceNo.match(/(?:JE[\/\-][A-Za-z0-9]+[\/\-]|\/)(\d+)(?:[\/\-]|$)/i);
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) {
+              maxSeq = num;
+            }
+          }
+        }
+
+        let nextSeqNum = maxSeq + 1;
+        while (true) {
+          const seqStr = String(nextSeqNum).padStart(2, '0');
+          const candidateNo = `JE/${prefix}/${seqStr}/${fy}`;
+          const exists = await tx.invoice.findFirst({
+            where: { invoiceNo: candidateNo }
+          });
+          if (!exists) {
+            invoiceNo = candidateNo;
+            break;
+          }
+          nextSeqNum++;
+        }
       }
 
       // 3. Persistence
