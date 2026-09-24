@@ -34,6 +34,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
+import { GlobalSearchInput } from "@/components/common/GlobalSearchInput";
 import { logoutAction } from "@/features/auth/actions/auth";
 
 import { cn } from "@/utils";
@@ -555,13 +556,7 @@ function Header({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md w-64 focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-300 transition-all">
-          <Search size={14} className="text-slate-400" />
-          <input
-            placeholder="Search system..."
-            className="bg-transparent border-none text-sm focus:ring-0 placeholder:text-slate-400 w-full text-slate-900 focus:outline-none"
-          />
-        </div>
+        <GlobalSearchInput />
 
         <div className="flex items-center gap-2">
           <button className="w-8 h-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors relative">

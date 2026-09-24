@@ -48,7 +48,19 @@ export default function DashboardPage() {
     );
   }
 
-  const { totalInvoices, totalClients, totalProducts, totalStock, totalReceivable, recentTransactions } = data || {};
+  const {
+    totalInvoices,
+    totalPurchases,
+    totalClients,
+    totalVendors,
+    totalProducts,
+    totalStock,
+    todaySales,
+    todayCollections,
+    totalReceivable,
+    totalPayable,
+    recentTransactions
+  } = data || {};
 
   return (
     <div className="space-y-6 pb-12">
@@ -79,26 +91,40 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           icon={<Receipt className="w-5 h-5" />}
           label="Total Receivable"
-          value={formatCurrency(totalReceivable)}
+          value={formatCurrency(totalReceivable ?? 0)}
           badge="Live"
           color="blue"
         />
         <MetricCard
-          icon={<Users className="w-5 h-5" />}
-          label="Active Clients"
-          value={totalClients?.toString()}
+          icon={<Wallet className="w-5 h-5" />}
+          label="Total Payable"
+          value={formatCurrency(totalPayable ?? 0)}
+          badge="Live"
+          color="rose"
+        />
+        <MetricCard
+          icon={<BarChart3 className="w-5 h-5" />}
+          label="Today's Sales"
+          value={formatCurrency(todaySales ?? 0)}
           color="emerald"
         />
         <MetricCard
-          icon={<FileText className="w-5 h-5" />}
-          label="Invoices Issued"
-          value={totalInvoices?.toString()}
-          color="amber"
+          icon={<Activity className="w-5 h-5" />}
+          label="Today's Collections"
+          value={formatCurrency(todayCollections ?? 0)}
+          color="indigo"
         />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MiniMetric label="Active Clients" value={totalClients ?? 0} icon={<Users className="w-4 h-4 text-blue-600" />} />
+        <MiniMetric label="Active Vendors" value={totalVendors ?? 0} icon={<Building2 className="w-4 h-4 text-purple-600" />} />
+        <MiniMetric label="Invoices Issued" value={totalInvoices ?? 0} icon={<FileText className="w-4 h-4 text-amber-600" />} />
+        <MiniMetric label="Stock Items" value={`${totalProducts ?? 0} (${totalStock ?? 0} qty)`} icon={<Package className="w-4 h-4 text-emerald-600" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,5 +286,21 @@ function HealthBar({ label, value, width }: any) {
         <div className={cn("h-full bg-white rounded-full", width)} />
       </div>
     </div>
+  );
+}
+
+function MiniMetric({ label, value, icon }: any) {
+  return (
+    <Card>
+      <CardContent className="p-4 flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-500 font-medium">{label}</p>
+          <p className="text-lg font-semibold text-slate-900 tracking-tight mt-0.5">{value}</p>
+        </div>
+        <div className="w-8 h-8 rounded-md bg-slate-50 flex items-center justify-center border border-slate-100">
+          {icon}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

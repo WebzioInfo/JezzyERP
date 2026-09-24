@@ -1,3 +1,4 @@
+import "server-only";
 import { db } from "@/db/prisma/client";
 import { recordAuditLog } from "@/lib/audit";
 import { InvoicePdfService } from "./InvoicePdfService";

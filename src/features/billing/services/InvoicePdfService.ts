@@ -1,3 +1,4 @@
+import "server-only";
 import { db } from "@/db/prisma/client";
 import { numberToWords } from "@/utils/financials";
 import jsPDF from "jspdf";

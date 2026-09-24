@@ -1,3 +1,4 @@
+import "server-only";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { db } from "@/db/prisma/client";

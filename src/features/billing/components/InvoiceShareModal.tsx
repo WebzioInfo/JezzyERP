@@ -11,7 +11,14 @@ import { prepareWhatsAppShareAction, sendInvoiceEmailAction, getInvoiceShareData
 import { getPartyAccountOverviewAction, prepareStatementWhatsAppAction, sendStatementEmailAction } from "../actions/accountActions";
 import apiClient from "@/lib/apiClient";
 
-import { InvoiceShareService } from "../services/InvoiceShareService";
+import { 
+    buildWhatsAppShareMessage, 
+    buildWhatsAppFollowupMessage, 
+    buildEmailShareContent, 
+    buildEmailFollowupContent,
+    buildWhatsAppStatementMessage,
+    buildEmailStatementContent
+} from "../utils/shareTemplates";
 
 export interface InvoiceShareModalProps {
     isOpen: boolean;
@@ -72,17 +79,17 @@ export function InvoiceShareModal({
                 if (channel === 'WHATSAPP') {
                     setRecipient(data.customerPhone || "");
                     if (actionType === 'SHARE') {
-                        setMessagePreview(InvoiceShareService.buildWhatsAppShareMessage(data));
+                        setMessagePreview(buildWhatsAppShareMessage(data));
                     } else {
-                        setMessagePreview(InvoiceShareService.buildWhatsAppFollowupMessage(data));
+                        setMessagePreview(buildWhatsAppFollowupMessage(data));
                     }
                 } else {
                     setRecipient(data.customerEmail || "");
                     if (actionType === 'SHARE') {
-                        const content = InvoiceShareService.buildEmailShareContent(data);
+                        const content = buildEmailShareContent(data);
                         setMessagePreview(`Subject: ${content.subject}\n\n${content.body}`);
                     } else {
-                        const content = InvoiceShareService.buildEmailFollowupContent(data);
+                        const content = buildEmailFollowupContent(data);
                         setMessagePreview(`Subject: ${content.subject}\n\n${content.body}`);
                     }
                 }
@@ -108,10 +115,10 @@ export function InvoiceShareModal({
 
                 if (channel === 'WHATSAPP') {
                     setRecipient(summary.phone || "");
-                    setMessagePreview(InvoiceShareService.buildWhatsAppStatementMessage(summary, isClient, bankDetailsShort));
+                    setMessagePreview(buildWhatsAppStatementMessage(summary, isClient, bankDetailsShort));
                 } else {
                     setRecipient(summary.email || "");
-                    const content = InvoiceShareService.buildEmailStatementContent(summary, isClient, bankDetails);
+                    const content = buildEmailStatementContent(summary, isClient, bankDetails);
                     setMessagePreview(`Subject: ${content.subject}\n\n${content.body}`);
                 }
             }
