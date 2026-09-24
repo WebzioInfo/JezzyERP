@@ -29,7 +29,7 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
     const initialData = {
         id: purchase.id,
         entityId: purchase.vendorId,
-        invoiceNo: purchase.invoiceNo,
+        invoiceNo: (purchase as any).invoiceNo || (purchase as any).purchaseNo,
         date: purchase.date,
         gstType: purchase.gstType,
         ewayBill: purchase.ewayBill,

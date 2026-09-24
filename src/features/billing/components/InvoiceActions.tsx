@@ -3,12 +3,15 @@
 import { useState, useTransition } from "react";
 import { markInvoiceSentAction, deleteInvoiceAction } from "@/features/billing/actions/billing";
 import { useToast } from "@/context/ToastContext";
-import { Button } from "@/ui/core/Button";
-import { Send, FileDown, CheckCircle2, Edit, Loader2, Trash2, Printer } from "lucide-react";
+import { 
+    Send, FileDown, CheckCircle2, Edit, Loader2, Trash2, Printer, 
+    Share2, MessageSquare, Mail, BellRing
+} from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/lib/apiClient";
 import { useConfirmStore } from "@/hooks/useConfirmStore";
 import { useRouter } from "next/navigation";
+import { InvoiceShareModal } from "./InvoiceShareModal";
 
 interface InvoiceActionsProps {
     invoiceId: string;
@@ -25,6 +28,24 @@ export function InvoiceActions({
     const { confirm } = useConfirmStore();
     const router = useRouter();
 
+    // Modal state for invoice sharing & follow-up
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        actionType: 'SHARE' | 'FOLLOWUP';
+        channel: 'WHATSAPP' | 'EMAIL';
+    }>({
+        isOpen: false,
+        actionType: 'SHARE',
+        channel: 'WHATSAPP'
+    });
+
+    const openShareModal = (actionType: 'SHARE' | 'FOLLOWUP', channel: 'WHATSAPP' | 'EMAIL') => {
+        setModalConfig({
+            isOpen: true,
+            actionType,
+            channel
+        });
+    };
 
     const handleMarkSent = () => {
         startTransition(async () => {
@@ -76,7 +97,6 @@ export function InvoiceActions({
         try {
             const res = await fetchPDFBlob();
 
-            // Derive filename from Content-Disposition header or fallback
             const disposition = (res.headers as any)["content-disposition"] || "";
             const fileNameMatch = disposition.match(/filename="?([^"]+)"?/);
             const fileName = fileNameMatch ? fileNameMatch[1] : `invoice-${invoiceId}.pdf`;
@@ -106,7 +126,6 @@ export function InvoiceActions({
             const res = await fetchPDFBlob();
             const url = URL.createObjectURL(res.data);
 
-            // Create a hidden iframe to trigger print
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.src = url;
@@ -114,7 +133,6 @@ export function InvoiceActions({
 
             iframe.onload = () => {
                 iframe.contentWindow?.print();
-                // Clean up after a delay to allow print dialog to open
                 setTimeout(() => {
                     document.body.removeChild(iframe);
                     URL.revokeObjectURL(url);
@@ -131,64 +149,144 @@ export function InvoiceActions({
         }
     };
 
+    const isPaid = status === "PAID";
+
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:justify-between gap-3 w-full bg-slate-900/5 p-2.5 rounded-[2.5rem] border border-slate-200/60 backdrop-blur-md shadow-xl">
-            {status === "DRAFT" && (
-                <button
-                    onClick={handleMarkSent}
-                    disabled={isPending}
-                    className="w-full lg:w-auto flex-1 h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
-                >
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 text-primary-500" />}
-                    Mark as Sent
-                </button>
-            )}
+        <div className="space-y-4 w-full">
+            {/* Main Action Bar */}
+            <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4">
+                
+                {/* ── SECTION 1: INVOICE ACTIONS ── */}
+                <div>
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                        <Share2 className="w-3.5 h-3.5 text-primary-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            Invoice Share Actions
+                        </span>
+                    </div>
 
-            {status !== "PAID" && status !== "DRAFT" && (
-                <Link href={`/payments/new?invoiceId=${invoiceId}`} className="w-full lg:w-auto flex-1 flex">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                            className="h-12 px-4 bg-white/10 hover:bg-white/15 text-white border border-white/10 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                        >
+                            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4 text-slate-300" />}
+                            {isDownloading ? "Generating..." : "View / PDF"}
+                        </button>
+
+                        <button
+                            onClick={() => openShareModal('SHARE', 'WHATSAPP')}
+                            className="h-12 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 active:scale-[0.98]"
+                        >
+                            <MessageSquare className="w-4 h-4 fill-current" />
+                            Share via WhatsApp
+                        </button>
+
+                        <button
+                            onClick={() => openShareModal('SHARE', 'EMAIL')}
+                            className="h-12 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/40 active:scale-[0.98]"
+                        >
+                            <Mail className="w-4 h-4" />
+                            Share via Email
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── SECTION 2: FOLLOW UP ── */}
+                <div className="pt-3 border-t border-slate-800">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <div className="flex items-center gap-2">
+                            <BellRing className="w-3.5 h-3.5 text-amber-400" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                Payment Follow-Up
+                            </span>
+                        </div>
+                        {isPaid && (
+                            <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
+                                Fully Paid
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button
+                            onClick={() => openShareModal('FOLLOWUP', 'WHATSAPP')}
+                            disabled={isPaid}
+                            title={isPaid ? "Invoice is fully paid" : "Send WhatsApp Payment Follow-up"}
+                            className="h-12 px-4 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-slate-800 active:scale-[0.98]"
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            Follow Up via WhatsApp
+                        </button>
+
+                        <button
+                            onClick={() => openShareModal('FOLLOWUP', 'EMAIL')}
+                            disabled={isPaid}
+                            title={isPaid ? "Invoice is fully paid" : "Send Email Payment Follow-up"}
+                            className="h-12 px-4 bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-slate-800 active:scale-[0.98]"
+                        >
+                            <Mail className="w-4 h-4" />
+                            Follow Up via Email
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── SECTION 3: MANAGEMENT & SETTLEMENT ACTIONS ── */}
+                <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+                    {status === "DRAFT" && (
+                        <button
+                            onClick={handleMarkSent}
+                            disabled={isPending}
+                            className="flex-1 h-11 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5 text-primary-400" />}
+                            Mark as Sent
+                        </button>
+                    )}
+
+                    {!isPaid && status !== "DRAFT" && (
+                        <Link href={`/payments/new?invoiceId=${invoiceId}`} className="flex-1 flex">
+                            <button className="w-full h-11 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md flex items-center justify-center gap-2 transition-all">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Record Settlement
+                            </button>
+                        </Link>
+                    )}
+
+                    <Link href={`/invoices/${invoiceId}/edit`} className="flex-1 flex">
+                        <button className="w-full h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-700 flex items-center justify-center gap-2 transition-all">
+                            <Edit className="w-3.5 h-3.5 text-indigo-400" /> Modify
+                        </button>
+                    </Link>
+
                     <button
-                        className="w-full h-14 px-6 bg-emerald-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                        onClick={handlePrint}
+                        disabled={isDownloading}
+                        className="flex-1 h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-700 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                     >
-                        <CheckCircle2 className="w-4 h-4" /> Record Settlement
+                        {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5 text-slate-400" />}
+                        Print
                     </button>
-                </Link>
-            )}
 
-            <Link href={`/invoices/${invoiceId}/edit`} className="w-full lg:w-auto flex-1 flex">
-                <button className="w-full h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
-                    <Edit className="w-4 h-4 text-indigo-500" /> Modify
-                </button>
-            </Link>
+                    <button
+                        onClick={handleTrash}
+                        disabled={isPending}
+                        className="h-11 px-3 bg-red-950/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 rounded-xl flex items-center justify-center transition-all active:scale-95 group"
+                        title="Trash Invoice"
+                    >
+                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    </button>
+                </div>
+            </div>
 
-            <button
-                onClick={handlePrint}
-                disabled={isDownloading}
-                className="w-full lg:w-auto flex-1 h-14 px-6 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
-            >
-                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4 text-slate-400" />}
-                {isDownloading ? "Preparing…" : "Print Protocol"}
-            </button>
-
-            <button
-                onClick={handleDownload}
-                disabled={isDownloading}
-                className="w-full lg:w-auto flex-1 h-14 px-6 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-slate-900/10 hover:bg-primary-600 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70"
-            >
-                {isDownloading
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <FileDown className="w-4 h-4" />
-                }
-                {isDownloading ? "Generating…" : "Download Ledger"}
-            </button>
-
-            <button
-                onClick={handleTrash}
-                disabled={isPending}
-                className="w-full lg:w-16 h-14 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl flex items-center justify-center transition-all active:scale-95 group col-span-2 md:col-span-1 border border-red-100"
-                title="Terminate Record"
-            >
-                <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </button>
+            {/* Invoice Share & Follow Up Modal */}
+            <InvoiceShareModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+                invoiceId={invoiceId}
+                actionType={modalConfig.actionType}
+                channel={modalConfig.channel}
+            />
         </div>
     );
 }

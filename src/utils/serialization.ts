@@ -1,43 +1,73 @@
 /**
- * This utility handles serialization of Prisma-specific types that are not 
- * compatible with Next.js Client Components (e.g., Decimal objects).
+ * Utility for robust serialization of Prisma models & database entities.
+ * Ensures compatibility across Next.js Server Components -> Client Components boundaries.
+ * Correctly converts Decimal objects, BigInts, and nested structures without data loss.
  */
 
-/**
- * Recursively traverses an object and converts Prisma Decimal objects to standard numbers.
- * This is necessary because Next.js Client Components only accept "plain objects".
- */
-export function serializePrisma<T>(data: T): any {
-  if (data === null || data === undefined) return data;
-
-  // Handle Arrays
-  if (Array.isArray(data)) {
-    return data.map(serializePrisma);
-  }
-
-  // Handle Dates (Next.js supports Dates, but we keep them as is)
-  if (data instanceof Date) {
+export function serializePrisma<T>(data: T): T {
+  if (data === null || data === undefined) {
     return data;
   }
 
+  // Handle Primitive Types (string, number, boolean, symbol)
+  const dataType = typeof data;
+  if (dataType === "string" || dataType === "number" || dataType === "boolean" || dataType === "symbol") {
+    return data;
+  }
+
+  // Handle BigInt
+  if (dataType === "bigint") {
+    return Number(data) as unknown as T;
+  }
+
+  // Handle Arrays
+  if (Array.isArray(data)) {
+    return data.map((item) => serializePrisma(item)) as unknown as T;
+  }
+
+  // Handle Dates
+  if (data instanceof Date) {
+    return new Date(data.getTime()) as unknown as T;
+  }
+
   // Handle Objects
-  if (typeof data === "object") {
-    // Check for Prisma Decimal (robust detection)
-    const isDecimal = data && typeof (data as any).toNumber === "function" && 
-      (data.constructor?.name === "Decimal" || ((data as any).d && (data as any).e !== undefined));
+  if (dataType === "object") {
+    const obj = data as Record<string, any>;
+
+    // Robust Prisma Decimal / Decimal.js detection
+    const isDecimal = Boolean(
+      obj &&
+      (
+        typeof obj.toNumber === "function" ||
+        typeof obj.toFixed === "function" ||
+        obj._isDecimal === true ||
+        obj.constructor?.name === "Decimal" ||
+        obj.constructor?.name === "Decimal2" ||
+        (obj.d !== undefined && obj.e !== undefined && obj.s !== undefined)
+      )
+    );
 
     if (isDecimal) {
-      return (data as any).toNumber();
+      if (typeof obj.toNumber === "function") {
+        const val = obj.toNumber();
+        return (isNaN(val) ? 0 : val) as unknown as T;
+      }
+      if (typeof obj.toString === "function") {
+        const val = Number(obj.toString());
+        return (isNaN(val) ? 0 : val) as unknown as T;
+      }
+      const val = Number(obj);
+      return (isNaN(val) ? 0 : val) as unknown as T;
     }
 
-    const serialized: any = {};
-    for (const key in data) {
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        serialized[key] = serializePrisma((data as any)[key]);
-      }
+    // Traverse Plain Objects
+    const serialized: Record<string, any> = {};
+    for (const key of Object.keys(obj)) {
+      serialized[key] = serializePrisma(obj[key]);
     }
-    return serialized;
+    return serialized as unknown as T;
   }
 
   return data;
 }
+
