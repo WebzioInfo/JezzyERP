@@ -34,6 +34,45 @@ export interface InvoicePdfResult {
 
 export class InvoicePdfService {
     /**
+     * Fallback for Cloudinary-hosted documents where direct .pdf download
+     * is blocked by default ACL rules (HTTP 401). Fetches high-res rendered
+     * pages via Cloudinary's dynamic image engine (dn_300,pg_1, etc.)
+     */
+    private static async fetchCloudinaryPages(cloudinaryUrl: string): Promise<Buffer[]> {
+        const pages: Buffer[] = [];
+        let pageNum = 1;
+        const maxPages = 20;
+
+        while (pageNum <= maxPages) {
+            let pageUrl = cloudinaryUrl.replace(/\.[a-zA-Z0-9]+$/, ".png");
+            if (pageUrl.includes("/image/upload/")) {
+                pageUrl = pageUrl.replace("/image/upload/", `/image/upload/dn_300,pg_${pageNum}/`);
+            } else {
+                break;
+            }
+
+            try {
+                const res = await fetch(pageUrl, { signal: AbortSignal.timeout(10000) });
+                if (!res.ok) {
+                    // Cloudinary returns 400 when page number exceeds available pages
+                    break;
+                }
+                const arrayBuf = await res.arrayBuffer();
+                const buf = Buffer.from(arrayBuf);
+                if (buf.length > 0) {
+                    pages.push(buf);
+                } else {
+                    break;
+                }
+                pageNum++;
+            } catch {
+                break;
+            }
+        }
+        return pages;
+    }
+
+    /**
      * Attaches an E-Way Bill (PDF or Image) to an invoice PDF buffer.
      * Appends the E-Way Bill page(s) after the invoice page(s).
      */
@@ -42,23 +81,81 @@ export class InvoicePdfService {
         ewayBillUrl: string
     ): Promise<{ buffer: Buffer; merged: boolean; error?: string }> {
         try {
-            let ewayBytes: Buffer;
+            let ewayBytes: Buffer = Buffer.alloc(0);
 
             // Fetch or read from local disk
             if (ewayBillUrl.startsWith("http://") || ewayBillUrl.startsWith("https://")) {
-                const response = await fetch(ewayBillUrl, {
-                    headers: { "Accept": "application/pdf,image/*,*/*" },
-                    signal: AbortSignal.timeout(15000),
-                });
-                if (!response.ok) {
+                let directFetchSuccess = false;
+                try {
+                    const response = await fetch(ewayBillUrl, {
+                        headers: { "Accept": "application/pdf,image/*,*/*" },
+                        signal: AbortSignal.timeout(15000),
+                    });
+                    if (response.ok) {
+                        const arrayBuffer = await response.arrayBuffer();
+                        ewayBytes = Buffer.from(arrayBuffer);
+                        if (ewayBytes.length > 0) {
+                            directFetchSuccess = true;
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.warn("[DIRECT_FETCH_WARN]", fetchErr);
+                }
+
+                // If direct fetch failed (e.g. Cloudinary 401 ACL restriction on direct PDF),
+                // check if it's a Cloudinary URL and fetch rendered high-res pages
+                if (!directFetchSuccess) {
+                    if (ewayBillUrl.includes("cloudinary.com")) {
+                        const cldPages = await this.fetchCloudinaryPages(ewayBillUrl);
+                        if (cldPages.length > 0) {
+                            const mergedDoc = await PDFDocument.create();
+                            const invoiceDoc = await PDFDocument.load(invoicePdfBuffer, { ignoreEncryption: true });
+
+                            // 1. Copy all invoice pages first (Page 1..N)
+                            const invoicePages = await mergedDoc.copyPages(invoiceDoc, invoiceDoc.getPageIndices());
+                            invoicePages.forEach(p => mergedDoc.addPage(p));
+
+                            // 2. Append each Cloudinary E-Way Bill page
+                            const a4Width = 595.28;
+                            const a4Height = 841.89;
+                            const margin = 20;
+                            const maxWidth = a4Width - (margin * 2);
+                            const maxHeight = a4Height - (margin * 2);
+
+                            for (const pageBuf of cldPages) {
+                                const isPng = pageBuf.length >= 8 && pageBuf[0] === 0x89;
+                                const isJpg = pageBuf.length >= 3 && pageBuf[0] === 0xFF;
+                                const img = isJpg
+                                    ? await mergedDoc.embedJpg(pageBuf)
+                                    : await mergedDoc.embedPng(pageBuf);
+
+                                const imgDims = img.scaleToFit(maxWidth, maxHeight);
+                                const x = margin + (maxWidth - imgDims.width) / 2;
+                                const y = margin + (maxHeight - imgDims.height) / 2;
+
+                                const page = mergedDoc.addPage([a4Width, a4Height]);
+                                page.drawImage(img, {
+                                    x,
+                                    y,
+                                    width: imgDims.width,
+                                    height: imgDims.height,
+                                });
+                            }
+
+                            const mergedBytes = await mergedDoc.save();
+                            return {
+                                buffer: Buffer.from(mergedBytes),
+                                merged: true
+                            };
+                        }
+                    }
+
                     return {
                         buffer: invoicePdfBuffer,
                         merged: false,
-                        error: `Failed to fetch E-Way Bill from URL (HTTP ${response.status})`
+                        error: "Failed to fetch E-Way Bill from remote URL"
                     };
                 }
-                const arrayBuffer = await response.arrayBuffer();
-                ewayBytes = Buffer.from(arrayBuffer);
             } else {
                 // Local file path
                 const cleanPath = ewayBillUrl.startsWith("/") ? ewayBillUrl.slice(1) : ewayBillUrl;
