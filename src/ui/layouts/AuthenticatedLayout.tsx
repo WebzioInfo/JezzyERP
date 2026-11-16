@@ -225,7 +225,7 @@ export default function AuthenticatedLayout({
       <aside
         className={cn(
           "hidden lg:flex flex-col transition-all duration-300 z-50 relative bg-white border-r border-slate-200 shrink-0",
-          !sidebarCollapsed ? "w-[210px]" : "w-[60px]"
+          !sidebarCollapsed ? "w-[220px]" : "w-[60px]"
         )}
       >
         <div className="h-full flex flex-col overflow-hidden">
@@ -340,20 +340,20 @@ function SidebarContent({
     <div className="flex-1 flex flex-col py-3 overflow-hidden">
       {!isMobile && !sidebarCollapsed && (
         <div className="px-3.5 mb-3 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 shadow-xs">
-            <Building2 className="w-3.5 h-3.5 text-white" />
+          <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 shadow-xs">
+            <Building2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-slate-900 text-xs tracking-tight leading-tight">JEZZY ERP</p>
-            <p className="text-[10px] text-slate-400 font-normal truncate">Enterprise ERP</p>
+            <p className="font-semibold text-slate-900 text-xs lg:text-sm tracking-tight leading-tight">JEZZY ERP</p>
+            <p className="text-[10px] lg:text-[11px] text-slate-400 font-normal truncate">Enterprise ERP</p>
           </div>
         </div>
       )}
 
       {!isMobile && sidebarCollapsed && (
         <div className="flex justify-center mb-3">
-          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shadow-xs" title="JEZZY ERP">
-            <Building2 className="w-3.5 h-3.5 text-white" />
+          <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-xs" title="JEZZY ERP">
+            <Building2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
           </div>
         </div>
       )}
@@ -374,11 +374,11 @@ function SidebarContent({
                   onClick={() => toggleSection(section.label)}
                   className="w-full flex items-center justify-between px-2 py-0.5 mb-0.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group cursor-pointer"
                 >
-                  <span className="text-[10px] font-semibold tracking-wider text-slate-400 group-hover:text-slate-600 uppercase">
+                  <span className="text-[10px] lg:text-[11px] font-semibold tracking-wider text-slate-400 group-hover:text-slate-600 uppercase">
                     {section.label}
                   </span>
                   <ChevronRight
-                    size={11}
+                    size={12}
                     className={cn(
                       "text-slate-400 transition-transform duration-200",
                       isExpanded ? "rotate-90" : "rotate-0"
@@ -413,7 +413,7 @@ function SidebarContent({
                               }
                             }}
                             className={cn(
-                              "group flex items-center gap-2 rounded-lg text-xs font-medium transition-colors relative",
+                              "group flex items-center gap-2 lg:gap-2.5 rounded-lg text-xs lg:text-[13px] font-medium transition-colors relative",
                               active
                                 ? "bg-slate-900 text-white font-medium shadow-xs"
                                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
@@ -422,11 +422,11 @@ function SidebarContent({
                             title={sidebarCollapsed ? `${item.name} - ${item.description}` : ""}
                           >
                             {isLoading ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
+                              <Loader2 className="h-3.5 w-3.5 lg:h-4 lg:w-4 animate-spin text-slate-400" />
                             ) : (
                               <item.icon
                                 className={cn(
-                                  "h-3.5 w-3.5 shrink-0 transition-colors",
+                                  "h-3.5 w-3.5 lg:h-4 lg:w-4 shrink-0 transition-colors",
                                   active ? "text-white" : "text-slate-400 group-hover:text-slate-600"
                                 )}
                               />
@@ -455,12 +455,12 @@ function SidebarContent({
                 isProfileMenuOpen ? "bg-slate-100" : "hover:bg-slate-100"
               )}
             >
-              <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-semibold text-white shrink-0">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] lg:text-xs font-semibold text-white shrink-0">
                 EA
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-900 truncate">JEZZY Admin</p>
-                <p className="text-[10px] text-slate-400 truncate">Administrator</p>
+                <p className="text-xs lg:text-[13px] font-semibold text-slate-900 truncate">JEZZY Admin</p>
+                <p className="text-[10px] lg:text-[11px] text-slate-400 truncate">Administrator</p>
               </div>
             </button>
 
