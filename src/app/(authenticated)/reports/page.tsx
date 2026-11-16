@@ -1,15 +1,15 @@
 import { db } from "@/db/prisma/client";
 import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { formatCurrency, getBusinessLabel } from "@/utils/financials";
+import { formatCurrency } from "@/utils/financials";
 import { FinanceService } from "@/features/billing/services/FinanceService";
 import { cn } from "@/utils/index";
 import {
    Card,
    CardContent,
-   CardDescription,
    CardHeader,
-   CardTitle
+   CardTitle,
+   CardDescription
 } from "@/ui/core/Card";
 import {
    BarChart3,
@@ -19,12 +19,10 @@ import {
    ArrowRight,
    FileText,
    Calendar,
-   ArrowDownLeft,
-   ArrowUpRight,
-   Zap,
-   Activity,
-   ShieldCheck,
-   Timer
+   Users,
+   Receipt,
+   Wallet,
+   Activity
 } from "lucide-react";
 import Link from "next/link";
 import { ReportFilters } from "./ReportFilters";
@@ -79,138 +77,135 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
    const totalInvoices = await db.invoice.count({ where: { deletedAt: null } });
 
    const reportCards = [
-      { title: "Account Statement", desc: "Detailed ledger per account", icon: FileText, href: "/accounts", color: "text-blue-600", bg: "bg-blue-50" },
-      { title: "Expense Analysis", desc: "Categorized spend report", icon: PieChart, href: "/expenses", color: "text-rose-600", bg: "bg-rose-50" },
-      { title: "Tax Summary", desc: "GST Inward vs Outward", icon: Calendar, href: "/reports/tax", color: "text-emerald-600", bg: "bg-emerald-50" },
-      { title: "Audit Trail", desc: "System activity logs", icon: BarChart3, href: "/transactions", color: "text-slate-600", bg: "bg-slate-50" },
+      { title: "Account Statement", desc: "Detailed general ledger and balances per account", icon: FileText, href: "/accounts", color: "text-blue-600", bg: "bg-blue-50" },
+      { title: "Expense Analysis", desc: "Categorized operating expenditure and breakdown", icon: PieChart, href: "/expenses", color: "text-rose-600", bg: "bg-rose-50" },
+      { title: "Transaction History", desc: "Complete audit log of all financial movements", icon: BarChart3, href: "/transactions", color: "text-emerald-600", bg: "bg-emerald-50" },
+      { title: "Invoices & Receivables", desc: "Status tracking of receivables and payments", icon: Receipt, href: "/invoices", color: "text-indigo-600", bg: "bg-indigo-50" },
    ];
 
    return (
-      <div className="space-y-12 animate-fade-up max-w-7xl mx-auto pb-24">
-         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+         {/* Page Header */}
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-               <div className="flex items-center gap-3 mb-2">
-                  <span className="text-[10px] font-black text-primary-500 uppercase tracking-[0.4em] italic">Intelligence Hub</span>
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary-500 shadow-lg shadow-primary-500/20" />
-               </div>
-               <h1 className="text-5xl font-black text-slate-900 leading-tight tracking-tighter font-display uppercase italic">
-                  Financial <span className="text-primary-600">Intel</span>
-               </h1>
+               <h1 className="text-2xl font-bold tracking-tight text-slate-900">Financial Reports</h1>
+               <p className="text-sm text-slate-500 mt-0.5">Overview of revenue, expenses, net profits, and statements</p>
             </div>
-
             <ReportFilters />
          </div>
 
-         {/* ── Primary Visualizer ── */}
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <Card className="lg:col-span-8 border-0 bg-slate-900 text-white shadow-3xl overflow-hidden rounded-[3rem] relative min-h-[400px]">
-               <div className="absolute top-0 right-0 p-12 opacity-5">
-                  <Activity className="w-80 h-80 rotate-12" />
-               </div>
-
-               <CardContent className="p-16 relative z-10 h-full flex flex-col justify-between">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                     <div className="space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                           <TrendingUp className="text-emerald-400 w-6 h-6" />
+         {/* Primary Summary Grid */}
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <Card className="lg:col-span-8 bg-slate-900 text-white border-0 shadow-md">
+               <CardContent className="p-6 sm:p-8 flex flex-col justify-between h-full space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                     <div className="space-y-3">
+                        <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                           <TrendingUp className="text-emerald-400 w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2">Gross Revenue</p>
-                           <h3 className="text-4xl font-black italic tracking-tighter tabular-nums text-emerald-400">{formatCurrency(revenue)}</h3>
+                           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gross Revenue</p>
+                           <h3 className="text-3xl font-bold tracking-tight tabular-nums text-emerald-400 mt-1">{formatCurrency(revenue)}</h3>
                         </div>
                      </div>
 
-                     <div className="space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                           <TrendingDown className="text-rose-400 w-6 h-6" />
+                     <div className="space-y-3">
+                        <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                           <TrendingDown className="text-rose-400 w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2">Direct Procurement</p>
-                           <h3 className="text-4xl font-black italic tracking-tighter tabular-nums text-rose-400">{formatCurrency(purchases)}</h3>
+                           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Direct Procurement</p>
+                           <h3 className="text-3xl font-bold tracking-tight tabular-nums text-rose-400 mt-1">{formatCurrency(purchases)}</h3>
                         </div>
                      </div>
                   </div>
 
-                  <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row md:items-end justify-between gap-10">
-                     <div className="flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary-400 mb-2">Net Period Profit</p>
+                  <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                     <div>
+                        <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Net Period Profit</p>
                         <h3 className={cn(
-                           "text-6xl font-black italic tracking-tighter tabular-nums",
-                           netProfit >= 0 ? "text-primary-500" : "text-rose-500"
+                           "text-4xl font-bold tracking-tight tabular-nums mt-1",
+                           netProfit >= 0 ? "text-blue-400" : "text-rose-400"
                         )}>
                            {formatCurrency(netProfit)}
                         </h3>
                      </div>
 
-                     <div className="w-full md:w-64 space-y-4">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                           <span className="text-slate-500">Efficiency</span>
-                           <span className="text-emerald-400">
-                              {revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : 0}% Margin
+                     <div className="w-full sm:w-64 space-y-2">
+                        <div className="flex justify-between text-xs font-medium">
+                           <span className="text-slate-400">Profit Margin</span>
+                           <span className="text-emerald-400 font-semibold">
+                              {revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : 0}%
                            </span>
                         </div>
-                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-primary-500 shadow-[0_0_20px_rgba(59,130,246,0.5)]" style={{ width: `${Math.max(0, Math.min(100, (netProfit / (revenue || 1)) * 100))}%` }} />
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                           <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.max(0, Math.min(100, (netProfit / (revenue || 1)) * 100))}%` }} />
                         </div>
                      </div>
                   </div>
                </CardContent>
             </Card>
 
-            <div className="lg:col-span-4 space-y-8">
-               <Card className="border-0 bg-primary-600 text-white p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-                  <div className="absolute -right-6 -bottom-6 opacity-20 group-hover:scale-110 transition-transform duration-1000">
-                     <Zap size={180} />
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-4 italic">Liquidity Profile</p>
-                  <h4 className="text-4xl font-black italic tracking-tighter mb-4">{formatCurrency(netCashFlow)}</h4>
-                  <p className="text-xs font-medium text-white/80 leading-relaxed max-w-[200px]">
-                     Current free cash flow available for operational reinvestment after direct costs.
-                  </p>
+            <div className="lg:col-span-4 flex flex-col gap-4">
+               <Card className="bg-primary-600 text-white border-0 shadow-sm">
+                  <CardContent className="p-6">
+                     <div className="flex items-center gap-2 mb-2 text-primary-200">
+                        <Wallet className="w-4 h-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Net Cash Flow</span>
+                     </div>
+                     <h4 className="text-2xl font-bold tabular-nums">{formatCurrency(netCashFlow)}</h4>
+                     <p className="text-xs text-primary-100 mt-2 leading-relaxed">
+                        Free cash flow after deducting operating expenses and purchases.
+                     </p>
+                  </CardContent>
                </Card>
 
-               <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-white p-8 rounded-[2rem] ring-1 ring-slate-100 shadow-sm space-y-4 hover:shadow-xl transition-all">
-                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                        <ShieldCheck size={20} />
-                     </div>
-                     <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Clients</p>
-                        <p className="text-2xl font-black text-slate-900">{totalClients}</p>
-                     </div>
-                  </div>
-                  <div className="bg-white p-8 rounded-[2rem] ring-1 ring-slate-100 shadow-sm space-y-4 hover:shadow-xl transition-all">
-                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                        <Timer size={20} />
-                     </div>
-                     <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Invoices</p>
-                        <p className="text-2xl font-black text-slate-900">{totalInvoices}</p>
-                     </div>
-                  </div>
+               <div className="grid grid-cols-2 gap-4 flex-1">
+                  <Card>
+                     <CardContent className="p-5 flex flex-col justify-between h-full">
+                        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
+                           <Users size={18} />
+                        </div>
+                        <div>
+                           <p className="text-xs font-medium text-slate-500">Active Clients</p>
+                           <p className="text-xl font-bold text-slate-900 mt-0.5">{totalClients}</p>
+                        </div>
+                     </CardContent>
+                  </Card>
+                  <Card>
+                     <CardContent className="p-5 flex flex-col justify-between h-full">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3">
+                           <Receipt size={18} />
+                        </div>
+                        <div>
+                           <p className="text-xs font-medium text-slate-500">Total Invoices</p>
+                           <p className="text-xl font-bold text-slate-900 mt-0.5">{totalInvoices}</p>
+                        </div>
+                     </CardContent>
+                  </Card>
                </div>
             </div>
          </div>
 
-         {/* ── Secondary Reports Grid ── */}
-         <div className="space-y-6">
-            <div className="flex items-center gap-3 px-4">
-               <ShieldCheck className="w-5 h-5 text-slate-400" />
-               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic">Compliance & Audit Streams</h3>
-            </div>
+         {/* Secondary Reports Grid */}
+         <div className="space-y-4">
+            <h2 className="text-base font-semibold text-slate-900">Detailed Statements & Registers</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                {reportCards.map((card) => (
                   <Link href={card.href} key={card.title} className="group">
-                     <Card className="border-0 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-primary-600/10 transition-all ring-1 ring-slate-100 rounded-[2.5rem] overflow-hidden bg-white">
-                        <CardContent className="p-10">
-                           <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-8 transition-all group-hover:scale-110 shadow-lg", card.bg, card.color)}>
-                              {typeof card.icon === 'string' ? <FileText className="w-7 h-7" /> : <card.icon className="w-7 h-7" />}
+                     <Card className="h-full hover:border-primary-300 hover:shadow-md transition-all">
+                        <CardContent className="p-5 flex flex-col justify-between h-full">
+                           <div>
+                              <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-105", card.bg, card.color)}>
+                                 <card.icon className="w-5 h-5" />
+                              </div>
+                              <h3 className="text-sm font-semibold text-slate-900 mb-1">{card.title}</h3>
+                              <p className="text-xs text-slate-500 leading-relaxed">{card.desc}</p>
                            </div>
-                           <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2">{card.title}</h4>
-                           <p className="text-xs text-slate-400 font-bold italic leading-relaxed">{card.desc}</p>
-                           <div className="mt-8 flex items-center gap-3 text-[10px] font-black text-primary-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                              Access Matrix <ArrowRight className="w-4 h-4" />
+                           <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-primary-600">
+                              <span>Open Statement</span>
+                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                            </div>
                         </CardContent>
                      </Card>

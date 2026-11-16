@@ -32,16 +32,16 @@ interface StockLog {
 
 export function StockLogTable({ logs }: { logs: StockLog[] }) {
     return (
-        <div className="glass shadow-2xl rounded-[2.5rem] overflow-hidden border-0">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
             <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader>
                     <TableRow>
-                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest italic">Timestamp</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest italic">Resource / SKU</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest italic text-center">Protocol</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest italic text-right">Delta</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest italic text-right">Balance</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest italic text-right pr-8">Actions</TableHead>
+                        <TableHead className="w-36">Timestamp</TableHead>
+                        <TableHead>Product / SKU</TableHead>
+                        <TableHead className="text-center w-28">Type</TableHead>
+                        <TableHead className="text-right w-24">Change</TableHead>
+                        <TableHead className="text-right w-28">New Balance</TableHead>
+                        <TableHead className="text-right w-24">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -50,61 +50,58 @@ export function StockLogTable({ logs }: { logs: StockLog[] }) {
                         const isPositive = change > 0;
                         
                         return (
-                            <TableRow key={log.id} className="group hover:bg-slate-50/50 transition-colors">
-                                <TableCell className="py-6 px-8">
+                            <TableRow key={log.id}>
+                                <TableCell className="font-medium text-slate-600 text-xs">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-black text-slate-900 italic tracking-tighter">
+                                        <span className="text-slate-900 font-semibold">
                                             {format(new Date(log.createdAt), "MMM dd, HH:mm")}
                                         </span>
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                            Log ID: {log.id.slice(-6)}
+                                        <span className="text-[10px] text-slate-400">
+                                            ID: #{log.id.slice(-6)}
                                         </span>
                                     </div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-black text-slate-800 uppercase tracking-tight truncate max-w-[200px]">
+                                        <span className="text-xs font-semibold text-slate-900 truncate max-w-[200px]">
                                             {log.product.description}
                                         </span>
-                                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
+                                        <span className="text-[10px] font-mono text-slate-400">
                                             {log.product.sku || "N/A"}
                                         </span>
                                     </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="text-center">
                                     <div className="flex justify-center">
-                                        <div className={cn(
-                                            "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest italic border",
-                                            log.type === 'ADD' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                                            log.type === 'REMOVE' ? "bg-rose-50 text-rose-700 border-rose-100" :
-                                            "bg-amber-50 text-amber-700 border-amber-100"
+                                        <span className={cn(
+                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                                            log.type === 'ADD' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                            log.type === 'REMOVE' ? "bg-rose-50 text-rose-700 border-rose-200" :
+                                            "bg-amber-50 text-amber-700 border-amber-200"
                                         )}>
                                             {log.type === 'ADD' && <ArrowUpRight size={10} />}
                                             {log.type === 'REMOVE' && <ArrowDownRight size={10} />}
                                             {log.type === 'MANUAL' && <RefreshCw size={10} />}
                                             {log.type}
-                                        </div>
+                                        </span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                    <span className={cn(
-                                        "text-sm font-black italic tabular-nums",
-                                        isPositive ? "text-emerald-600" : "text-rose-600"
-                                    )}>
+                                <TableCell className="text-right font-semibold tabular-nums text-sm">
+                                    <span className={isPositive ? "text-emerald-600" : "text-rose-600"}>
                                         {isPositive ? "+" : ""}{change}
                                     </span>
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-right tabular-nums text-xs font-medium text-slate-900">
                                     <div className="flex flex-col items-end">
-                                        <span className="text-sm font-black text-slate-900 tabular-nums italic">
+                                        <span className="font-bold text-slate-900">
                                             {Number(log.quantityAfter)}
                                         </span>
-                                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest opacity-60">
-                                            Prev: {Number(log.quantityBefore)}
+                                        <span className="text-[10px] text-slate-400">
+                                            Was: {Number(log.quantityBefore)}
                                         </span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right pr-8">
+                                <TableCell className="text-right">
                                     <StockLogActions 
                                         logId={log.id} 
                                         currentQuantity={Number(log.quantityChange)} 
@@ -118,9 +115,9 @@ export function StockLogTable({ logs }: { logs: StockLog[] }) {
             </Table>
             
             {logs.length === 0 && (
-                <div className="py-20 text-center">
-                    <AlertCircle className="mx-auto h-10 w-10 text-slate-200 mb-4" />
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">No activity logs recorded yet.</p>
+                <div className="py-16 text-center">
+                    <AlertCircle className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                    <p className="text-slate-400 font-medium text-xs">No activity logs recorded yet.</p>
                 </div>
             )}
         </div>

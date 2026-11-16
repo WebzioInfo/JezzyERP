@@ -252,14 +252,14 @@ export default function PurchaseImportPage() {
 
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-24">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase flex items-center gap-3">
-            <ArrowRightLeft className="w-8 h-8 text-indigo-600" />
-            AI Resell Workflow
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
+            <ArrowRightLeft className="w-6 h-6 text-indigo-600" />
+            <span>Import Purchase Bill & Resell</span>
           </h1>
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">Upload Purchase Bill → Review → Sell</p>
+          <p className="text-sm text-slate-500 mt-0.5">Upload a vendor invoice to extract line items, record purchase inventory, or generate sales invoices</p>
         </div>
       </div>
 

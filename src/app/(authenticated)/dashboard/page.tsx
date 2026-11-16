@@ -11,16 +11,16 @@ import {
   Plus,
   History,
   Wallet,
-  Target,
   CheckCircle2,
   ArrowDownUp,
   Loader2,
   Package,
   Building2,
-  BarChart3
+  BarChart3,
+  CreditCard
 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/utils";
+import { Button } from "@/ui/core/Button";
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -41,16 +41,15 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-40 space-y-4">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-        <p className="text-sm font-medium text-slate-500">Loading dashboard...</p>
+      <div className="flex flex-col items-center justify-center py-32 space-y-3">
+        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+        <p className="text-xs font-medium text-slate-500">Loading overview...</p>
       </div>
     );
   }
 
   const {
     totalInvoices,
-    totalPurchases,
     totalClients,
     totalVendors,
     totalProducts,
@@ -64,77 +63,82 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-            Overview
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
+            Financial Overview
           </h1>
-          <p className="text-sm text-slate-500 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-500" />
-            Financial metrics and system activity
+          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-emerald-600" />
+            Live business activity and ledger summary
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <Link href="/payments/new">
-            <button className="h-9 px-4 bg-white border border-slate-200 text-slate-700 rounded-md font-medium text-sm hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-slate-500" />
-              Capture Funds
-            </button>
+            <Button variant="secondary" size="md">
+              <Wallet className="w-4 h-4 text-slate-500 mr-2" />
+              Receive Payment
+            </Button>
           </Link>
           <Link href="/invoices/new">
-            <button className="h-9 px-4 bg-slate-900 text-white rounded-md font-medium text-sm hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2">
-              <Plus className="w-4 h-4" />
+            <Button variant="primary" size="md">
+              <Plus className="w-4 h-4 mr-1.5" />
               New Invoice
-            </button>
+            </Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── Core Financial Metrics ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          icon={<Receipt className="w-5 h-5" />}
-          label="Total Receivable"
+          icon={<Receipt className="w-4 h-4 text-blue-600" />}
+          label="Total Receivables"
           value={formatCurrency(totalReceivable ?? 0)}
-          badge="Live"
-          color="blue"
+          badge="Incoming"
+          badgeColor="blue"
         />
         <MetricCard
-          icon={<Wallet className="w-5 h-5" />}
-          label="Total Payable"
+          icon={<Wallet className="w-4 h-4 text-rose-600" />}
+          label="Total Payables"
           value={formatCurrency(totalPayable ?? 0)}
-          badge="Live"
-          color="rose"
+          badge="Outgoing"
+          badgeColor="rose"
         />
         <MetricCard
-          icon={<BarChart3 className="w-5 h-5" />}
+          icon={<BarChart3 className="w-4 h-4 text-emerald-600" />}
           label="Today's Sales"
           value={formatCurrency(todaySales ?? 0)}
-          color="emerald"
         />
         <MetricCard
-          icon={<Activity className="w-5 h-5" />}
+          icon={<Activity className="w-4 h-4 text-indigo-600" />}
           label="Today's Collections"
           value={formatCurrency(todayCollections ?? 0)}
-          color="indigo"
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ── Directory Mini Metrics ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <MiniMetric label="Active Clients" value={totalClients ?? 0} icon={<Users className="w-4 h-4 text-blue-600" />} />
         <MiniMetric label="Active Vendors" value={totalVendors ?? 0} icon={<Building2 className="w-4 h-4 text-purple-600" />} />
         <MiniMetric label="Invoices Issued" value={totalInvoices ?? 0} icon={<FileText className="w-4 h-4 text-amber-600" />} />
-        <MiniMetric label="Stock Items" value={`${totalProducts ?? 0} (${totalStock ?? 0} qty)`} icon={<Package className="w-4 h-4 text-emerald-600" />} />
+        <MiniMetric label="Stock Items" value={`${totalProducts ?? 0} (${totalStock ?? 0} units)`} icon={<Package className="w-4 h-4 text-emerald-600" />} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ── Activity Stream & Quick Actions ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Recent Transactions List */}
         <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
               <History className="w-4 h-4 text-slate-400" />
               Recent Transactions
             </CardTitle>
-            <Link href="/transactions" className="text-sm font-medium text-slate-500 hover:text-slate-900">View All</Link>
+            <Link href="/transactions" className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              View All
+            </Link>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
@@ -149,63 +153,72 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
-          <Card className="bg-slate-900 text-white border-0">
-            <CardContent className="p-6">
-              <h4 className="text-sm font-medium text-slate-400 mb-6">System Health</h4>
-              <div className="space-y-6">
-                <HealthBar label="Synchronization" value="98%" width="w-[98%]" />
-                <HealthBar label="Data Integrity" value="100%" width="w-full" />
+        {/* System Health & Quick Actions */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-slate-900">System Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-0">
+              <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                <span className="text-xs text-slate-600">Database Engine</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Connected
+                </span>
               </div>
-
-              <div className="mt-8 flex items-center gap-2 px-3 py-2 bg-white/10 rounded-md border border-white/10">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium">All Systems Operational</span>
+              <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                <span className="text-xs text-slate-600">Data Integrity</span>
+                <span className="text-xs font-semibold text-slate-900">100% Verified</span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg text-slate-700 text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>All subsystems operational</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-slate-900">Quick Shortcuts</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Link href="/invoices/new" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <Plus className="w-4 h-4 text-slate-500" />
-                    Invoice
-                  </button>
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <FileText className="w-3.5 h-3.5 text-slate-500" />
+                    <span>New Invoice</span>
+                  </div>
                 </Link>
                 <Link href="/quotations/new" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <FileText className="w-4 h-4 text-slate-500" />
-                    Quote
-                  </button>
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <Plus className="w-3.5 h-3.5 text-slate-500" />
+                    <span>New Quote</span>
+                  </div>
                 </Link>
                 <Link href="/payments/new" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <Wallet className="w-4 h-4 text-slate-500" />
-                    Payment
-                  </button>
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <Wallet className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Record Payment</span>
+                  </div>
+                </Link>
+                <Link href="/purchases/new" className="flex">
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <CreditCard className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Log Purchase</span>
+                  </div>
                 </Link>
                 <Link href="/products" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <Package className="w-4 h-4 text-slate-500" />
-                    Products
-                  </button>
-                </Link>
-                <Link href="/clients" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <Building2 className="w-4 h-4 text-slate-500" />
-                    Clients
-                  </button>
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <Package className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Products</span>
+                  </div>
                 </Link>
                 <Link href="/reports" className="flex">
-                  <button className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md text-sm font-medium transition-all flex flex-col items-center justify-center gap-2 border border-slate-200">
-                    <BarChart3 className="w-4 h-4 text-slate-500" />
-                    Reports
-                  </button>
+                  <div className="w-full p-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border border-slate-200 shadow-2xs">
+                    <BarChart3 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Reports</span>
+                  </div>
                 </Link>
               </div>
             </CardContent>
@@ -216,22 +229,32 @@ export default function DashboardPage() {
   );
 }
 
-function MetricCard({ icon, label, value, badge, color }: any) {
+function MetricCard({ icon, label, value, badge, badgeColor }: { 
+  icon: React.ReactNode; 
+  label: string; 
+  value: string; 
+  badge?: string;
+  badgeColor?: 'blue' | 'rose' | 'emerald';
+}) {
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-600">
+      <CardContent className="p-5">
+        <div className="flex justify-between items-start mb-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
             {icon}
           </div>
           {badge && (
-            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${
+              badgeColor === 'blue' 
+                ? 'text-blue-700 bg-blue-50 border border-blue-100' 
+                : 'text-rose-700 bg-rose-50 border border-rose-100'
+            }`}>
               {badge}
             </span>
           )}
         </div>
-        <p className="text-sm text-slate-500 mb-1">{label}</p>
-        <h3 className="text-2xl font-semibold tracking-tight text-slate-900">{value}</h3>
+        <p className="text-xs font-medium text-slate-500 mb-1">{label}</p>
+        <h3 className="text-xl font-bold tracking-tight text-slate-900 tabular-nums">{value}</h3>
       </CardContent>
     </Card>
   );
@@ -239,25 +262,25 @@ function MetricCard({ icon, label, value, badge, color }: any) {
 
 function TransactionRow({ tx }: any) {
   return (
-    <div className="flex items-center justify-between p-4 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-md flex items-center justify-center border bg-slate-100 border-slate-200 text-slate-500">
-          <ArrowDownUp size={16} />
+    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-500 shrink-0">
+          <ArrowDownUp size={14} />
         </div>
-        <div>
-          <p className="text-sm font-medium text-slate-900">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-900 truncate">
             {tx.debitAccount?.name} ← {tx.creditAccount?.name}
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5 truncate">
             {getBusinessLabel(tx.transactionType ?? tx.referenceType, tx.debitAccount?.type, tx.creditAccount?.type)}
           </p>
         </div>
       </div>
-      <div className="text-right">
-        <p className="text-sm font-semibold text-slate-900">
+      <div className="text-right shrink-0 ml-3">
+        <p className="text-xs font-bold text-slate-900 tabular-nums">
           {formatCurrency(Number(tx.amount))}
         </p>
-        <p className="text-xs text-slate-500 mt-0.5">{new Date(tx.date).toLocaleDateString()}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">{new Date(tx.date).toLocaleDateString()}</p>
       </div>
     </div>
   );
@@ -265,39 +288,25 @@ function TransactionRow({ tx }: any) {
 
 function EmptyBuffer() {
   return (
-    <div className="py-12 flex flex-col items-center justify-center text-center space-y-3 border border-dashed border-slate-200 rounded-md">
-      <History className="w-8 h-8 text-slate-300" />
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-slate-600">No recent transactions</p>
-        <p className="text-xs text-slate-500">Your ledger history will appear here</p>
+    <div className="py-10 flex flex-col items-center justify-center text-center space-y-2 border border-dashed border-slate-200 rounded-lg">
+      <History className="w-6 h-6 text-slate-300" />
+      <div className="space-y-0.5">
+        <p className="text-xs font-semibold text-slate-700">No recent transactions</p>
+        <p className="text-[11px] text-slate-400">Transaction history will appear here once recorded.</p>
       </div>
     </div>
   );
 }
 
-function HealthBar({ label, value, width }: any) {
-  return (
-    <div>
-      <div className="flex justify-between text-xs font-medium text-slate-300 mb-2">
-        <span>{label}</span>
-        <span>{value}</span>
-      </div>
-      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-        <div className={cn("h-full bg-white rounded-full", width)} />
-      </div>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value, icon }: any) {
+function MiniMetric({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
   return (
     <Card>
-      <CardContent className="p-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-slate-500 font-medium">{label}</p>
-          <p className="text-lg font-semibold text-slate-900 tracking-tight mt-0.5">{value}</p>
+      <CardContent className="p-3.5 flex items-center justify-between">
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 font-medium truncate">{label}</p>
+          <p className="text-base font-bold text-slate-900 tracking-tight mt-0.5 truncate tabular-nums">{value}</p>
         </div>
-        <div className="w-8 h-8 rounded-md bg-slate-50 flex items-center justify-center border border-slate-100">
+        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 shrink-0 ml-2">
           {icon}
         </div>
       </CardContent>

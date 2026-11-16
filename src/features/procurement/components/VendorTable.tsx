@@ -3,21 +3,22 @@
 import { useState } from "react";
 import { 
     Search, 
-    MoreVertical, 
     Trash2, 
     Edit2, 
     Building2, 
-    Plus,
-    Filter,
-    ShieldCheck,
-    Globe,
-    Phone,
-    Mail
+    Plus, 
+    ShieldCheck, 
+    Globe, 
+    Phone, 
+    Mail,
+    X,
+    Building
 } from "lucide-react";
 import { deleteVendorAction } from "../actions";
 import { VendorForm } from "./VendorForm";
-import { cn } from "@/utils";
 import { Modal } from "@/ui/core/Modal";
+import { Button } from "@/ui/core/Button";
+import { Card, CardContent } from "@/ui/core/Card";
 
 interface VendorTableProps {
     vendors: any[];
@@ -27,10 +28,12 @@ export function VendorTable({ vendors }: VendorTableProps) {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingVendor, setEditingVendor] = useState<any>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const filtered = vendors.filter(v => 
-        v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.gst?.toLowerCase().includes(searchTerm.toLowerCase())
+        v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.gst?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleEdit = (vendor: any) => {
@@ -43,42 +46,60 @@ export function VendorTable({ vendors }: VendorTableProps) {
         setEditingVendor(null);
     };
 
+    const handleDelete = async (id: string) => {
+        await deleteVendorAction(id);
+        setConfirmDeleteId(null);
+    };
+
     return (
-        <div className="space-y-10 animate-fade-in custom-scrollbar">
-            {/* Header + Search */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white/40 p-8 rounded-[2.5rem] border border-white/50 backdrop-blur-xl">
-                <div className="flex-1 max-w-md relative group">
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors">
-                        <Search size={22} />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search supplier directory / GST endpoints..."
-                        className="w-full bg-white/80 h-16 pl-14 pr-6 rounded-2xl border-none clay-inner focus:ring-4 focus:ring-primary-500/10 focus:bg-white text-base font-semibold text-slate-900 transition-all placeholder:text-slate-300"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+        <div className="space-y-4">
+            {/* Header Actions & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Vendors & Suppliers</h1>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage supplier contact profiles, GST records, and purchase directories</p>
                 </div>
-                
-                <div className="flex items-center gap-4">
-                    <button className="h-16 w-16 flex items-center justify-center clay-btn bg-white rounded-2xl text-slate-400 hover:text-primary-600 transition-all">
-                        <Filter size={20} />
-                    </button>
-                    <button 
-                        onClick={() => setIsFormOpen(true)}
-                        className="h-16 px-8 flex items-center gap-4 clay-btn bg-primary-600 text-white rounded-2xl font-black uppercase italic tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary-500/20"
-                    >
-                        <Plus size={20} />
-                        <span>Add Supplier</span>
-                    </button>
-                </div>
+
+                <Button 
+                    onClick={() => setIsFormOpen(true)}
+                    variant="primary"
+                    size="md"
+                >
+                    <Plus size={16} className="mr-1.5" />
+                    <span>Add Supplier</span>
+                </Button>
             </div>
 
-            {/* Form Overlay */}
+            {/* Search Filter */}
+            <Card>
+                <CardContent className="p-3.5">
+                    <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <input
+                            type="text"
+                            placeholder="Search suppliers by name, GSTIN, or email..."
+                            className="w-full h-9 pl-9 pr-8 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-colors"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Vendor Modal */}
             <Modal
                 isOpen={isFormOpen}
                 onClose={handleCloseForm}
-                maxWidth="max-w-5xl"
+                title={editingVendor ? "Edit Supplier" : "Add Supplier"}
+                maxWidth="max-w-2xl"
             >
                 <VendorForm 
                     vendor={editingVendor} 
@@ -87,72 +108,109 @@ export function VendorTable({ vendors }: VendorTableProps) {
                 />
             </Modal>
 
-            {/* Table Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {/* Supplier Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {filtered.map((vendor) => (
-                    <div key={vendor.id} className="group relative bg-white rounded-[2.5rem] border border-slate-200/50 p-8 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-primary-100 hover:-translate-y-2">
-                        <div className="flex items-start justify-between mb-8">
-                            <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-500 overflow-hidden shadow-inner">
-                                <Building2 className="w-7 h-7 text-slate-400 group-hover:text-primary-600 group-hover:scale-110 transition-all" />
-                            </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-500">
-                                <button 
-                                    onClick={() => handleEdit(vendor)}
-                                    className="p-3 rounded-2xl bg-slate-50 text-slate-400 hover:bg-primary-50 hover:text-primary-600 border border-slate-100 transition-all"
-                                >
-                                    <Edit2 size={16} />
-                                </button>
-                                <button 
-                                    onClick={() => deleteVendorAction(vendor.id)}
-                                    className="p-3 rounded-2xl bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600 border border-slate-100 transition-all"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </div>
+                    <Card key={vendor.id} className="p-4 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                                        <Building2 className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-sm font-semibold text-slate-900 truncate leading-snug">{vendor.name}</h3>
+                                        <p className="text-[11px] text-slate-400 truncate">ID: {vendor.id.slice(-6)}</p>
+                                    </div>
+                                </div>
 
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-black text-slate-900 tracking-tighter truncate leading-tight italic uppercase group-hover:text-primary-600 transition-colors">{vendor.name}</h3>
-                            
-                            <div className="flex flex-wrap gap-2">
+                                {/* Accessible Action Buttons */}
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEdit(vendor)}
+                                        aria-label={`Edit ${vendor.name}`}
+                                        className="h-8 w-8 text-slate-400 hover:text-slate-700"
+                                    >
+                                        <Edit2 size={14} />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setConfirmDeleteId(vendor.id)}
+                                        aria-label={`Delete ${vendor.name}`}
+                                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                    >
+                                        <Trash2 size={14} />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Tax Badge */}
+                            <div className="mb-3">
                                 {vendor.gst ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                                        <ShieldCheck size={12} /> GST Verified: {vendor.gst}
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-mono font-medium border border-emerald-200">
+                                        <ShieldCheck size={12} /> GST: {vendor.gst}
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 text-orange-700 text-[10px] font-black uppercase tracking-widest border border-orange-100">
-                                        No Tax Identity
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-xs">
+                                        Unregistered Taxpayer
                                     </span>
                                 )}
                             </div>
 
-                            <div className="pt-6 space-y-3.5 border-t border-slate-50">
-                                <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                    <Mail size={16} />
-                                    <span className="text-xs font-bold truncate">{vendor.email || 'No Email Registered'}</span>
+                            {/* Contact Details */}
+                            <div className="space-y-1.5 text-xs text-slate-600 pt-3 border-t border-slate-100">
+                                <div className="flex items-center gap-2 text-slate-600">
+                                    <Mail size={13} className="text-slate-400 shrink-0" />
+                                    <span className="truncate">{vendor.email || 'No email provided'}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                    <Phone size={16} />
-                                    <span className="text-xs font-bold">{vendor.phone || 'No Contact Number'}</span>
+                                <div className="flex items-center gap-2 text-slate-600">
+                                    <Phone size={13} className="text-slate-400 shrink-0" />
+                                    <span>{vendor.phone || 'No phone recorded'}</span>
                                 </div>
-                                <div className="flex items-start gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
-                                    <Globe className="w-4 h-4 mt-0.5" />
-                                    <p className="text-xs font-bold leading-relaxed line-clamp-2 italic">
-                                        {vendor.address1}, {vendor.state}
-                                    </p>
-                                </div>
+                                {vendor.address1 && (
+                                    <div className="flex items-start gap-2 text-slate-500">
+                                        <Globe size={13} className="text-slate-400 shrink-0 mt-0.5" />
+                                        <span className="truncate">{vendor.address1}{vendor.state ? `, ${vendor.state}` : ''}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
+
+                        {/* Inline Delete Confirmation */}
+                        {confirmDeleteId === vendor.id && (
+                            <div className="mt-3 pt-3 border-t border-red-100 flex items-center justify-between gap-2 bg-red-50/50 p-2 rounded-lg">
+                                <span className="text-xs text-red-700 font-medium">Delete supplier?</span>
+                                <div className="flex gap-1.5">
+                                    <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 px-2 text-xs">
+                                        Cancel
+                                    </Button>
+                                    <Button variant="danger" size="sm" onClick={() => handleDelete(vendor.id)} className="h-7 px-2.5 text-xs">
+                                        Delete
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
                 ))}
 
                 {filtered.length === 0 && (
-                    <div className="col-span-full py-32 flex flex-col items-center text-center">
-                        <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100 mb-8 border-dashed">
-                             <Building2 className="w-10 h-10 text-slate-200" />
-                        </div>
-                        <h4 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">No Suppliers Found</h4>
-                        <p className="text-slate-400 mt-2 font-medium max-w-xs leading-relaxed italic uppercase text-[10px] tracking-[0.2em]">The procurement directory is currently empty. Initialize a new business relationship to begin inward billing.</p>
+                    <div className="col-span-full">
+                        <Card className="text-center py-16 p-4">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                                 <Building className="w-5 h-5" />
+                            </div>
+                            <h4 className="text-slate-900 font-semibold text-sm">No suppliers found</h4>
+                            <p className="text-xs text-slate-500 mt-0.5 mb-5 max-w-sm mx-auto">
+                                {searchTerm ? "No suppliers match your current query." : "Add suppliers to track purchases and incoming vendor bills."}
+                            </p>
+                            <Button variant="primary" size="md" onClick={() => setIsFormOpen(true)}>
+                                <Plus size={16} className="mr-1.5" />
+                                Add Supplier
+                            </Button>
+                        </Card>
                     </div>
                 )}
             </div>

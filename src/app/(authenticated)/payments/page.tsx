@@ -15,7 +15,16 @@ import {
   Users
 } from "lucide-react";
 import { Card, CardContent } from "@/ui/core/Card";
+import { Button } from "@/ui/core/Button";
 import { LiveSearch } from "@/components/common/LiveSearch";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "@/ui/core/Table";
 
 export default async function PaymentsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const session = await verifySessionCookie();
@@ -57,7 +66,6 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       return sum + (Number(pur.grandTotal) - allocated);
   }, 0);
 
-  
   const clientData = clients.map(client => {
     let billed = 0;
     let paid = 0;
@@ -81,122 +89,121 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
     : clientData;
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700 pb-20">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase">
-            Credit <span className="text-primary-600">Dynamics</span>
-          </h1>
-          <p className="text-slate-500 mt-4 text-lg font-medium leading-relaxed italic">
-            Monitor accounts receivable (Incoming) and accounts payable (Outgoing) credits.
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Payments & Credit Management</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Monitor accounts receivable (Incoming) and accounts payable (Outgoing) credits
           </p>
         </div>
 
         <Link href="/payments/new">
-          <button className="h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-            <Plus className="w-5 h-5" />
+          <Button className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
             <span>Record Payment</span>
-          </button>
+          </Button>
         </Link>
       </div>
 
-      {/* ── Credit Summaries ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="border-0 bg-emerald-50 text-slate-900 shadow-2xl shadow-emerald-900/5 overflow-hidden relative group ring-1 ring-emerald-500/10">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-             <TrendingUp className="w-32 h-32 text-emerald-900" />
-          </div>
-          <CardContent className="p-10 relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                  <ArrowUpRight className="w-5 h-5" />
-               </div>
-               <span className="text-xs font-black uppercase tracking-[0.3em] text-emerald-600/70">Incoming Credit (Receivable)</span>
+      {/* Credit Summaries */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border border-emerald-200/80 bg-emerald-50/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-emerald-800">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+                  <ArrowUpRight className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-wider">Incoming Credit (Receivable)</span>
+              </div>
+              <span className="text-xs text-emerald-700 font-medium">{invoices.length} active invoices</span>
             </div>
-            <h2 className="text-5xl font-black italic tabular-nums text-emerald-900 tracking-tighter">{formatCurrency(incomingCredit)}</h2>
-            <p className="mt-4 text-emerald-600 font-bold text-sm uppercase tracking-widest italic">Outstanding revenue from {invoices.length} active invoices</p>
+            <h2 className="text-3xl font-bold tabular-nums text-emerald-900 tracking-tight">{formatCurrency(incomingCredit)}</h2>
+            <p className="mt-1 text-xs text-emerald-700 font-medium">Outstanding payments due from clients</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-rose-50 text-slate-900 shadow-2xl shadow-rose-900/5 overflow-hidden relative group ring-1 ring-rose-500/10">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-             <TrendingDown className="w-32 h-32 text-rose-900" />
-          </div>
-          <CardContent className="p-10 relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600">
-                  <ArrowDownRight className="w-5 h-5" />
-               </div>
-               <span className="text-xs font-black uppercase tracking-[0.3em] text-rose-600/70">Outgoing Credit (Payable)</span>
+        <Card className="border border-rose-200/80 bg-rose-50/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-rose-800">
+                <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-700">
+                  <ArrowDownRight className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-wider">Outgoing Credit (Payable)</span>
+              </div>
+              <span className="text-xs text-rose-700 font-medium">{purchases.length} bills</span>
             </div>
-            <h2 className="text-5xl font-black italic tabular-nums text-rose-900 tracking-tighter">{formatCurrency(outgoingCredit)}</h2>
-            <p className="mt-4 text-rose-600 font-bold text-sm uppercase tracking-widest italic">Pending settlements for {purchases.length} purchase bills</p>
+            <h2 className="text-3xl font-bold tabular-nums text-rose-900 tracking-tight">{formatCurrency(outgoingCredit)}</h2>
+            <p className="mt-1 text-xs text-rose-700 font-medium">Pending vendor settlements</p>
           </CardContent>
         </Card>
       </div>
 
-
-      {/* ── Search & Filter ── */}
-      <div className="flex flex-col md:flex-row items-center gap-4">
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <LiveSearch 
           placeholder="Filter by Client Name..." 
-          className="flex-1 w-full"
+          className="w-full sm:max-w-xs"
         />
+        <span className="text-xs font-medium text-slate-500 self-start sm:self-auto">
+          Showing {filteredClients.length} clients with activity
+        </span>
       </div>
 
-      {/* ── Client Payments List ── */}
-      <Card className="border-0 shadow-2xl shadow-slate-200/50 overflow-hidden">
+      {/* Client Payments List */}
+      <Card>
         <CardContent className="p-0">
           {filteredClients.length === 0 ? (
-            <div className="text-center py-32 bg-slate-50/30">
-              <Users className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-              <h3 className="text-slate-800 font-black text-2xl font-display uppercase italic tracking-tighter">No Client Data Found</h3>
-              <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">Adjust search parameters or issue new invoices.</p>
+            <div className="text-center py-16 px-4">
+              <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-slate-900">No client payment data found</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Try adjusting your search criteria or create a new invoice to start tracking payments.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-900">
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Client Name</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Billed</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Amount Paid</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pending Balance</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredClients.map((client) => (
-                    <tr key={client.id} className="group hover:bg-slate-50 transition-all">
-                      <td className="px-8 py-6">
-                        <Link href={`/clients/${client.id}`} className="group/link">
-                          <span className="font-black text-slate-900 text-sm group-hover/link:text-primary-600 transition-colors uppercase tracking-tight">{client.name}</span>
-                        </Link>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <span className="text-sm font-black text-slate-600 tabular-nums">{formatCurrency(client.billed)}</span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <span className="text-sm font-black text-emerald-600 tabular-nums">{formatCurrency(client.paid)}</span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <span className={`text-lg font-black tabular-nums italic tracking-tighter ${client.pending > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
-                          {formatCurrency(client.pending)}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <Link href={`/clients/${client.id}`}>
-                          <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm ml-auto">
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client Name</TableHead>
+                  <TableHead className="text-right">Total Billed</TableHead>
+                  <TableHead className="text-right">Amount Paid</TableHead>
+                  <TableHead className="text-right">Pending Balance</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell className="font-medium text-slate-900">
+                      <Link href={`/clients/${client.id}`} className="hover:text-primary-600 transition-colors">
+                        {client.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-slate-600 tabular-nums">
+                      {formatCurrency(client.billed)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-emerald-600 tabular-nums">
+                      {formatCurrency(client.paid)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      <span className={client.pending > 0 ? 'text-rose-600' : 'text-slate-500'}>
+                        {formatCurrency(client.pending)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link href={`/clients/${client.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900">
+                          <span>View</span>
+                          <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

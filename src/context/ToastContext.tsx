@@ -43,12 +43,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         theme="light"
         toastOptions={{
           style: {
-            borderRadius: '1.5rem',
-            padding: '1rem',
-            border: 'none',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+            borderRadius: '0.5rem',
+            padding: '0.875rem 1rem',
+            fontSize: '0.875rem',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04)',
           },
-          className: "font-display font-bold italic",
+          className: "font-sans font-medium",
         }}
       />
     </ToastContext.Provider>

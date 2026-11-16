@@ -3,10 +3,10 @@ import { verifySessionCookie } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { PurchaseDetailsCard } from "@/features/procurement/components/PurchaseDetailsCard";
 import { PurchaseItemsView } from "@/features/procurement/components/PurchaseItemsView";
-import { ArrowLeft, Edit3, Printer, Share2, Info, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Edit3, Printer, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/ui/core/Button";
-import { Card } from "@/ui/core/Card";
+import { Card, CardContent } from "@/ui/core/Card";
 import { formatCurrency } from "@/utils/financials";
 
 export default async function PurchaseViewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,37 +25,35 @@ export default async function PurchaseViewPage({ params }: { params: Promise<{ i
     const roundOff = grandTotal - (subTotal + taxTotal);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+        <div className="max-w-5xl mx-auto space-y-6 pb-16">
             {/* Header Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
                     <Link href="/purchases">
-                        <Button variant="ghost" size="sm" className="h-12 w-12 rounded-2xl bg-white shadow-xl hover:bg-slate-50">
-                            <ArrowLeft className="w-5 h-5 text-slate-600" />
+                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-lg border border-slate-200">
+                            <ArrowLeft className="w-4 h-4 text-slate-600" />
                         </Button>
                     </Link>
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] italic">Procurement Node</span>
-                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Purchase Bill</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {purchase.status}
+                            </span>
                         </div>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
                             {purchase.purchaseNo}
                         </h1>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <Link href={`/purchases/${id}/edit`}>
-                        <Button variant="ghost" className="bg-white shadow-xl hover:bg-slate-50 gap-2 h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-600 border border-slate-100">
-                            <Edit3 size={16} className="text-primary-500" />
-                            Modify Record
+                        <Button variant="outline" size="sm">
+                            <Edit3 size={14} className="mr-1.5" />
+                            <span>Edit Purchase</span>
                         </Button>
                     </Link>
-                    <Button variant="ghost" className="bg-slate-900 shadow-xl hover:bg-black gap-3 h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white">
-                        <Printer size={18} className="text-primary-400" />
-                        Print Protocol
-                    </Button>
                 </div>
             </div>
 
@@ -66,66 +64,60 @@ export default async function PurchaseViewPage({ params }: { params: Promise<{ i
             <PurchaseItemsView items={purchase.lineItems} />
 
             {/* Step 3: Financial Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <Card className="bg-slate-900 border-0 p-10 shadow-2xl relative overflow-hidden group rounded-[2.5rem]">
-                    <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none group-hover:scale-110 transition-all duration-1000">
-                        <Info size={240} className="text-white" />
-                    </div>
-                    <div className="relative z-10 space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-primary-600 flex items-center justify-center shadow-2xl shadow-primary-600/40">
-                            <CheckCircle2 className="w-6 h-6 text-white" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-slate-900 text-white border-0 shadow-sm">
+                    <CardContent className="p-6 space-y-4">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5" />
                         </div>
-                        <h4 className="font-black text-2xl italic uppercase tracking-tight font-display text-primary-500">Validation Status</h4>
-                        <p className="text-sm text-slate-400 leading-relaxed font-medium">
-                            This procurement record has been committed to the master ledger and synchronized with inventory reserves. 
-                            The associated Input Tax Credit (ITC) of {formatCurrency(taxTotal)} is now eligible for reconciliation.
-                        </p>
-                        <div className="flex gap-4">
-                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/5">
-                                Audit Ready
-                            </div>
-                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-full border border-white/5">
-                                Ledger Synced
-                            </div>
+                        <div>
+                            <h2 className="font-semibold text-base text-white">Ledger & Inventory Status</h2>
+                            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                This procurement entry is recorded in the general ledger and added to inventory balances. 
+                                Eligible Input Tax Credit (ITC) of {formatCurrency(taxTotal)} has been booked to the GST input account.
+                            </p>
                         </div>
-                    </div>
+                        <div className="flex gap-2 pt-2 text-xs">
+                            <span className="px-2.5 py-1 rounded bg-white/10 text-slate-300 font-medium">Audit Verified</span>
+                            <span className="px-2.5 py-1 rounded bg-white/10 text-slate-300 font-medium">Inventory Synced</span>
+                        </div>
+                    </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-3xl ring-1 ring-slate-900/5 bg-white p-10 overflow-hidden rounded-[2.5rem]">
-                    <div className="flex items-center justify-between mb-10">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 italic">Financial Summary</h4>
-                        <div className="px-3 py-1 bg-slate-50 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest">Final Value</div>
-                    </div>
+                <Card>
+                    <CardContent className="p-6 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2">
+                            Purchase Cost Summary
+                        </h2>
 
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center text-sm font-black text-slate-400">
-                            <span className="uppercase tracking-[0.2em] text-[10px]">Supply Base Value</span>
-                            <span className="tabular-nums text-slate-900 italic">{formatCurrency(subTotal)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm font-black text-slate-400">
-                            <span className="uppercase tracking-[0.2em] text-[10px]">Tax Provision</span>
-                            <span className="tabular-nums text-emerald-600 italic">+{formatCurrency(taxTotal)}</span>
-                        </div>
-
-                        {Math.abs(roundOff) > 0.01 && (
-                            <div className="flex justify-between items-center text-sm font-black text-slate-400">
-                                <span className="uppercase tracking-[0.2em] text-[10px]">Round Off</span>
-                                <span className="tabular-nums text-slate-500 italic">{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center text-slate-600">
+                                <span className="text-xs">Subtotal (Taxable Value)</span>
+                                <span className="font-medium text-slate-900 tabular-nums">{formatCurrency(subTotal)}</span>
                             </div>
-                        )}
+                            <div className="flex justify-between items-center text-slate-600">
+                                <span className="text-xs">Total Tax (GST Input)</span>
+                                <span className="font-medium text-emerald-600 tabular-nums">+{formatCurrency(taxTotal)}</span>
+                            </div>
 
-                        <div className="pt-10 border-t border-slate-50 mt-6">
-                            <div className="flex justify-between items-end">
-                                <div className="space-y-1">
-                                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary-600 italic">Gross Cost</p>
-                                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Aggregate INR Value</p>
+                            {Math.abs(roundOff) > 0.01 && (
+                                <div className="flex justify-between items-center text-slate-600">
+                                    <span className="text-xs">Round Off</span>
+                                    <span className="font-medium text-slate-500 tabular-nums">{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
                                 </div>
-                                <p className="text-5xl font-black tracking-tighter text-slate-900 italic">
+                            )}
+
+                            <div className="pt-3 border-t border-slate-200 mt-2 flex justify-between items-end">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Purchase Amount</p>
+                                    <p className="text-[11px] text-slate-400">Net payable to supplier</p>
+                                </div>
+                                <p className="text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
                                     {formatCurrency(grandTotal)}
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </CardContent>
                 </Card>
             </div>
         </div>

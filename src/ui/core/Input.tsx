@@ -21,29 +21,29 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 )}
                 <div className="relative group">
                     {icon && (
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors pointer-events-none">
                             {icon}
                         </div>
                     )}
                     <input
                         type={type}
                         className={cn(
-                            "flex w-full rounded-md border border-slate-300 bg-white text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 h-10",
-                            icon ? "pl-10 pr-3" : "px-3",
-                            error && "border-red-500 focus-visible:ring-red-500",
+                            "flex w-full rounded-lg border border-slate-300 bg-white text-sm shadow-xs transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:border-slate-900 focus-visible:ring-2 focus-visible:ring-slate-900/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 h-10",
+                            icon ? "pl-9 pr-3" : "px-3",
+                            error && "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20",
                             className
                         )}
                         ref={ref}
                         onClick={(e) => {
                             if (type === "date" || type === "time") {
-                                try { (e.target as HTMLInputElement).showPicker(); } catch (err) {}
+                                try { (e.target as HTMLInputElement).showPicker(); } catch {}
                             }
                             props.onClick?.(e);
                         }}
                         {...props}
                     />
                 </div>
-                {error && <p className="text-[11px] font-medium text-red-500 tracking-tight">{error}</p>}
+                {error && <p className="text-xs font-medium text-red-600 tracking-tight">{error}</p>}
             </div>
         )
     }
@@ -51,4 +51,3 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input"
 
 export { Input }
-

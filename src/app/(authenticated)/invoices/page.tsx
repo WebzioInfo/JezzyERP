@@ -4,15 +4,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/utils/index";
 import { formatCurrency } from "@/utils/financials";
-import {
-  FileText, Plus, Search, Filter,
-  ChevronRight, Calendar, ArrowUpRight,
-} from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { InvoiceListActions } from "@/features/billing/components/InvoiceListActions";
 import { InvoicesHeaderActions } from "@/features/billing/components/InvoicesHeaderActions";
 import { Card, CardContent } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/ui/core/Table";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { LiveSearch } from "@/components/common/LiveSearch";
 
@@ -78,25 +76,25 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   countMap["TRASH"] = trashCount;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-12">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Invoices</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage and track your invoices</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Invoices</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Manage tax invoices, delivery statuses, and collections</p>
         </div>
         <InvoicesHeaderActions />
       </div>
 
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-center">
+        <CardContent className="p-3.5">
+          <div className="flex flex-col lg:flex-row gap-3 items-center">
              <LiveSearch 
-               placeholder="Search by Invoice # or Client Name..." 
+               placeholder="Search by invoice number or client name..." 
                className="flex-1 w-full"
              />
 
-             <div className="flex flex-wrap items-center gap-2">
+             <div className="flex flex-wrap items-center gap-1.5 w-full lg:w-auto">
                 {STATUS_TABS.map((tab) => {
                   const isActive = statusFilter === tab.value;
                   const count = countMap[tab.value] || 0;
@@ -105,15 +103,15 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
                       key={tab.value}
                       href={`/invoices?${tab.value ? `status=${tab.value}` : ""}${searchQuery ? `&q=${searchQuery}` : ""}`}
                       className={cn(
-                        "px-3 py-1.5 rounded-md text-sm font-medium transition-all inline-flex items-center gap-2 border",
+                        "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 border",
                         isActive 
                           ? "bg-slate-900 text-white border-slate-900" 
                           : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
                       )}
                     >
-                      {tab.label}
+                      <span>{tab.label}</span>
                       <span className={cn(
-                        "min-w-[1.25rem] h-5 px-1 rounded-full flex items-center justify-center text-xs",
+                        "min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-semibold",
                         isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                       )}>
                         {count}
@@ -130,70 +128,75 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
       <ErrorBoundary name="Invoice Table">
         <Card className="overflow-hidden">
         {invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4">
-               <FileText className="w-6 h-6 text-slate-300" />
+          <div className="flex flex-col items-center justify-center py-16 text-center p-4">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+               <FileText className="w-5 h-5" />
             </div>
-            <p className="font-medium text-slate-900 text-base">No invoices found</p>
-            <p className="text-sm text-slate-500 mt-1 mb-6">
-              {searchQuery || statusFilter ? "Adjust your search filters to find what you're looking for." : "Create your first invoice to get started."}
+            <p className="font-semibold text-slate-900 text-sm">No invoices found</p>
+            <p className="text-xs text-slate-500 mt-0.5 mb-5 max-w-sm">
+              {searchQuery || statusFilter ? "Adjust your search filters or status tab to find matching records." : "Create your first invoice to start billing."}
             </p>
             <Link href="/invoices/new">
-               <Button variant="primary">
-                  <Plus className="w-4 h-4 mr-2" />
+               <Button variant="primary" size="md">
+                  <Plus className="w-4 h-4 mr-1.5" />
                   New Invoice
                </Button>
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium">Invoice #</th>
-                  <th className="text-left px-4 py-3 font-medium">Client</th>
-                  <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Date</th>
-                  <th className="text-right px-4 py-3 font-medium">Amount</th>
-                  <th className="text-center px-4 py-3 font-medium">Status</th>
-                  <th className="text-right px-4 py-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-                {invoices.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-4 py-3 font-medium text-slate-900">
-                      {String(inv.sequenceNumber || 1).padStart(2, '0')}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link 
-                        href={`/clients/${inv.client.id}`}
-                        className="font-medium text-slate-900 hover:text-primary-600 transition-colors inline-flex items-center gap-1"
-                      >
-                        {inv.client.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                       <span className="text-slate-500">
-                         {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(inv.date))}
-                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(inv.grandTotal.toNumber())}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge status={inv.status} />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <InvoiceListActions 
-                        invoiceId={inv.id} 
-                        isTrashed={statusFilter === "TRASH"} 
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-20">Seq #</TableHead>
+                <TableHead className="w-36">Invoice #</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoices.map((inv: any) => (
+                <TableRow key={inv.id} className="group">
+                  <TableCell className="font-mono text-slate-500 text-xs">
+                    {String(inv.sequenceNumber || 1).padStart(2, '0')}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-900">
+                    <Link 
+                      href={`/invoices/${inv.id}`}
+                      className="hover:underline hover:text-slate-700"
+                    >
+                      {inv.invoiceNo}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Link 
+                      href={`/clients/${inv.client.id}`}
+                      className="font-medium text-slate-900 hover:underline"
+                    >
+                      {inv.client.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-slate-500 text-xs">
+                    {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(inv.date))}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-slate-900 tabular-nums">
+                    {formatCurrency(inv.grandTotal.toNumber())}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <StatusBadge status={inv.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <InvoiceListActions 
+                      invoiceId={inv.id} 
+                      isTrashed={statusFilter === "TRASH"} 
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
         </Card>
       </ErrorBoundary>

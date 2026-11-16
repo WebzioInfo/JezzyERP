@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Upload, X, File, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, X, File, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/utils';
 import { useLoadingStore } from '@/lib/store/useLoadingStore';
+import { Button } from './Button';
 
 interface FileUploadProps {
   onUpload: (file: File) => Promise<void>;
@@ -42,8 +43,6 @@ export function FileUpload({ onUpload, maxSize = 5, accept, label }: FileUploadP
     setStatus('uploading');
     incrementRequests();
     
-    // Simulate progress since native fetch doesn't support progress tracking 
-    // (Axios would be better here, but we'll simulate for the UI demonstration)
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 95) {
@@ -59,7 +58,7 @@ export function FileUpload({ onUpload, maxSize = 5, accept, label }: FileUploadP
       clearInterval(interval);
       setProgress(100);
       setStatus('success');
-    } catch (err) {
+    } catch {
       clearInterval(interval);
       setStatus('error');
       setErrorMsg("Failed to upload file. Please try again.");
@@ -76,15 +75,15 @@ export function FileUpload({ onUpload, maxSize = 5, accept, label }: FileUploadP
   };
 
   return (
-    <div className="space-y-4">
-      {label && <label className="text-xs font-black uppercase tracking-widest text-slate-400 italic mb-2 block">{label}</label>}
+    <div className="space-y-2">
+      {label && <label className="text-xs font-medium text-slate-700 block">{label}</label>}
       
       <div className={cn(
-        "relative rounded-[2rem] border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center text-center",
-        status === 'uploading' ? "bg-primary-50/50 border-primary-200" : 
-        status === 'success' ? "bg-emerald-50/50 border-emerald-200" :
-        status === 'error' ? "bg-red-50/50 border-red-200" :
-        "bg-slate-50 border-slate-200 hover:border-primary-400 hover:bg-white"
+        "relative rounded-xl border-2 border-dashed transition-all p-6 sm:p-8 flex flex-col items-center justify-center text-center",
+        status === 'uploading' ? "bg-slate-50 border-slate-300" : 
+        status === 'success' ? "bg-emerald-50/50 border-emerald-300" :
+        status === 'error' ? "bg-red-50/50 border-red-300" :
+        "bg-slate-50/50 border-slate-300 hover:border-slate-400 hover:bg-slate-50"
       )}>
         <input 
           type="file" 
@@ -98,59 +97,60 @@ export function FileUpload({ onUpload, maxSize = 5, accept, label }: FileUploadP
           {!file ? (
             <motion.div 
               key="empty"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="space-y-4"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="space-y-3"
             >
-              <div className="w-16 h-16 rounded-3xl bg-white shadow-xl flex items-center justify-center mx-auto">
-                <Upload className="w-8 h-8 text-primary-500" />
+              <div className="w-12 h-12 rounded-xl bg-white shadow-xs border border-slate-200 flex items-center justify-center mx-auto text-slate-500">
+                <Upload className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">Drop file here or click to browse</p>
-                <p className="text-[10px] font-medium text-slate-400 mt-1 italic uppercase tracking-wider">MAX {maxSize}MB // {accept || 'ALL FORMATS'}</p>
+                <p className="text-sm font-semibold text-slate-900">Drop file here or click to browse</p>
+                <p className="text-xs text-slate-500 mt-1">Maximum size {maxSize}MB • {accept || 'All supported formats'}</p>
               </div>
             </motion.div>
           ) : (
             <motion.div 
               key="selected"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full space-y-6"
+              className="w-full space-y-4"
             >
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 max-w-sm mx-auto">
-                <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                  <File className="w-6 h-6 text-slate-400" />
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-xs border border-slate-200 max-w-sm mx-auto">
+                <div className="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center shrink-0 text-slate-600">
+                  <File className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-bold text-slate-900 truncate">{file.name}</p>
-                  <p className="text-[10px] font-medium text-slate-400 uppercase">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                  <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
                 {status !== 'uploading' && (
-                  <button onClick={reset} className="p-2 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors">
+                  <button onClick={reset} aria-label="Remove file" className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-md transition-colors">
                     <X size={16} />
                   </button>
                 )}
               </div>
 
               {status === 'idle' && (
-                <button 
+                <Button 
                   onClick={startUpload}
-                  className="h-12 px-8 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all active:scale-95 shadow-xl"
+                  variant="primary"
+                  size="md"
                 >
                   Confirm Upload
-                </button>
+                </Button>
               )}
 
               {status === 'uploading' && (
-                <div className="space-y-3 max-w-sm mx-auto w-full">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 italic">Syncing to cloud...</span>
-                    <span className="text-[10px] font-black text-slate-900">{progress}%</span>
+                <div className="space-y-2 max-w-sm mx-auto w-full">
+                  <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>Uploading...</span>
+                    <span>{progress}%</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                     <motion.div 
-                      className="h-full bg-primary-600"
+                      className="h-full bg-slate-900"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                     />
@@ -159,22 +159,26 @@ export function FileUpload({ onUpload, maxSize = 5, accept, label }: FileUploadP
               )}
 
               {status === 'success' && (
-                <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                <div className="flex flex-col items-center gap-2 animate-in fade-in">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                   </div>
-                  <p className="text-sm font-bold text-emerald-700 italic">Asset successfully registered!</p>
-                  <button onClick={reset} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-2">Upload Another</button>
+                  <p className="text-sm font-medium text-emerald-700">File uploaded successfully</p>
+                  <Button variant="ghost" size="sm" onClick={reset}>
+                    Upload Another
+                  </Button>
                 </div>
               )}
 
               {status === 'error' && (
-                <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in">
-                  <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="flex flex-col items-center gap-2 animate-in fade-in">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
                   </div>
-                  <p className="text-sm font-bold text-red-700 italic">{errorMsg}</p>
-                  <button onClick={reset} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 mt-2">Try Again</button>
+                  <p className="text-sm font-medium text-red-600">{errorMsg}</p>
+                  <Button variant="outline" size="sm" onClick={reset}>
+                    Try Again
+                  </Button>
                 </div>
               )}
             </motion.div>

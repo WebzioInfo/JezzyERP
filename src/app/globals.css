@@ -25,6 +25,22 @@
   --color-accent-600: #4F46E5;
   --color-accent-700: #4338CA;
 
+  /* Semantic Danger */
+  --color-danger-50: #FEF2F2;
+  --color-danger-100: #FEE2E2;
+  --color-danger-200: #FECACA;
+  --color-danger-300: #FCA5A5;
+  --color-danger-400: #F87171;
+  --color-danger-500: #EF4444;
+  --color-danger-600: #DC2626;
+  --color-danger-700: #B91C1C;
+
+  /* Semantic Success */
+  --color-success-50: #ECFDF5;
+  --color-success-100: #D1FAE5;
+  --color-success-500: #10B981;
+  --color-success-600: #059669;
+
   /* Slate Neutrals */
   --color-slate-50: #F8FAFC;
   --color-slate-100: #F1F5F9;
@@ -38,14 +54,14 @@
   --color-slate-900: #0F172A;
 
   /* Typography */
-  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-outfit: "Outfit", var(--font-inter), sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-outfit), var(--font-inter), sans-serif;
 
   /* Layout Constants */
   --sidebar-width: 260px;
-  --sidebar-collapsed-width: 80px;
+  --sidebar-collapsed-width: 72px;
   --header-height: 56px;
 }
 
@@ -54,6 +70,7 @@
    ========================================== */
 html {
   font-size: 87.5%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -69,14 +86,43 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-slate-300); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-slate-400); }
+::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-slate-300);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover, .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-400);
+}
 
-/* ==========================================
-   MINIMAL UTILITIES
-   ========================================== */
+/* Shimmer Animation Keyframes */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Reveal / Fade-in Animation */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-reveal {
+  animation: reveal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
 /* ==========================================
    LENIS SMOOTH SCROLL SUPPORT
@@ -159,4 +205,3 @@ html.lenis, html.lenis body {
     break-before: page !important;
   }
 }
-

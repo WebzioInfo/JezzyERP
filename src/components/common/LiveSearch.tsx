@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 import { Input } from "@/ui/core/Input";
 
 interface LiveSearchProps {
@@ -37,12 +37,11 @@ export function LiveSearch({
       const search = current.toString();
       const query = search ? `?${search}` : "";
       
-      // Only push if the query has actually changed to avoid loops
       if (query !== (searchParams.toString() ? `?${searchParams.toString()}` : "")) {
         router.push(`${pathname}${query}`);
       }
       setIsSearching(false);
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [inputValue, paramName, pathname, router, searchParams]);
@@ -52,15 +51,30 @@ export function LiveSearch({
     setIsSearching(true);
   };
 
+  const handleClear = () => {
+    setInputValue("");
+    setIsSearching(true);
+  };
+
   return (
-    <div className={`relative group ${className}`}>
+    <div className={`relative group w-full ${className}`}>
       <Input
         value={inputValue}
         onChange={handleChange}
         placeholder={placeholder}
-        icon={isSearching ? <Loader2 className="w-5 h-5 text-primary-500 animate-spin" /> : <Search className="w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />}
-        className="h-12 rounded-[1.25rem] bg-slate-50 border-0 ring-1 ring-slate-200 group-focus-within:ring-primary-500 group-focus-within:ring-2 transition-all shadow-inner"
+        icon={isSearching ? <Loader2 className="w-4 h-4 text-slate-500 animate-spin" /> : <Search className="w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />}
+        className="h-9 text-sm"
       />
+      {inputValue && (
+        <button
+          type="button"
+          onClick={handleClear}
+          aria-label="Clear search"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
+        >
+          <X size={14} />
+        </button>
+      )}
     </div>
   );
 }

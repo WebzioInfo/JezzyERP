@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, ClipboardList, Search, Filter, ChevronRight, ArrowUpRight } from "lucide-react";
+import { Plus, ClipboardList } from "lucide-react";
 import { verifySessionCookie } from "@/lib/auth";
-import { Card, CardHeader, CardContent } from "@/ui/core/Card";
+import { Card, CardContent } from "@/ui/core/Card";
+import { Button } from "@/ui/core/Button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/ui/core/Table";
 import { db } from "@/db/prisma/client";
 import { formatCurrency } from "@/utils/financials";
 import { StatusBadge } from "@/features/billing/components/StatusBadge";
 import { QuotationListActions } from "@/features/billing/components/QuotationListActions";
 import { LiveSearch } from "@/components/common/LiveSearch";
+import { cn } from "@/utils";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 interface PageProps {
   searchParams: Promise<{ status?: string; q?: string }>;
@@ -62,143 +66,133 @@ export default async function QuotationsPage({ searchParams }: PageProps) {
   countMap["TRASH"] = trashCount;
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-5 pb-12">
       {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
-        <div className="max-w-2xl">
-          <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase">
-            Proposal <span className="text-primary-600">Pipeline</span>
-          </h1>
-          <p className="text-slate-500 mt-4 text-lg font-medium leading-relaxed italic">
-            Manage your project estimates, client proposals, and commercial contracts.
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Quotations</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Commercial estimates, proposals, and customer approvals</p>
         </div>
 
         <Link href="/quotations/new">
-          <button className="h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-            <Plus className="w-5 h-5" />
-            <span>New Proposal</span>
-          </button>
+          <Button variant="primary" size="md">
+            <Plus className="w-4 h-4 mr-1.5" />
+            New Quotation
+          </Button>
         </Link>
       </div>
 
       {/* ── Filters & Search ── */}
-      <Card className="border-0 shadow-2xl shadow-slate-200/50 overflow-hidden">
-        <div className="p-4 flex flex-col sm:flex-row gap-3 border-b border-slate-100 bg-white">
-          <LiveSearch 
-            placeholder="Search proposal directory..." 
-            className="flex-1"
-          />
-          <div className="flex items-center gap-2 px-6 bg-slate-50 rounded-xl border border-slate-100 h-14 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-            <Filter className="w-4 h-4" />
-            <span>{quotations.length} RECORDS</span>
-          </div>
-        </div>
+      <Card>
+        <CardContent className="p-3.5">
+          <div className="flex flex-col lg:flex-row gap-3 items-center">
+            <LiveSearch
+              placeholder="Search by quotation number or client..."
+              className="flex-1 w-full"
+            />
 
-        {/* Status Tabs */}
-        <div className="flex flex-wrap gap-1 md:ms-4 p-2 bg-slate-50/30">
-          {QUO_STATUS_TABS.map((tab) => {
-            const isActive = statusFilter === tab.value;
-            const count = countMap[tab.value] || 0;
-            return (
-              <Link
-                key={tab.value}
-                href={`/quotations?${tab.value ? `status=${tab.value}` : ""}${searchQuery ? `&q=${searchQuery}` : ""}`}
-                className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${isActive
-                  ? "bg-slate-900 text-white shadow-xl scale-[1.02]"
-                  : "text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-md"
-                  }`}
-              >
-                {tab.label}
-                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-500"
-                  }`}>
-                  {count}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+            <div className="flex flex-wrap items-center gap-1.5 w-full lg:w-auto">
+              {QUO_STATUS_TABS.map((tab) => {
+                const isActive = statusFilter === tab.value;
+                const count = countMap[tab.value] || 0;
+                return (
+                  <Link
+                    key={tab.value}
+                    href={`/quotations?${tab.value ? `status=${tab.value}` : ""}${searchQuery ? `&q=${searchQuery}` : ""}`}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5 border",
+                      isActive
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    <span>{tab.label}</span>
+                    <span className={cn(
+                      "min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-semibold",
+                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                    )}>
+                      {count}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {/* ── Quotations Table ── */}
-      <Card className="border-0 shadow-2xl shadow-primary-900/5 overflow-hidden">
-        <CardHeader className="bg-slate-900 rounded-t-4xl px-8 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-              <ClipboardList className="w-5 h-5 text-white/70" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-white font-display uppercase italic tracking-tight">Project Registry</h3>
-              <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest italic">Live proposal status & commercial tracking</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
+      <ErrorBoundary name="Quotations Table">
+        <Card className="overflow-hidden">
           {quotations.length === 0 ? (
-            <div className="text-center py-32">
-              <div className="w-20 h-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-200 shadow-inner">
-                <ClipboardList className="w-10 h-10 text-slate-300" />
+            <div className="text-center py-16 p-4">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <ClipboardList className="w-5 h-5" />
               </div>
-              <h3 className="text-slate-800 font-black text-2xl font-display uppercase italic tracking-tighter">Registry is Empty</h3>
-              <p className="text-sm font-bold text-slate-400 mt-3 max-w-sm mx-auto leading-relaxed uppercase tracking-widest opacity-60">
-                Start by creating a professional proposal for your project.
+              <h3 className="text-slate-900 font-semibold text-sm">No quotations found</h3>
+              <p className="text-xs text-slate-500 mt-0.5 mb-5 max-w-sm mx-auto">
+                {searchQuery || statusFilter ? "Adjust your search filters or status selection." : "Create your first commercial quotation to send to a client."}
               </p>
+              <Link href="/quotations/new">
+                <Button variant="primary" size="md">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  New Quotation
+                </Button>
+              </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400">Proposal Identity</th>
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400">Recipient Node</th>
-                    <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400 hidden sm:table-cell">Emission Date</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400">Proposal Value</th>
-                    <th className="text-center px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400">State</th>
-                    <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-[0.25em] italic text-slate-400">Operations</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {quotations.map((quo: any) => (
-                    <tr key={quo.id} className="group hover:bg-slate-50 transition-all cursor-pointer">
-                      <td className="px-8 py-6">
-                        <p className="font-black text-slate-900 group-hover:text-primary-600 transition-colors tracking-tight uppercase">{quo.quotationNo}</p>
-                      </td>
-                      <td className="px-8 py-6">
-                        <Link 
-                          href={`/clients/${quo.client.id}`}
-                          className="group/client inline-flex flex-col hover:text-primary-600 transition-colors"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-extrabold text-slate-700 uppercase tracking-tight text-sm group-hover/client:text-primary-600 transition-colors">{quo.client.name}</p>
-                            <ArrowUpRight size={12} className="opacity-0 group-hover/client:opacity-100 transition-all text-primary-500" />
-                          </div>
-                        </Link>
-                      </td>
-                      <td className="px-8 py-6 hidden sm:table-cell">
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                          {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(quo.date))}
-                        </p>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <p className="font-black text-slate-900 text-lg tracking-tighter italic">{formatCurrency(quo.grandTotal.toNumber())}</p>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                        <StatusBadge status={quo.status} />
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <QuotationListActions
-                          quotationId={quo.id}
-                          isTrashed={statusFilter === "TRASH"}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-36">Quotation #</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead className="hidden sm:table-cell">Date</TableHead>
+                  <TableHead className="text-right">Estimate Total</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {quotations.map((quo: any) => (
+                  <TableRow key={quo.id} className="group">
+                    <TableCell className="font-medium text-slate-900">
+                      <Link 
+                        href={`/quotations/${quo.id}`}
+                        className="hover:underline hover:text-slate-700"
+                      >
+                        {quo.quotationNo}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link 
+                        href={`/clients/${quo.client.id}`}
+                        className="font-medium text-slate-900 hover:underline"
+                      >
+                        {quo.client.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-slate-500 text-xs">
+                      {new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(quo.date))}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-slate-900 tabular-nums">
+                      {formatCurrency(quo.grandTotal.toNumber())}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <StatusBadge status={quo.status} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <QuotationListActions
+                        quotationId={quo.id}
+                        isTrashed={statusFilter === "TRASH"}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </CardContent>
-      </Card>
+        </Card>
+      </ErrorBoundary>
     </div>
   );
 }

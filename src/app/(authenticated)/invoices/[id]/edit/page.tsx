@@ -66,14 +66,14 @@ export default async function EditInvoicePage({ params }: PageProps) {
     ]);
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 max-w-7xl mx-auto pb-16">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 italic uppercase">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                         Edit Invoice <span className="text-primary-600">#{invoice.invoiceNo}</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 font-medium">
-                        Modify the details of this tax invoice. Changes will be reflected in the final document immediately after saving.
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Update items, customer information, or terms for this invoice.
                     </p>
                 </div>
             </div>

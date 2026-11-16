@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { Plus, Trash2, Package, Tag, Hash } from "lucide-react";
+import { Plus, Trash2, Package } from "lucide-react";
 import { Button } from "@/ui/core/Button";
-import { FormField } from "@/ui/core/FormField";
 import { formatCurrency } from "@/utils/financials";
 import { useTransactionStore } from "@/lib/store/transactionStore";
 import { AnimatePresence, motion } from "framer-motion";
@@ -19,23 +18,36 @@ const Row = React.memo(({ item, index, products }: { item: any; index: number; p
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="group relative bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-primary-900/5 mb-6 overflow-hidden"
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="group relative bg-white border border-slate-200 rounded-xl transition-all shadow-xs mb-3 overflow-hidden"
         >
-            {/* Index Badge */}
-            <div className="absolute left-0 top-0 w-8 h-8 rounded-br-2xl bg-slate-900 text-white text-[10px] font-black flex items-center justify-center z-10 shadow-lg">
-                {index + 1}
+            {/* Header bar of the line item */}
+            <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs">
+                <div className="flex items-center gap-2 font-medium text-slate-700">
+                    <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-800 text-[11px] font-semibold flex items-center justify-center">
+                        {index + 1}
+                    </span>
+                    <span>Item #{index + 1}</span>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    aria-label={`Remove item ${index + 1}`}
+                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
             </div>
 
-            <div className="p-6 pt-10">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-                    {/* Product & Description */}
-                    <div className="col-span-1 lg:col-span-4 space-y-2">
-                        <label className="text-[10px] font-black uppercase text-slate-400 block px-1">Item Details</label>
+            <div className="p-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                    {/* Catalog Selection & Custom Description */}
+                    <div className="md:col-span-12 lg:col-span-5 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block">Catalog Product</label>
                         <select
-                            className="flex w-full rounded-xl border-0 bg-slate-100/50 px-3 py-2.5 text-xs shadow-inner ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:bg-white focus:outline-none appearance-none font-bold"
+                            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs shadow-xs focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 h-9"
                             value={item.productId || ""}
                             onChange={(e) => {
                                 const prod = products.find(p => p.id === e.target.value);
@@ -53,58 +65,64 @@ const Row = React.memo(({ item, index, products }: { item: any; index: number; p
                                 }
                             }}
                         >
-                            <option value="">-- Catalog --</option>
+                            <option value="">Select from catalog...</option>
                             {products.map(p => (
                                 <option key={p.id} value={p.id}>
-                                    {p.description} [Rate: {formatCurrency(Number(p.sellingRate || p.purchaseRate || 0))}]
+                                    {p.description} [{formatCurrency(Number(p.sellingRate || p.purchaseRate || 0))}]
                                 </option>
                             ))}
                         </select>
                         <input
-                            placeholder="Custom Description"
+                            placeholder="Custom description or item notes..."
                             value={item.description}
                             onChange={(e) => updateItem(item.id, { description: e.target.value })}
-                            className="w-full bg-transparent border-0 border-b border-slate-100 text-[11px] font-medium focus:ring-0 focus:border-primary-500 px-1 py-1"
+                            className="w-full text-xs text-slate-700 border-b border-slate-200 focus:border-slate-900 focus:outline-none py-1 bg-transparent placeholder:text-slate-400"
                         />
                     </div>
 
                     {/* HSN */}
-                    <div className="col-span-1 lg:col-span-1">
-                        <FormField
-                            label="HSN"
+                    <div className="col-span-6 sm:col-span-3 lg:col-span-2 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block">HSN / SAC</label>
+                        <input
+                            type="text"
                             value={item.hsn}
                             onChange={(e) => updateItem(item.id, { hsn: e.target.value })}
-                            className="font-mono text-center uppercase text-[10px] h-10"
+                            placeholder="HSN"
+                            className="w-full h-9 px-2.5 rounded-lg border border-slate-300 bg-white text-xs font-mono uppercase text-center focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
                         />
                     </div>
 
-                    {/* Qty */}
-                    <div className="col-span-1 lg:col-span-2">
-                        <FormField
-                            label={`Quantity`}
+                    {/* Quantity */}
+                    <div className="col-span-6 sm:col-span-3 lg:col-span-1 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block text-center">Qty</label>
+                        <input
                             type="number"
+                            min="1"
+                            step="any"
                             value={item.qty}
                             onChange={(e) => updateItem(item.id, { qty: Number(e.target.value) })}
-                            className="text-center font-black text-xs h-10 bg-primary-50/30 border-primary-100"
+                            className="w-full h-9 px-2 rounded-lg border border-slate-300 bg-white text-xs text-center font-semibold focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
                         />
                     </div>
 
-                    {/* Rate */}
-                    <div className="col-span-1 lg:col-span-2">
-                        <FormField
-                            label="Unit Rate (₹)"
+                    {/* Unit Rate */}
+                    <div className="col-span-6 sm:col-span-3 lg:col-span-2 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block text-right">Rate (₹)</label>
+                        <input
                             type="number"
+                            min="0"
+                            step="any"
                             value={item.rate}
                             onChange={(e) => updateItem(item.id, { rate: Number(e.target.value) })}
-                            className="text-right font-black text-xs h-10 bg-emerald-50/30 border-emerald-100"
+                            className="w-full h-9 px-2.5 rounded-lg border border-slate-300 bg-white text-xs text-right font-semibold tabular-nums focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
                         />
                     </div>
 
-                    {/* GST */}
-                    <div className="col-span-1 lg:col-span-1">
-                        <label className="text-[9px] font-black uppercase text-slate-400 block mb-1 text-center">GST %</label>
+                    {/* GST % */}
+                    <div className="col-span-6 sm:col-span-3 lg:col-span-1 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block text-center">GST %</label>
                         <select
-                            className="flex h-10 w-full rounded-xl border-0 bg-slate-100/50 px-1 text-[10px] font-black shadow-inner ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500/20 text-center"
+                            className="w-full h-9 px-1 rounded-lg border border-slate-300 bg-white text-xs text-center font-medium focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
                             value={item.taxPercent}
                             onChange={(e) => updateItem(item.id, { taxPercent: Number(e.target.value) })}
                         >
@@ -113,67 +131,29 @@ const Row = React.memo(({ item, index, products }: { item: any; index: number; p
                     </div>
 
                     {/* Pkgs */}
-                    <div className="col-span-1 lg:col-span-1">
-                        <FormField
-                            label="Pkgs"
+                    <div className="col-span-6 sm:col-span-3 lg:col-span-1 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block text-center">Boxes</label>
+                        <input
                             type="number"
+                            min="0"
                             value={item.pkgCount || 0}
                             onChange={e => updateItem(item.id, { pkgCount: parseInt(e.target.value) || 0 })}
-                            className="text-center font-bold text-[10px] h-10"
+                            className="w-full h-9 px-1.5 rounded-lg border border-slate-300 bg-white text-xs text-center focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
                         />
                     </div>
-
-                    {/* Remove */}
-                    <div className="col-span-1 lg:col-span-1 flex items-center justify-center">
-                        <button
-                            onClick={() => removeItem(item.id)}
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
-                    </div>
                 </div>
 
-                {/* Product Metadata (Non-editable clarification) */}
-                {item.productId && (
-                    <div className="mt-6 flex flex-wrap gap-4 items-center px-1 animate-in fade-in slide-in-from-left-2 duration-500">
-                        <div className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-2 border border-slate-100 shadow-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">SKU</span>
-                            <span className="text-[11px] font-black text-slate-900 font-mono tracking-tighter">
-                                {products.find(p => p.id === item.productId)?.sku || 'N/A'}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-2 border border-slate-100 shadow-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Catalog Unit</span>
-                            <span className="text-[11px] font-black text-slate-900 italic uppercase">
-                                {products.find(p => p.id === item.productId)?.unit || item.unit}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-2 border border-slate-100 shadow-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Standard Packing</span>
-                            <span className="text-[11px] font-black text-slate-900">
-                                {products.find(p => p.id === item.productId)?.qtyPerBox || 0} {item.unit || 'NOS'} / {item.pkgType || 'BOX'}
-                            </span>
-                        </div>
+                {/* Sub-bar with line total and product specs */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+                        {item.unit && <span>Unit: <strong className="text-slate-700">{item.unit}</strong></span>}
+                        {item.qtyPerBox > 0 && <span>Packing: <strong className="text-slate-700">{item.qtyPerBox} / box</strong></span>}
                     </div>
-                )}
-            </div>
-
-            {/* Bottom Total Bar */}
-            <div className="bg-slate-900 px-8 py-3 flex justify-between items-center group-hover:bg-primary-950 transition-colors">
-                <div className="flex items-center gap-4">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Calculated Sub-Val</span>
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter leading-none mb-1">Line Amount</span>
-                        <div className="text-sm font-black text-white tabular-nums italic tracking-tight">
+                    <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-xs text-slate-500 font-medium">Line Amount:</span>
+                        <span className="text-sm font-bold text-slate-900 tabular-nums">
                             {formatCurrency(item.totalAmount || 0)}
-                        </div>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -188,23 +168,24 @@ export function TransactionTable({ products }: TransactionTableProps) {
     const addItem = useTransactionStore((state) => state.addItem);
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex items-center justify-between px-2">
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 italic tracking-tight uppercase">Supply Records</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">Define goods, services and logistics</p>
+                    <h3 className="text-base font-semibold text-slate-900">Line Items & Products</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Specify products, rates, quantities, and tax specifications</p>
                 </div>
                 <Button
-                    variant="outline"
+                    type="button"
+                    variant="secondary"
+                    size="md"
                     onClick={addItem}
-                    className="h-12 px-6 rounded-2xl border-primary-100 text-primary-600 hover:bg-primary-50 font-black uppercase italic tracking-widest text-[11px] flex items-center gap-2 group shadow-lg shadow-primary-900/5"
                 >
-                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
-                    Append Listing
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Add Item
                 </Button>
             </div>
 
-            <div className="relative min-h-[200px]">
+            <div className="min-h-[140px]">
                 <AnimatePresence initial={false}>
                     {items.length > 0 ? (
                         <div className="flex flex-col">
@@ -213,19 +194,17 @@ export function TransactionTable({ products }: TransactionTableProps) {
                             ))}
                         </div>
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-slate-50/50"
-                        >
-                            <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center shadow-xl shadow-primary-900/5 mb-6 animate-bounce duration-3000">
-                                <Plus className="w-10 h-10 text-primary-200" />
+                        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
+                            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-xs mb-3 text-slate-400">
+                                <Package className="w-5 h-5" />
                             </div>
-                            <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Inventory Ledger Vacant</p>
-                            <Button variant="primary" onClick={addItem} className="mt-8 h-12 px-8">
-                                Initialize Record
+                            <p className="text-sm font-semibold text-slate-800">No items added yet</p>
+                            <p className="text-xs text-slate-500 mt-0.5 mb-4">Click Add Item below to start adding products to this invoice.</p>
+                            <Button variant="primary" size="sm" onClick={addItem}>
+                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                Add First Item
                             </Button>
-                        </motion.div>
+                        </div>
                     )}
                 </AnimatePresence>
             </div>

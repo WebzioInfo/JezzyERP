@@ -39,10 +39,10 @@ export default async function VendorDetailPage({ params }: PageProps) {
       <div className="flex items-center justify-between gap-6">
         <Link
           href="/vendors"
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-all font-black uppercase tracking-widest group"
+          className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 transition-colors font-medium"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          Back to Vendors Terminal
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Vendors</span>
         </Link>
       </div>
 

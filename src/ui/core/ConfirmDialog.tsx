@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 import { useConfirmStore } from '@/hooks/useConfirmStore';
@@ -9,6 +9,18 @@ import { cn } from '@/utils';
 
 export function ConfirmDialog() {
   const { isOpen, options, setResult } = useConfirmStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        setResult(false);
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, setResult]);
 
   if (!isOpen || !options) return null;
 
@@ -22,58 +34,65 @@ export function ConfirmDialog() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div 
+        className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+      >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          className="absolute inset-0"
           onClick={() => setResult(false)}
         />
 
         {/* Modal */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden"
+          exit={{ opacity: 0, scale: 0.98, y: 10 }}
+          transition={{ duration: 0.2 }}
+          className="relative w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-10"
         >
-          <div className="p-8">
-            <div className="flex items-center gap-4 mb-6">
+          <div className="p-6">
+            <div className="flex items-start gap-3.5 mb-4">
               <div className={cn(
-                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
-                type === 'danger' && "bg-red-50 text-red-500",
-                type === 'warning' && "bg-amber-50 text-amber-500",
-                type === 'info' && "bg-blue-50 text-blue-500"
+                "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                type === 'danger' && "bg-red-50 text-red-600",
+                type === 'warning' && "bg-amber-50 text-amber-600",
+                type === 'info' && "bg-blue-50 text-blue-600"
               )}>
-                {type === 'danger' && <AlertCircle className="w-6 h-6" />}
-                {type === 'warning' && <AlertTriangle className="w-6 h-6" />}
-                {type === 'info' && <Info className="w-6 h-6" />}
+                {type === 'danger' && <AlertCircle className="w-5 h-5" />}
+                {type === 'warning' && <AlertTriangle className="w-5 h-5" />}
+                {type === 'info' && <Info className="w-5 h-5" />}
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">{title}</h3>
+              <div className="space-y-1">
+                <h3 id="confirm-dialog-title" className="text-base font-semibold text-slate-900 leading-snug">
+                  {title}
+                </h3>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  {message}
+                </p>
+              </div>
             </div>
-            
-            <p className="text-slate-500 text-sm font-medium leading-relaxed uppercase tracking-tight italic opacity-80">
-              {message}
-            </p>
 
-            <div className="flex items-center gap-3 mt-10">
+            <div className="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
               <Button
-                variant="ghost"
+                variant="outline"
+                size="md"
                 onClick={() => setResult(false)}
-                className="flex-1 h-12 rounded-2xl font-black text-xs uppercase tracking-widest"
+                className="min-w-20"
               >
                 {cancelText}
               </Button>
               <Button
                 variant={type === 'danger' ? 'danger' : 'primary'}
+                size="md"
                 onClick={() => setResult(true)}
-                className={cn(
-                    "flex-1 h-12 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl",
-                    type === 'danger' && "shadow-red-500/20",
-                    type === 'warning' && "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 border-none"
-                )}
+                className="min-w-20"
               >
                 {confirmText}
               </Button>
@@ -82,9 +101,10 @@ export function ConfirmDialog() {
           
           <button 
             onClick={() => setResult(false)}
-            className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+            aria-label="Close dialog"
+            className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </motion.div>
       </div>

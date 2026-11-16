@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/core/Card";
+import { Button } from "@/ui/core/Button";
+import { Input } from "@/ui/core/Input";
+import { Label } from "@/ui/core/Label";
 
 const PAYMENT_METHODS = [
   { value: "CASH", label: "Cash", icon: Banknote },
@@ -60,157 +64,136 @@ export function EditLoanClient({ loan, initialPaymentMethod }: EditLoanClientPro
   const TypeIcon = isTaken ? TrendingDown : TrendingUp;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-3xl mx-auto pb-20">
-      {/* ── Header ── */}
+    <div className="space-y-6 max-w-2xl mx-auto pb-16">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <Link
           href="/loans"
-          className="flex items-center gap-3 text-slate-500 hover:text-slate-900 transition-all font-black text-xs uppercase tracking-widest group"
+          className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
         >
-          <div className="w-10 h-10 glass rounded-2xl flex items-center justify-center border border-slate-200 group-hover:bg-slate-50 transition-all">
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          </div>
-          Back to Protocol
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Loans</span>
         </Link>
-        <div className="px-4 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">
-          Edit Entry #{loan.id.slice(-6)}
-        </div>
+        <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full text-xs font-medium border border-slate-200">
+          Loan #{loan.id.slice(-6)}
+        </span>
       </div>
 
-      {/* ── Page Title ── */}
       <div>
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 font-display italic uppercase leading-none">
-          Edit <span className="text-primary-600">Loan Record</span>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Edit Loan Record
         </h1>
-        <p className="text-slate-400 mt-3 text-sm font-bold uppercase tracking-widest">
-          Modify principal obligations or terms
+        <p className="text-sm text-slate-500 mt-0.5">
+          Update counterparty, principal amount, or repayment details
         </p>
       </div>
 
-      <form action={formAction} className="space-y-6">
+      <form action={formAction} className="space-y-4">
         {state?.error && (
-          <div className="p-5 rounded-3xl bg-rose-50 border border-rose-200 flex items-start gap-4 animate-in fade-in slide-in-from-top-2">
-            <div className="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
-              <AlertCircle className="w-5 h-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-sm font-black text-rose-900 uppercase tracking-tight">Entry Error</p>
-              <p className="text-sm text-rose-700 mt-1">{state.error}</p>
-            </div>
+          <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs font-medium">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <span>{state.error}</span>
           </div>
         )}
 
         {/* Loan Type Display (Read-Only) */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <LifeBuoy className="w-5 h-5 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-slate-500">Classification (Immutable)</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">This classification cannot be modified after registry</p>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-[2rem] border-2 border-primary-500 bg-primary-50/50 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white shadow-xl flex items-center justify-center">
-              <TypeIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-xs font-black uppercase tracking-widest block text-primary-700">
-                {isTaken ? "Loan Taken" : "Loan Given"}
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1 block leading-tight">
-                {isTaken ? "Liability - Payable to someone" : "Asset - Receivable from someone"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Party & Amount */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary-600" />
-            </div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Entity & Value</p>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Party Name / Source / Recipient</label>
-              <div className="relative">
-                <Users className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                <input
-                  name="partyName"
-                  required
-                  defaultValue={loan.partyName}
-                  placeholder="e.g. HDFC Bank, John Doe, Founder Name"
-                  className="w-full h-16 pl-14 pr-6 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all placeholder:text-slate-300 uppercase tracking-tight"
-                />
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
+              <LifeBuoy className="w-4 h-4 text-slate-500" />
+              <span>Classification (Fixed)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-primary-600 text-white flex items-center justify-center shrink-0">
+                <TypeIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-900 block">
+                  {isTaken ? "Loan Taken (Liability)" : "Loan Given (Asset)"}
+                </span>
+                <span className="text-xs text-slate-500 block">
+                  {isTaken ? "Liability payable to third party" : "Asset receivable from counterparty"}
+                </span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Party & Amount Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
+              <Users className="w-4 h-4 text-slate-500" />
+              <span>Party & Principal Details</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-4">
+            <div>
+              <Label htmlFor="partyName">Party Name</Label>
+              <Input
+                id="partyName"
+                name="partyName"
+                defaultValue={loan.partyName}
+                required
+              />
+            </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Principal Amount (₹)</label>
+              <Label htmlFor="amount">Principal Amount (₹)</Label>
               <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl italic">₹</span>
-                <input
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">₹</span>
+                <Input
+                  id="amount"
                   type="number"
                   name="amount"
                   step="0.01"
+                  defaultValue={Number(loan.amount)}
                   required
-                  defaultValue={loan.amount}
-                  placeholder="0.00"
-                  className="w-full h-20 pl-12 pr-6 bg-slate-50 border border-slate-200 rounded-3xl text-3xl font-black text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all tabular-nums placeholder:text-slate-200 italic"
+                  className="pl-8 text-base font-semibold tabular-nums"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Transaction Date</label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="date"
-                    defaultValue={loan.date ? new Date(loan.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]}
-                    required
-                    className="w-full h-16 px-6 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all"
-                  />
-                </div>
+                <Label htmlFor="date">Transaction Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  name="date"
+                  defaultValue={loan.date ? new Date(loan.date).toISOString().split("T")[0] : ""}
+                  required
+                />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Interest Rate (%) <span className="opacity-50">(Optional)</span></label>
-                <div className="relative">
-                  <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">%</span>
-                  <input
-                    type="number"
-                    name="interestRate"
-                    step="0.01"
-                    defaultValue={loan.interestRate ? Number(loan.interestRate) : undefined}
-                    placeholder="0.00"
-                    className="w-full h-16 pl-6 pr-12 bg-slate-50 border border-slate-200 rounded-3xl text-lg font-black text-slate-900 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all tabular-nums"
-                  />
-                </div>
+                <Label htmlFor="interestRate">Interest Rate (%) <span className="text-slate-400 font-normal">(Optional)</span></Label>
+                <Input
+                  id="interestRate"
+                  type="number"
+                  name="interestRate"
+                  step="0.01"
+                  defaultValue={loan.interestRate ? Number(loan.interestRate) : ""}
+                  placeholder="0.00"
+                />
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Method & Notes */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-violet-100 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-violet-600" />
-            </div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Transaction Details</p>
-          </div>
-
-          <div className="space-y-6">
+        {/* Method & Notes Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
+              <Wallet className="w-4 h-4 text-slate-500" />
+              <span>Payment Method & Notes</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 block ml-1">Disbursement / Receipt Method</label>
-              <div className="grid grid-cols-2 gap-4">
+              <Label>Disbursement / Receipt Method</Label>
+              <div className="grid grid-cols-2 gap-3">
                 {PAYMENT_METHODS.map((method) => {
                   const active = selectedMethod === method.value;
                   return (
@@ -219,22 +202,14 @@ export function EditLoanClient({ loan, initialPaymentMethod }: EditLoanClientPro
                       type="button"
                       onClick={() => setSelectedMethod(method.value as any)}
                       className={cn(
-                        "flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-300 text-left group",
+                        "flex items-center gap-2.5 p-3 rounded-lg border text-left transition-all",
                         active
-                          ? "border-primary-500 bg-primary-50/50 shadow-md shadow-primary-500/5"
-                          : "border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white"
+                          ? "border-primary-600 bg-primary-50/50 text-primary-900 font-semibold"
+                          : "border-slate-200 hover:border-slate-300 text-slate-700"
                       )}
                     >
-                      <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                        active ? "bg-primary-600 text-white shadow-lg" : "bg-white text-slate-400 border border-slate-100 group-hover:text-slate-600"
-                      )}>
-                        <method.icon className="w-5 h-5" />
-                      </div>
-                      <span className={cn(
-                        "text-xs font-black uppercase tracking-widest",
-                        active ? "text-primary-700" : "text-slate-400"
-                      )}>{method.label}</span>
+                      <method.icon className={cn("w-4 h-4", active ? "text-primary-600" : "text-slate-400")} />
+                      <span className="text-xs">{method.label}</span>
                     </button>
                   );
                 })}
@@ -242,41 +217,31 @@ export function EditLoanClient({ loan, initialPaymentMethod }: EditLoanClientPro
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Internal Reference / Notes (Optional)</label>
-              <div className="relative">
-                <FileText className="absolute left-5 top-5 w-5 h-5 text-slate-400 pointer-events-none" />
-                <textarea
-                  name="notes"
-                  rows={4}
-                  defaultValue={loan.notes || ""}
-                  placeholder="e.g. Personal loan for expansion, repayment expected in 6 months..."
-                  className="w-full pl-14 pr-6 py-5 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-8 focus:ring-primary-500/5 focus:border-primary-400 transition-all placeholder:text-slate-300 resize-none text-slate-900"
-                />
-              </div>
+              <Label htmlFor="notes">Notes / Reference <span className="text-slate-400 font-normal">(Optional)</span></Label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                defaultValue={loan.notes || ""}
+                placeholder="e.g. Terms, repayment schedule, purpose..."
+                className="w-full p-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
+              />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Submit */}
-        <button
+        <Button
           type="submit"
           disabled={pending}
-          className={cn(
-            "w-full h-20 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl overflow-hidden group relative",
-            pending
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : "bg-slate-900 text-white hover:bg-primary-600 hover:shadow-primary-500/30 hover:scale-[1.01] active:scale-[0.99]"
-          )}
+          className="w-full h-10 text-sm font-semibold"
         >
           {pending ? (
-            <><Loader2 className="w-6 h-6 animate-spin" /> WRITING CHANGES...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving Changes...</>
           ) : (
-            <>
-              <span>Save Loan Changes</span>
-              <Save className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            </>
+            <><Save className="w-4 h-4 mr-2" /> Save Loan Updates</>
           )}
-        </button>
+        </Button>
       </form>
     </div>
   );

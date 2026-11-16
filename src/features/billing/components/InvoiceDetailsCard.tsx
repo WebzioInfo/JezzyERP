@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input } from "@/ui/core/Input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui/core/Card";
 import { Client } from "@/features/clients/types";
 import { 
     Building2, Calendar, FileText, Truck, 
-    ShieldCheck, HelpCircle, Info, MapPin, 
+    ShieldCheck, Info, MapPin, 
     ChevronDown, ChevronUp, CheckSquare, Square, CloudUpload, Loader2
 } from "lucide-react";
 import { cn } from "@/utils";
-import { Address } from "@/types/invoice";
 import BillingForm from "./BillingForm";
 import ShippingForm from "./ShippingForm";
 
@@ -44,68 +43,63 @@ export function InvoiceDetailsCard({
     const [showAddresses, setShowAddresses] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-
     return (
-        <Card className="border-0 shadow-lg ring-1 ring-slate-200 overflow-hidden rounded-3xl">
-            <CardHeader className={cn(
-                "px-6 py-6 border-b",
-                mode === 'QUOTATION' ? 'bg-amber-500' : 'bg-slate-900'
-            )}>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
-                            {mode === 'QUOTATION' ? <HelpCircle className="w-6 h-6 text-white" /> : <FileText className="w-6 h-6 text-white" />}
-                        </div>
-                        <div>
-                            <CardTitle className="text-white text-xl italic tracking-tight">{mode === "QUOTATION" ? "Quotation" : "Invoice"} Core Details</CardTitle>
-                            <CardDescription className={mode === 'QUOTATION' ? 'text-amber-100' : 'text-slate-400'}>
-                                {mode === "QUOTATION" ? "Drafting business estimate" : "Generating tax-compliant invoice"}
-                            </CardDescription>
-                        </div>
+        <Card>
+            <CardHeader className="border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                        <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-base font-semibold text-slate-900">
+                            {mode === "QUOTATION" ? "Quotation Details" : "Invoice Details"}
+                        </CardTitle>
+                        <CardDescription className="text-xs text-slate-500">
+                            {mode === "QUOTATION" ? "Drafting formal customer estimate" : "B2B tax invoice and customer metadata"}
+                        </CardDescription>
                     </div>
                 </div>
             </CardHeader>
 
-            <CardContent className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                     {/* Client Selection */}
-                    <div className="md:col-span-12 lg:col-span-4 space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-2">
-                            <Building2 size={12} className="text-primary-500" /> Billed To <span className="text-danger-500">*</span>
+                    <div className="md:col-span-12 lg:col-span-4 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block">
+                            Client / Customer <span className="text-red-500">*</span>
                         </label>
                         <select
-                            className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none h-[46px]"
+                            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-xs transition-colors focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 h-10"
                             value={clientId}
                             onChange={e => setEntityId(e.target.value)}
                         >
-                            <option value="">Select a Client...</option>
+                            <option value="">Select a client...</option>
                             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <div className="flex items-center gap-1.5 mt-2 ml-1">
-                            <Info size={10} className="text-slate-400" />
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Auto-loads GST preferences</p>
-                        </div>
+                        <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                            <Info size={12} className="text-slate-400" />
+                            Auto-configures tax state and addresses
+                        </p>
                     </div>
 
                     {/* Dates & Invoice Number */}
-                    <div className="md:col-span-12 lg:col-span-8 space-y-2">
+                    <div className="md:col-span-12 lg:col-span-8">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <Input
                                 label="Document Date"
                                 type="date"
                                 value={date}
                                 onChange={e => setField("date", e.target.value)}
-                                icon={<Calendar size={16} />}
+                                icon={<Calendar size={15} />}
                                 required
                             />
-                            {mode === "INVOICE" ? null : (
+                            {mode === "QUOTATION" && (
                                 <Input
                                     label="Valid Until"
                                     type="date"
                                     value={validUntil}
                                     onChange={e => setField("validUntil", e.target.value)}
-                                    className="border-amber-100"
-                                    icon={<Calendar size={16} className="text-amber-500" />}
+                                    icon={<Calendar size={15} />}
                                 />
                             )}
                             <div className="space-y-1">
@@ -113,116 +107,84 @@ export function InvoiceDetailsCard({
                                     label="Invoice Number"
                                     value={invoiceNo}
                                     onChange={e => setField("invoiceNo", e.target.value)}
-                                    placeholder="Leave blank for auto-gen"
-                                    icon={<Info size={14} className="text-primary-400" />}
+                                    placeholder="Leave blank for auto-number"
                                 />
-                                <div className="flex items-center gap-1.5 ml-1">
-                                    <Info size={10} className="text-slate-400 shrink-0" />
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Format: JE/B2B/XX/FY</p>
-                                </div>
+                                <p className="text-[11px] text-slate-400">Leave blank for sequential</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Tax Type */}
-                    <div className="md:col-span-6 lg:col-span-4 space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-2">
-                            <ShieldCheck size={12} className="text-primary-500" /> GST Configuration
+                    <div className="md:col-span-6 lg:col-span-4 space-y-1.5">
+                        <label className="text-xs font-medium text-slate-700 block">
+                            GST Protocol
                         </label>
                         <select
-                            className="flex w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 appearance-none h-[46px] font-bold"
+                            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-xs focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 h-10"
                             value={gstType}
                             onChange={e => setField("gstType", e.target.value as any)}
                         >
-                            <option value="CGST_SGST">Intra-state (9+9)</option>
-                            <option value="IGST">Inter-state (18%)</option>
-                            <option value="NONE">Exempted (0%)</option>
+                            <option value="CGST_SGST">Intra-State (CGST + SGST)</option>
+                            <option value="IGST">Inter-State (IGST)</option>
+                            <option value="NONE">Exempt / Zero Rated (0%)</option>
                         </select>
                     </div>
 
-                    {/* Address Overrides */}
-                    <div className="md:col-span-12 space-y-4 pt-4 border-t border-slate-100">
-                        <div className="flex flex-wrap items-center gap-4 border-b border-slate-100 pb-4">
+                    {/* Address Overrides Header */}
+                    <div className="md:col-span-12 space-y-4 pt-3 border-t border-slate-100">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                             <button
                                 type="button"
                                 onClick={() => setShowAddresses(!showAddresses)}
-                                className="flex items-center gap-2 group"
+                                className="flex items-center gap-2 p-1.5 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-slate-700 text-xs font-medium cursor-pointer"
                             >
-                                <div className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                    showAddresses ? "bg-primary-600 text-white shadow-lg shadow-primary-200" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
-                                )}>
-                                    <MapPin size={16} />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Address Overrides</p>
-                                    <p className="text-sm font-bold text-slate-700 leading-none">
-                                        {showAddresses ? "Hide Management" : "Review Billing & Shipping"}
-                                    </p>
-                                </div>
-                                {showAddresses ? <ChevronUp size={14} className="ml-2 text-slate-400" /> : <ChevronDown size={14} className="ml-2 text-slate-400 group-hover:translate-y-0.5 transition-transform" />}
+                                <MapPin size={14} className="text-slate-500" />
+                                <span>{showAddresses ? "Hide Address Details" : "Review Billing & Shipping Addresses"}</span>
+                                {showAddresses ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
                             </button>
 
                             {!showAddresses && (
-                                <div className="flex items-center gap-6 ml-auto pr-2">
-                                    <div className="hidden sm:flex flex-col items-end">
-                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Billed To</span>
-                                        <span className="text-[11px] font-bold text-slate-500 max-w-[150px] truncate italic">{billingAddress.name || 'No Name'}</span>
-                                    </div>
-                                    <div className="w-px h-6 bg-slate-100 hidden sm:block"></div>
-                                    <div className="hidden sm:flex flex-col items-end">
-                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Shipping To</span>
-                                        <span className="text-[11px] font-bold text-slate-500 max-w-[150px] truncate italic">
-                                            {shippingSameAsBilling ? "Same as Billing" : (shippingAddress.name || 'No Name')}
-                                        </span>
-                                    </div>
+                                <div className="text-xs text-slate-500 flex items-center gap-2">
+                                    <span>Billed To: <strong className="text-slate-700 font-medium">{billingAddress.name || 'Auto-filled on client select'}</strong></span>
                                 </div>
                             )}
                         </div>
 
                         {showAddresses && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-950 flex items-center gap-2 italic">
-                                            <Building2 size={12} className="text-primary-500" /> Billing Address Snapshot
-                                        </h4>
-                                    </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2 animate-reveal">
+                                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
+                                    <h4 className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                                        <Building2 size={14} className="text-slate-600" /> Billing Address
+                                    </h4>
                                     <BillingForm 
                                         billing={billingAddress} 
                                         setBilling={(addr) => setField("billingAddress", addr)} 
                                     />
                                 </div>
 
-                                <div className="space-y-6">
+                                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-950 flex items-center gap-2 italic">
-                                            <Truck size={12} className="text-green-500" /> Shipping Destination
+                                        <h4 className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                                            <Truck size={14} className="text-slate-600" /> Shipping Destination
                                         </h4>
                                         <button
                                             type="button"
                                             onClick={() => setField("shippingSameAsBilling", !shippingSameAsBilling)}
-                                            className="flex items-center gap-1.5 transition-all"
+                                            className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer"
                                         >
-                                            {shippingSameAsBilling ? <CheckSquare size={14} className="text-primary-600" /> : <Square size={14} className="text-slate-300" />}
-                                            <span className={cn("text-[10px] font-black uppercase tracking-widest", shippingSameAsBilling ? "text-primary-600" : "text-slate-400")}>Same as billing</span>
+                                            {shippingSameAsBilling ? <CheckSquare size={14} className="text-slate-900" /> : <Square size={14} className="text-slate-400" />}
+                                            <span>Same as billing</span>
                                         </button>
                                     </div>
                                     
-                                    {!shippingSameAsBilling && (
-                                        <div className="animate-in zoom-in-95 duration-300">
-                                            <ShippingForm 
-                                                shipping={shippingAddress} 
-                                                setShipping={(addr) => setField("shippingAddress", addr)} 
-                                            />
-                                        </div>
-                                    )}
-                                    {shippingSameAsBilling && (
-                                        <div className="p-8 border-2 border-dashed border-slate-100 rounded-3xl flex flex-col items-center justify-center gap-3 bg-slate-50/50">
-                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                                                <Truck size={18} className="text-slate-300" />
-                                            </div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Shipping mirrors billing record</p>
+                                    {!shippingSameAsBilling ? (
+                                        <ShippingForm 
+                                            shipping={shippingAddress} 
+                                            setShipping={(addr) => setField("shippingAddress", addr)} 
+                                        />
+                                    ) : (
+                                        <div className="py-8 text-center text-xs text-slate-500">
+                                            Shipping address mirrors the billing record above.
                                         </div>
                                     )}
                                 </div>
@@ -231,46 +193,37 @@ export function InvoiceDetailsCard({
                     </div>
 
                     {/* Logistics & Notes */}
-                    <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+                    <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-100 items-end">
                         {mode === "INVOICE" && (
                             <>
                                 <Input
                                     label="E-Way Bill Number"
                                     value={ewayBill}
                                     onChange={e => setField("ewayBill", e.target.value)}
-                                    placeholder="Optional"
-                                    icon={<Truck size={16} />}
+                                    placeholder="Optional e-way bill number"
+                                    icon={<Truck size={15} />}
                                 />
                                 <Input
                                     label="Vehicle Registration"
                                     value={vehicleNo}
                                     onChange={e => setField("vehicleNo", e.target.value)}
-                                    placeholder="e.g. AS-01-XX-1234"
-                                    icon={<Truck size={16} />}
+                                    placeholder="e.g. KL-10-XX-1234"
+                                    icon={<Truck size={15} />}
                                 />
-                                {/* Cloudinary Upload for E-Way Bill */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">E-Way Bill Document</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-700 block">E-Way Bill Document</label>
                                     <label className={cn(
-                                        "flex flex-col items-center justify-center w-full h-[46px] rounded-2xl border-2 border-dashed transition-all cursor-pointer group",
-                                        ewayBillUrl ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary-200'
+                                        "flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-dashed transition-colors cursor-pointer px-3",
+                                        ewayBillUrl ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'
                                     )}>
-                                            <div className="flex items-center gap-3">
-                                                {isUploading ? (
-                                                    <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
-                                                ) : (
-                                                    <CloudUpload className={cn(
-                                                        "w-5 h-5 transition-colors",
-                                                        ewayBillUrl ? 'text-emerald-500' : 'text-slate-400 group-hover:text-primary-500'
-                                                    )} />
-                                                )}
-                                                <p className={cn(
-                                                    "text-[10px] font-black uppercase tracking-widest transition-colors",
-                                                    isUploading ? 'text-primary-600' : (ewayBillUrl ? 'text-emerald-600' : 'text-slate-500 group-hover:text-primary-600')
-                                                )}>
-                                                    {isUploading ? 'Uploading System Doc...' : (ewayBillUrl ? 'Attached Successfully' : 'Upload PDF/Image')}
-                                                </p>
-                                            </div>
+                                        {isUploading ? (
+                                            <Loader2 className="w-4 h-4 text-slate-500 animate-spin" />
+                                        ) : (
+                                            <CloudUpload className="w-4 h-4 text-slate-500" />
+                                        )}
+                                        <span className="text-xs font-medium truncate">
+                                            {isUploading ? 'Uploading...' : (ewayBillUrl ? 'File Attached' : 'Attach File (PDF/Image)')}
+                                        </span>
                                         <input type="file" className="hidden" onChange={async (e) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
@@ -302,33 +255,30 @@ export function InvoiceDetailsCard({
                                 </div>
                             </>
                         )}
-                        <div className={cn("space-y-4 col-span-1 sm:col-span-2 lg:col-span-2", mode === "QUOTATION" ? "lg:col-span-3" : "")}>
-                            <div className="flex flex-col space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Internal Notes</label>
-                                <textarea
-                                    className="flex w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-none hover:ring-slate-300 resize-none h-[46px]"
-                                    value={notes}
-                                    onChange={e => setField("notes", e.target.value)}
-                                    placeholder="Ref tags, PO number, etc."
-                                />
-                            </div>
+                        <div className={cn("space-y-1.5", mode === "INVOICE" ? "sm:col-span-2" : "sm:col-span-2 lg:col-span-2")}>
+                            <Input
+                                label="Internal Notes & Remarks"
+                                value={notes}
+                                onChange={e => setField("notes", e.target.value)}
+                                placeholder="PO reference, transport notes, delivery instructions..."
+                            />
                         </div>
-                        <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-end">
+                        <div className="col-span-1 flex items-end">
                             <button
                                 type="button"
                                 onClick={() => setField("isFreightCollect", !isFreightCollect)}
                                 className={cn(
-                                    "flex items-center gap-3 px-6 w-full h-[46px] rounded-2xl border-2 transition-all group",
+                                    "flex items-center justify-between gap-3 px-3.5 w-full h-10 rounded-lg border transition-colors cursor-pointer text-xs font-medium",
                                     isFreightCollect 
-                                        ? "bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-900/20" 
-                                        : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                                        ? "bg-slate-900 border-slate-900 text-white shadow-xs" 
+                                        : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                                 )}
                             >
-                                {isFreightCollect ? <CheckSquare className="w-5 h-5 text-primary-400" /> : <Square className="w-5 h-5 opacity-20" />}
-                                <div className="text-left">
-                                    <p className="text-[9px] font-black uppercase tracking-widest leading-none mb-1 opacity-60">Logistics Term</p>
-                                    <p className="text-xs font-black uppercase italic tracking-tighter leading-none">Freight Collect</p>
+                                <div className="flex items-center gap-2">
+                                    <Truck size={15} />
+                                    <span>Freight Collect</span>
                                 </div>
+                                {isFreightCollect ? <CheckSquare size={15} className="text-white" /> : <Square size={15} className="text-slate-400" />}
                             </button>
                         </div>
                     </div>

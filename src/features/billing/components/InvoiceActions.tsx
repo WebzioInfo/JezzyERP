@@ -12,6 +12,7 @@ import apiClient from "@/lib/apiClient";
 import { useConfirmStore } from "@/hooks/useConfirmStore";
 import { useRouter } from "next/navigation";
 import { InvoiceShareModal } from "./InvoiceShareModal";
+import { Button } from "@/ui/core/Button";
 
 interface InvoiceActionsProps {
     invoiceId: string;
@@ -152,130 +153,147 @@ export function InvoiceActions({
     const isPaid = status === "PAID";
 
     return (
-        <div className="space-y-4 w-full">
-            {/* Main Action Bar */}
-            <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4">
-                
+        <div className="space-y-3 w-full">
+            <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3.5">
                 {/* ── SECTION 1: INVOICE ACTIONS ── */}
                 <div>
-                    <div className="flex items-center gap-2 mb-2 px-1">
-                        <Share2 className="w-3.5 h-3.5 text-primary-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            Invoice Share Actions
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                        <span className="text-xs font-semibold text-slate-700">
+                            Document Actions
                         </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        <button
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Button
+                            variant="secondary"
+                            size="md"
                             onClick={handleDownload}
                             disabled={isDownloading}
-                            className="h-12 px-4 bg-white/10 hover:bg-white/15 text-white border border-white/10 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                            className="w-full"
                         >
-                            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4 text-slate-300" />}
-                            {isDownloading ? "Generating..." : "View / PDF"}
-                        </button>
+                            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <FileDown className="w-4 h-4 text-slate-500 mr-1.5" />}
+                            {isDownloading ? "Generating..." : "Download PDF"}
+                        </Button>
 
-                        <button
+                        <Button
+                            variant="outline"
+                            size="md"
                             onClick={() => openShareModal('SHARE', 'WHATSAPP')}
-                            className="h-12 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 active:scale-[0.98]"
+                            className="w-full text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
                         >
-                            <MessageSquare className="w-4 h-4 fill-current" />
-                            Share via WhatsApp
-                        </button>
+                            <MessageSquare className="w-4 h-4 mr-1.5 text-emerald-600" />
+                            Share on WhatsApp
+                        </Button>
 
-                        <button
+                        <Button
+                            variant="outline"
+                            size="md"
                             onClick={() => openShareModal('SHARE', 'EMAIL')}
-                            className="h-12 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/40 active:scale-[0.98]"
+                            className="w-full text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 border-indigo-200"
                         >
-                            <Mail className="w-4 h-4" />
+                            <Mail className="w-4 h-4 mr-1.5 text-indigo-600" />
                             Share via Email
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
                 {/* ── SECTION 2: FOLLOW UP ── */}
-                <div className="pt-3 border-t border-slate-800">
-                    <div className="flex items-center justify-between mb-2 px-1">
-                        <div className="flex items-center gap-2">
-                            <BellRing className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <div className="pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                            <BellRing className="w-3.5 h-3.5 text-slate-500" />
+                            <span className="text-xs font-semibold text-slate-700">
                                 Payment Follow-Up
                             </span>
                         </div>
                         {isPaid && (
-                            <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
+                            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                 Fully Paid
                             </span>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <button
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Button
+                            variant="outline"
+                            size="md"
                             onClick={() => openShareModal('FOLLOWUP', 'WHATSAPP')}
                             disabled={isPaid}
                             title={isPaid ? "Invoice is fully paid" : "Send WhatsApp Payment Follow-up"}
-                            className="h-12 px-4 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-slate-800 active:scale-[0.98]"
+                            className="w-full"
                         >
-                            <MessageSquare className="w-4 h-4" />
+                            <MessageSquare className="w-4 h-4 mr-1.5 text-emerald-600" />
                             Follow Up via WhatsApp
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                            variant="outline"
+                            size="md"
                             onClick={() => openShareModal('FOLLOWUP', 'EMAIL')}
                             disabled={isPaid}
                             title={isPaid ? "Invoice is fully paid" : "Send Email Payment Follow-up"}
-                            className="h-12 px-4 bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-slate-700 rounded-2xl font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-slate-800 active:scale-[0.98]"
+                            className="w-full"
                         >
-                            <Mail className="w-4 h-4" />
+                            <Mail className="w-4 h-4 mr-1.5 text-indigo-600" />
                             Follow Up via Email
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
                 {/* ── SECTION 3: MANAGEMENT & SETTLEMENT ACTIONS ── */}
-                <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
-                    {status === "DRAFT" && (
-                        <button
-                            onClick={handleMarkSent}
-                            disabled={isPending}
-                            className="flex-1 h-11 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5 text-primary-400" />}
-                            Mark as Sent
-                        </button>
-                    )}
+                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2 flex-1">
+                        {status === "DRAFT" && (
+                            <Button
+                                variant="secondary"
+                                size="md"
+                                onClick={handleMarkSent}
+                                disabled={isPending}
+                            >
+                                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+                                Mark as Sent
+                            </Button>
+                        )}
 
-                    {!isPaid && status !== "DRAFT" && (
-                        <Link href={`/payments/new?invoiceId=${invoiceId}`} className="flex-1 flex">
-                            <button className="w-full h-11 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md flex items-center justify-center gap-2 transition-all">
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Record Settlement
-                            </button>
+                        {!isPaid && status !== "DRAFT" && (
+                            <Link href={`/payments/new?invoiceId=${invoiceId}`}>
+                                <Button variant="primary" size="md">
+                                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                    Record Payment
+                                </Button>
+                            </Link>
+                        )}
+
+                        <Link href={`/invoices/${invoiceId}/edit`}>
+                            <Button variant="outline" size="md">
+                                <Edit className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+                                Edit Invoice
+                            </Button>
                         </Link>
-                    )}
 
-                    <Link href={`/invoices/${invoiceId}/edit`} className="flex-1 flex">
-                        <button className="w-full h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-700 flex items-center justify-center gap-2 transition-all">
-                            <Edit className="w-3.5 h-3.5 text-indigo-400" /> Modify
-                        </button>
-                    </Link>
+                        <Button
+                            variant="outline"
+                            size="md"
+                            onClick={handlePrint}
+                            disabled={isDownloading}
+                        >
+                            {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Printer className="w-3.5 h-3.5 mr-1.5 text-slate-500" />}
+                            Print
+                        </Button>
+                    </div>
 
-                    <button
-                        onClick={handlePrint}
-                        disabled={isDownloading}
-                        className="flex-1 h-11 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest border border-slate-700 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                    >
-                        {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5 text-slate-400" />}
-                        Print
-                    </button>
-
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={handleTrash}
                         disabled={isPending}
-                        className="h-11 px-3 bg-red-950/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/50 rounded-xl flex items-center justify-center transition-all active:scale-95 group"
-                        title="Trash Invoice"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        title="Move to Trash"
+                        aria-label="Trash Invoice"
                     >
-                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    </button>
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
                 </div>
             </div>
 

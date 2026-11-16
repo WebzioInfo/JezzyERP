@@ -57,18 +57,18 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-7xl mx-auto">
+                <div className="flex items-center gap-3">
                     <Link href={`/purchases/${id}`}>
-                        <Button variant="ghost" size="sm" className="h-12 w-12 rounded-2xl bg-white shadow-xl hover:bg-slate-50 border border-slate-100">
-                            <ArrowLeft className="w-5 h-5 text-slate-600" />
+                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-lg border border-slate-200">
+                            <ArrowLeft className="w-4 h-4 text-slate-600" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">
-                            Modify <span className="text-primary-600">Purchase</span>
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            Edit Purchase
                         </h1>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1 italic">Correcting ledger entry for node: {purchase.purchaseNo}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Update details for purchase bill {purchase.purchaseNo}</p>
                     </div>
                 </div>
             </div>

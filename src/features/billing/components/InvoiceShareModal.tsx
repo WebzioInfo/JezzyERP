@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Modal } from "@/ui/core/Modal";
 import { Button } from "@/ui/core/Button";
 import { useToast } from "@/context/ToastContext";
 import { 
-    MessageSquare, Mail, Download, ExternalLink, Send, Loader2, AlertCircle, FileText
+    MessageSquare, Mail, ExternalLink, Send, Loader2, AlertCircle, FileText
 } from "lucide-react";
 import { prepareWhatsAppShareAction, sendInvoiceEmailAction, getInvoiceShareDataAction } from "../actions/shareActions";
 import { getPartyAccountOverviewAction, prepareStatementWhatsAppAction, sendStatementEmailAction } from "../actions/accountActions";
@@ -51,13 +51,7 @@ export function InvoiceShareModal({
     const effectiveInvoiceId = invoiceId || (!isStatement ? partyId : "");
     const effectivePartyId = partyId || (isStatement ? invoiceId : "");
 
-    useEffect(() => {
-        if (isOpen) {
-            loadData();
-        }
-    }, [isOpen, effectiveInvoiceId, effectivePartyId, documentType, actionType, channel]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         setErrMessage(null);
         try {
@@ -127,7 +121,13 @@ export function InvoiceShareModal({
         } finally {
             setLoading(false);
         }
-    };
+    }, [isStatement, effectiveInvoiceId, effectivePartyId, actionType, channel, documentType]);
+
+    useEffect(() => {
+        if (isOpen) {
+            loadData();
+        }
+    }, [isOpen, loadData]);
 
     const handleDownloadPdf = async () => {
         try {
@@ -185,7 +185,7 @@ export function InvoiceShareModal({
                     } else {
                         await handleDownloadPdf();
                         window.open(res.whatsappUrl, "_blank");
-                        success("WhatsApp Web opened with pre-filled message! Attached PDF downloaded.");
+                        success("WhatsApp Web opened with pre-filled message. Attached PDF downloaded.");
                         onClose();
                     }
                 } else {
@@ -209,7 +209,7 @@ export function InvoiceShareModal({
                     if (!res || 'error' in res) {
                         error(res?.error || "Failed to send email.");
                     } else {
-                        success(`Invoice ${actionType === 'SHARE' ? 'shared' : 'follow-up'} emailed successfully to ${recipient}!`);
+                        success(`Invoice emailed successfully to ${recipient}.`);
                         onClose();
                     }
                 }
@@ -227,7 +227,7 @@ export function InvoiceShareModal({
                     } else {
                         await handleDownloadPdf();
                         window.open(res.whatsappUrl, "_blank");
-                        success("WhatsApp Web opened with pre-filled Account Statement message!");
+                        success("WhatsApp Web opened with account statement message.");
                         onClose();
                     }
                 } else {
@@ -252,7 +252,7 @@ export function InvoiceShareModal({
                     if (!res || 'error' in res) {
                         error(res?.error || "Failed to email statement.");
                     } else {
-                        success(`Account Statement emailed successfully to ${recipient}!`);
+                        success(`Account Statement emailed successfully to ${recipient}.`);
                         onClose();
                     }
                 }
@@ -268,83 +268,61 @@ export function InvoiceShareModal({
     const isShare = actionType === 'SHARE';
 
     const modalTitle = isStatement
-        ? `Share Account Statement via ${isWhatsApp ? 'WhatsApp' : 'Email'}`
+        ? `Share Statement via ${isWhatsApp ? 'WhatsApp' : 'Email'}`
         : `${isShare ? 'Share Invoice' : 'Payment Follow-Up'} via ${isWhatsApp ? 'WhatsApp' : 'Email'}`;
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
+            title={modalTitle}
             maxWidth="max-w-2xl"
         >
-            <div className="p-6 sm:p-8 space-y-6">
-                {/* Header Title Bar */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-5 pr-10">
-                    <div className="flex items-center gap-3.5">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-xl shrink-0 ${
-                            isWhatsApp ? 'bg-emerald-600 shadow-emerald-600/20' : 'bg-indigo-600 shadow-indigo-600/20'
-                        }`}>
-                            {isWhatsApp ? <MessageSquare className="w-6 h-6" /> : <Mail className="w-6 h-6" />}
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight italic uppercase">
-                                {modalTitle}
-                            </h2>
-                            <p className="text-xs font-bold text-slate-500 mt-0.5">
-                                {shareData?.invoiceNo 
-                                    ? `Invoice #${shareData.invoiceNo} • ${shareData.customerName}` 
-                                    : (shareData?.name ? `Account: ${shareData.name}` : 'Loading document details...')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sub Header Badge / Document Indicator */}
-                <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-900 text-white shadow-xl border border-slate-800">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
-                        <FileText className="w-5 h-5 text-indigo-300" />
+            <div className="p-6 space-y-5">
+                {/* Document summary info */}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="w-8 h-8 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-700 shrink-0">
+                        <FileText size={16} />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="text-xs font-black uppercase tracking-wider text-white truncate">
-                            {isStatement 
-                                ? 'Certified Account Statement Document' 
-                                : (isShare ? 'Official Tax Invoice Document' : 'Payment Follow-Up Notice')}
-                        </h3>
-                        <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-                            Generated ERP PDF attachment included automatically
+                        <p className="text-xs font-semibold text-slate-900 truncate">
+                            {shareData?.invoiceNo 
+                                ? `Invoice #${shareData.invoiceNo} — ${shareData.customerName}` 
+                                : (shareData?.name ? `Account: ${shareData.name}` : 'Document')}
                         </p>
+                        <p className="text-[11px] text-slate-500">Official PDF attachment included automatically</p>
                     </div>
                 </div>
 
                 {loading ? (
-                    <div className="py-12 flex flex-col items-center justify-center space-y-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-                        <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Preparing document data & PDF...</p>
+                    <div className="py-10 flex flex-col items-center justify-center space-y-2 bg-slate-50/50 rounded-lg border border-dashed border-slate-200">
+                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                        <p className="text-xs text-slate-500">Preparing document details...</p>
                     </div>
                 ) : errMessage ? (
-                    <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-2.5">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                         <div>
-                            <p className="text-xs font-black uppercase tracking-wider mb-1">Notice</p>
-                            <p className="text-xs font-medium leading-relaxed">{errMessage}</p>
+                            <p className="text-xs font-semibold">Notice</p>
+                            <p className="text-xs mt-0.5 leading-relaxed">{errMessage}</p>
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {/* Recipient Input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-wider text-slate-700 block">
-                                {isWhatsApp ? 'Mobile / WhatsApp Number' : 'Email Address'}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-700 block">
+                                {isWhatsApp ? 'WhatsApp Phone Number' : 'Recipient Email Address'}
                             </label>
                             <input
                                 type={isWhatsApp ? "tel" : "email"}
                                 value={recipient}
                                 onChange={(e) => setRecipient(e.target.value)}
                                 placeholder={isWhatsApp ? "+91 98765 43210" : "client@company.com"}
-                                className="w-full h-12 px-4 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-300"
+                                className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white shadow-xs focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-colors placeholder:text-slate-400"
                             />
                             {!recipient && (
-                                <p className="text-xs font-bold text-amber-600 flex items-center gap-1.5 pt-1">
+                                <p className="text-xs text-amber-600 flex items-center gap-1">
                                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                     No saved {isWhatsApp ? 'phone number' : 'email'} found for this party. Please enter one above.
                                 </p>
@@ -352,55 +330,46 @@ export function InvoiceShareModal({
                         </div>
 
                         {/* Message Preview */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-black uppercase tracking-wider text-slate-700 block">
-                                    Generated Message & Subject Preview
-                                </label>
-                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-full">
-                                    Official ERP Template
-                                </span>
-                            </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-700 block">
+                                Message & Subject Preview
+                            </label>
                             <textarea
                                 value={messagePreview}
                                 onChange={(e) => setMessagePreview(e.target.value)}
                                 rows={6}
-                                className="w-full p-4 bg-slate-50/80 rounded-2xl border border-slate-200 text-xs font-mono text-slate-700 leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none transition-all custom-scrollbar shadow-inner"
+                                className="w-full p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 leading-relaxed focus:outline-none focus:bg-white focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 resize-none transition-colors custom-scrollbar"
                             />
                         </div>
 
                         {/* Modal Footer Actions */}
-                        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-6 border-t border-slate-100">
+                        <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                             <Button
                                 type="button"
-                                variant="ghost"
+                                variant="outline"
                                 onClick={onClose}
-                                className="w-full sm:w-auto h-11 px-6 rounded-xl text-xs font-black uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                disabled={actionPending}
                             >
                                 Cancel
                             </Button>
                             
                             <Button
                                 type="button"
+                                variant={isWhatsApp ? "success" : "primary"}
                                 onClick={handleSubmit}
                                 disabled={actionPending || !recipient.trim()}
-                                className={`w-full sm:w-auto h-11 px-6 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg text-white flex items-center justify-center gap-2 transition-all ${
-                                    isWhatsApp ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
-                                }`}
+                                loading={actionPending}
                             >
                                 {actionPending ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        {isWhatsApp ? 'Opening WhatsApp...' : 'Sending Email...'}
-                                    </>
+                                    isWhatsApp ? 'Opening WhatsApp...' : 'Sending Email...'
                                 ) : isWhatsApp ? (
                                     <>
-                                        <ExternalLink className="w-4 h-4" />
+                                        <ExternalLink className="w-4 h-4 mr-1.5" />
                                         Open WhatsApp & Download PDF
                                     </>
                                 ) : (
                                     <>
-                                        <Send className="w-4 h-4" />
+                                        <Send className="w-4 h-4 mr-1.5" />
                                         Send Email with Attached PDF
                                     </>
                                 )}

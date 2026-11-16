@@ -2,15 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/ui/core/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/core/Card";
 import { Button } from "@/ui/core/Button";
 import { Input } from "@/ui/core/Input";
 import { Label } from "@/ui/core/Label";
 import { 
   Receipt, 
-  Wallet, 
-  Building2, 
-  Users,
   AlertCircle,
   CheckCircle2,
   Loader2
@@ -82,54 +79,51 @@ export function ExpenseForm({ accounts }: { accounts: Account[] }) {
     ];
 
     return (
-        <Card className="max-w-2xl mx-auto border-0 shadow-2xl ring-1 ring-slate-200 rounded-[2.5rem] overflow-hidden">
-            <div className="bg-slate-900 p-8 text-white">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                        <Receipt className="w-6 h-6 text-rose-400" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black uppercase italic tracking-tight">Record Expense</h2>
-                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Operational Outflow Entry</p>
-                    </div>
-                </div>
-            </div>
+        <Card>
+            <CardHeader className="pb-4 border-b border-slate-100">
+                <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                    <Receipt className="w-5 h-5 text-rose-600" />
+                    <span>Expense Details</span>
+                </CardTitle>
+            </CardHeader>
 
-            <CardContent className="p-10">
-                <form onSubmit={handleSubmit} className="space-y-8">
+            <CardContent className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
-                        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center gap-3 text-red-600 animate-shake">
-                            <AlertCircle className="w-5 h-5" />
-                            <p className="text-xs font-bold uppercase tracking-tight">{error}</p>
+                        <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs font-medium">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+                            <span>{error}</span>
                         </div>
                     )}
 
                     {success && (
-                        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3 text-emerald-600 animate-bounce">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <p className="text-xs font-bold uppercase tracking-tight">Expense recorded successfully!</p>
+                        <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2.5 text-emerald-700 text-xs font-medium">
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                            <span>Expense recorded successfully! Redirecting...</span>
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Amount (₹)</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="amount">Amount (₹)</Label>
                             <Input 
+                                id="amount"
                                 name="amount" 
                                 type="number" 
                                 step="0.01" 
                                 required 
-                                className="h-14 rounded-2xl text-lg font-black italic tracking-tight border-slate-200 focus:ring-primary-500"
                                 placeholder="0.00"
+                                className="text-base font-semibold tabular-nums"
                             />
                         </div>
 
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expense Category</Label>
+                        <div>
+                            <Label htmlFor="category">Expense Category</Label>
                             <select 
+                                id="category"
                                 name="category" 
                                 required 
-                                className="w-full h-14 px-4 rounded-2xl border border-slate-200 text-sm font-bold bg-white focus:ring-primary-500 focus:border-primary-500 transition-all outline-hidden appearance-none"
+                                className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                             >
                                 <option value="">Select Category</option>
                                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -137,14 +131,15 @@ export function ExpenseForm({ accounts }: { accounts: Account[] }) {
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Paid Via (Source Account)</Label>
+                    <div>
+                        <Label htmlFor="sourceAccountId">Paid Via (Source Account)</Label>
                         <select 
+                            id="sourceAccountId"
                             name="sourceAccountId" 
                             required 
-                            className="w-full h-14 px-4 rounded-2xl border border-slate-200 text-sm font-bold bg-white focus:ring-primary-500 focus:border-primary-500 transition-all outline-hidden appearance-none"
+                            className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                         >
-                            <option value="">Select Account</option>
+                            <option value="">Select Source Account</option>
                             {accounts.map(acc => (
                                 <option key={acc.id} value={acc.id}>
                                     {acc.name} ({acc.type})
@@ -153,56 +148,54 @@ export function ExpenseForm({ accounts }: { accounts: Account[] }) {
                         </select>
                     </div>
 
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Description / Notes</Label>
+                    <div>
+                        <Label htmlFor="description">Description / Purpose</Label>
                         <Input 
+                            id="description"
                             name="description" 
                             placeholder="e.g. Office rent for May 2026" 
-                            className="h-14 rounded-2xl border-slate-200 font-bold"
                         />
                     </div>
 
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transaction Date</Label>
+                    <div>
+                        <Label htmlFor="date">Transaction Date</Label>
                         <Input 
+                            id="date"
                             name="date" 
                             type="date" 
                             defaultValue={new Date().toISOString().split('T')[0]} 
-                            className="h-14 rounded-2xl border-slate-200 font-bold"
                         />
                     </div>
 
                     {warning && (
-                        <div className="p-6 rounded-3xl bg-amber-50 border border-amber-100 space-y-4">
-                            <div className="flex items-center gap-3 text-amber-600 text-xs font-black uppercase tracking-tight">
-                                <AlertCircle className="w-5 h-5" />
-                                {warning}
+                        <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-3">
+                            <div className="flex items-center gap-2 text-amber-800 text-xs font-medium">
+                                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                                <span>{warning}</span>
                             </div>
                             <Button 
                                 type="button"
+                                variant="secondary"
                                 onClick={() => handleSubmit(undefined, true)}
-                                className="w-full h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="w-full"
                             >
                                 Confirm & Proceed
                             </Button>
                         </div>
                     )}
 
-                    {error && (
-                        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center gap-3 text-rose-600 text-xs font-bold uppercase tracking-tight">
-                            <AlertCircle className="w-4 h-4" />
-                            {error}
-                        </div>
-                    )}
-
                     {!warning && (
-                        <div className="pt-4">
+                        <div className="pt-2">
                             <Button 
                                 type="submit" 
                                 disabled={loading}
-                                className="w-full h-16 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl hover:bg-primary-600 transition-all gap-3"
+                                className="w-full"
                             >
-                                {loading ? "Processing..." : "Confirm & Record Expense"}
+                                {loading ? (
+                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Recording Expense...</>
+                                ) : (
+                                    "Confirm & Record Expense"
+                                )}
                             </Button>
                         </div>
                     )}

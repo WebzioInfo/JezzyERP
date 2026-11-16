@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, FileText, Users, Building2, Package, CreditCard, ShoppingCart, ArrowRight } from "lucide-react";
+import { Search, Loader2, FileText, Users, Building2, Package, CreditCard, ShoppingCart, X } from "lucide-react";
 import apiClient from "@/lib/apiClient";
 import { SearchResultItem } from "@/features/search/services/GlobalSearchService";
 
@@ -27,15 +27,24 @@ export function GlobalSearchInput() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const performSearch = async (searchTerm: string) => {
@@ -61,81 +70,83 @@ export function GlobalSearchInput() {
 
   const getItemIcon = (type: SearchResultItem['type']) => {
     switch (type) {
-      case 'CLIENT': return <Users className="w-4 h-4 text-blue-500" />;
-      case 'VENDOR': return <Building2 className="w-4 h-4 text-indigo-500" />;
-      case 'INVOICE': return <FileText className="w-4 h-4 text-emerald-500" />;
-      case 'PURCHASE': return <ShoppingCart className="w-4 h-4 text-purple-500" />;
-      case 'PRODUCT': return <Package className="w-4 h-4 text-amber-500" />;
-      case 'PAYMENT': return <CreditCard className="w-4 h-4 text-rose-500" />;
+      case 'CLIENT': return <Users className="w-4 h-4 text-blue-600" />;
+      case 'VENDOR': return <Building2 className="w-4 h-4 text-purple-600" />;
+      case 'INVOICE': return <FileText className="w-4 h-4 text-emerald-600" />;
+      case 'PURCHASE': return <ShoppingCart className="w-4 h-4 text-indigo-600" />;
+      case 'PRODUCT': return <Package className="w-4 h-4 text-amber-600" />;
+      case 'PAYMENT': return <CreditCard className="w-4 h-4 text-rose-600" />;
     }
   };
 
   return (
-    <div className="relative w-64 md:w-80" ref={dropdownRef}>
-      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all shadow-sm">
+    <div className="relative w-36 sm:w-56 md:w-72" ref={dropdownRef}>
+      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-900 transition-colors shadow-2xs">
         {loading ? (
-          <Loader2 className="w-4 h-4 text-primary-500 animate-spin shrink-0" />
+          <Loader2 className="w-3.5 h-3.5 text-slate-500 animate-spin shrink-0" />
         ) : (
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         )}
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= 2 && setIsOpen(true)}
-          placeholder="Search ERP (inv, client, vendor)..."
-          className="bg-transparent border-none text-xs font-bold focus:ring-0 placeholder:text-slate-400 w-full text-slate-900 focus:outline-none"
+          placeholder="Search..."
+          aria-label="Global search across ERP"
+          className="bg-transparent border-none text-xs font-normal focus:ring-0 placeholder:text-slate-400 w-full text-slate-900 focus:outline-none"
         />
         {query && (
           <button
             onClick={() => { setQuery(""); setIsOpen(false); }}
-            className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 px-1"
+            aria-label="Clear query"
+            className="text-slate-400 hover:text-slate-700 p-0.5 rounded"
           >
-            Clear
+            <X size={12} />
           </button>
         )}
       </div>
 
       {/* Global Search Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-200 max-h-96 overflow-y-auto custom-scrollbar">
+        <div className="absolute top-full right-0 sm:left-0 sm:right-auto w-72 sm:w-80 mt-1.5 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50 animate-reveal max-h-96 overflow-y-auto custom-scrollbar">
           {results.length === 0 ? (
-            <div className="p-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <div className="p-4 text-center text-xs text-slate-500">
               No matching ERP records found.
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              <div className="px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest flex justify-between items-center">
-                <span>ERP Search Results ({results.length})</span>
-                <span className="opacity-60">Click or press Enter</span>
+              <div className="px-3 py-2 bg-slate-50 text-slate-500 text-xs font-medium flex justify-between items-center border-b border-slate-100">
+                <span>Results ({results.length})</span>
+                <span className="text-[11px] text-slate-400">Esc to close</span>
               </div>
               {results.map((item) => (
                 <button
                   key={`${item.type}-${item.id}`}
                   onClick={() => handleSelect(item.url)}
-                  className="w-full text-left p-3 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 group"
+                  className="w-full text-left p-3 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0">
                       {getItemIcon(item.type)}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 tracking-tight truncate group-hover:text-primary-600 transition-colors">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-slate-900 truncate group-hover:text-slate-700">
                           {item.title}
                         </span>
                         {item.status && (
-                          <span className="text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded">
                             {item.status}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">{item.subtitle}</p>
+                      <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>
                     </div>
                   </div>
                   {item.amount && (
                     <div className="text-right shrink-0">
-                      <span className="text-xs font-black italic text-slate-900 block">{item.amount}</span>
+                      <span className="text-xs font-semibold text-slate-900 tabular-nums block">{item.amount}</span>
                     </div>
                   )}
                 </button>

@@ -19,13 +19,11 @@ export default async function SettingsPage() {
   const settings = await CompanyService.getSettings();
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-6xl mx-auto pb-24">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">Company Profile</h1>
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">Refine your business identity and billing details</p>
-        </div>
+    <div className="space-y-6 max-w-6xl mx-auto pb-16">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Company Settings</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Manage your legal business identity, registered address, and invoice preferences</p>
       </div>
 
       <form
@@ -33,28 +31,28 @@ export default async function SettingsPage() {
           "use server";
           await updateCompanySettingsAction(formData);
         }}
-        className="space-y-8"
+        className="space-y-6"
       >
         <input type="hidden" name="id" value={settings.id} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* ── Left Column: Identity & Address ── */}
-          <div className="lg:col-span-7 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Identity & Address */}
+          <div className="lg:col-span-7 space-y-6">
             {/* Business Identity */}
             <Card>
-              <CardHeader className="bg-slate-900 rounded-t-4xl">
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                    <Building2 className="w-5 h-5 text-white" />
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                    <Building2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <CardTitle className="text-white mt-0">Business Identity</CardTitle>
-                    <CardDescription className="text-slate-400">Legal name and tax identifiers</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Business Identity</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Legal entity name and tax identifiers</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6 ">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <Input
                       label="Full Legal Company Name"
@@ -69,7 +67,7 @@ export default async function SettingsPage() {
                     name="gstin"
                     defaultValue={settings.gstin}
                     placeholder="29AAAAA0000A1Z5"
-                    icon={<ShieldCheck size={18} />}
+                    icon={<ShieldCheck size={16} />}
                     required
                   />
                   <Input
@@ -78,7 +76,7 @@ export default async function SettingsPage() {
                     defaultValue={settings.pan || ""}
                     placeholder="ABCDE1234F"
                     className="uppercase"
-                    icon={<span className="text-[10px] font-black">PAN</span>}
+                    icon={<span className="text-[10px] font-bold text-slate-400">PAN</span>}
                   />
                 </div>
               </CardContent>
@@ -86,19 +84,19 @@ export default async function SettingsPage() {
 
             {/* Registered Address */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-primary-600" />
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <CardTitle>Physical Address</CardTitle>
-                    <CardDescription>Primary business location for billing</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Physical Address</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Primary operating facility for billing</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <Input
                       label="Address Line 1"
@@ -142,24 +140,24 @@ export default async function SettingsPage() {
 
             {/* Communication Profile */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                    <Globe size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <Globe size={18} />
                   </div>
                   <div>
-                    <CardTitle>Communication Profile</CardTitle>
-                    <CardDescription>Direct contact channels for clients</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Contact Channels</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Direct contact channels printed on correspondence</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="Phone Number"
                     name="phone"
                     defaultValue={settings.phone}
-                    icon={<Phone size={18} />}
+                    icon={<Phone size={16} />}
                     required
                   />
                   <Input
@@ -167,7 +165,7 @@ export default async function SettingsPage() {
                     name="email"
                     type="email"
                     defaultValue={settings.email}
-                    icon={<Mail size={18} />}
+                    icon={<Mail size={16} />}
                     required
                   />
                 </div>
@@ -176,96 +174,94 @@ export default async function SettingsPage() {
 
             {/* Display & Billing Preferences */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
-                    <ShieldCheck size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <ShieldCheck size={18} />
                   </div>
                   <div>
-                    <CardTitle>Display Preferences</CardTitle>
-                    <CardDescription>Controls how your invoices look</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Invoice Display Preferences</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Controls layout elements on customer PDF invoices</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
-                <div className="space-y-6">
-                  {/* Pkg Details Toggle */}
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200/80">
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-medium text-slate-900">Show "No. & Kind of Pkgs" Column</p>
-                      <p className="text-xs text-slate-500">
-                        Enable this to display physical packaging details (e.g. 10 BOXES) on your PDF invoices.
-                      </p>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        name="showPkgDetails"
-                        value="true"
-                        defaultChecked={settings.showPkgDetails}
-                        className="peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-200 transition-colors checked:bg-slate-900 focus:outline-none"
-                      />
-                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></span>
-                    </div>
+              <CardContent className="p-5 space-y-4">
+                {/* Pkg Details Toggle */}
+                <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-slate-900">Show "No. & Kind of Pkgs" Column</p>
+                    <p className="text-xs text-slate-500">
+                      Display physical packaging breakdown (e.g. 10 BOXES) on PDF invoices.
+                    </p>
                   </div>
-
-                  {/* Logo Toggle */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 group transition-all hover:bg-slate-50">
-                    <div className="space-y-1">
-                      <p className="text-sm font-black text-slate-900 uppercase tracking-tight italic">Show Company Logo on Invoice</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                        If enabled, your logo will be printed at the top-left of every PDF invoice.
-                      </p>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        name="showLogo"
-                        value="true"
-                        defaultChecked={settings.showLogo}
-                        className="peer h-6 w-12 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-primary-600 focus:outline-none"
-                      />
-                      <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-6"></span>
-                    </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      name="showPkgDetails"
+                      value="true"
+                      defaultChecked={settings.showPkgDetails}
+                      className="peer h-5 w-9 cursor-pointer appearance-none rounded-full bg-slate-200 transition-colors checked:bg-primary-600 focus:outline-none"
+                    />
+                    <span className="pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></span>
                   </div>
-
-                  {/* Logo Path */}
-                  <Input
-                    label="Logo Filename (in public/ folder)"
-                    name="logoUrl"
-                    defaultValue={settings.logoUrl || "logo.png"}
-                    placeholder="e.g. logo.png"
-                    icon={<Globe size={18} />}
-                  />
                 </div>
+
+                {/* Logo Toggle */}
+                <div className="flex items-center justify-between p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-slate-900">Show Company Logo on Invoices</p>
+                    <p className="text-xs text-slate-500">
+                      Print your company logo at the top-left of generated PDF invoices.
+                    </p>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      name="showLogo"
+                      value="true"
+                      defaultChecked={settings.showLogo}
+                      className="peer h-5 w-9 cursor-pointer appearance-none rounded-full bg-slate-200 transition-colors checked:bg-primary-600 focus:outline-none"
+                    />
+                    <span className="pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></span>
+                  </div>
+                </div>
+
+                {/* Logo Path */}
+                <Input
+                  label="Logo Filename (in public/ folder)"
+                  name="logoUrl"
+                  defaultValue={settings.logoUrl || "logo.png"}
+                  placeholder="e.g. logo.png"
+                  icon={<Globe size={16} />}
+                />
               </CardContent>
             </Card>
           </div>
 
-          {/* ── Right Column: Bank & Action ── */}
-          <div className="lg:col-span-5 space-y-8">
+          {/* Right Column: Bank & Action */}
+          <div className="lg:col-span-5 space-y-6">
             {/* Bank Settlement */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
-                    <Landmark size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <Landmark size={18} />
                   </div>
                   <div>
-                    <CardTitle>Bank Settlement</CardTitle>
-                    <CardDescription>Verified account for payments</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Bank Settlement Account</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Printed on invoices for wire & NEFT receipts</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 flex gap-2.5 mb-6">
+              <CardContent className="p-5 space-y-4">
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex gap-2.5">
                   <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-slate-600">
-                    This information will be printed on all invoices to facilitate bank transfers.
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    This account will appear in the payment remittance block on all client-facing invoices.
                   </p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <Input
                     label="Account Holder Name"
                     name="bankAccountName"
@@ -291,7 +287,7 @@ export default async function SettingsPage() {
                     label="Account Number"
                     name="bankAccountNo"
                     defaultValue={settings.bankAccountNo}
-                    icon={<CreditCard size={18} />}
+                    icon={<CreditCard size={16} />}
                     required
                   />
                   <Input
@@ -307,25 +303,25 @@ export default async function SettingsPage() {
 
             {/* Founder Equity Card */}
             <Card>
-              <CardHeader>
+              <CardHeader className="border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
-                    <Briefcase size={20} />
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                    <Briefcase size={18} />
                   </div>
                   <div>
-                    <CardTitle>Founder Profile</CardTitle>
-                    <CardDescription>Manage owner equity and capital contributions</CardDescription>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Founder Profile</CardTitle>
+                    <CardDescription className="text-xs text-slate-500">Manage owner capital contributions</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 pt-6">
+              <CardContent className="p-5">
                 <Link href="/accounts/equity">
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full text-xs"
                   >
-                    Manage Equity
+                    Manage Owner Equity
                   </Button>
                 </Link>
               </CardContent>
@@ -333,19 +329,17 @@ export default async function SettingsPage() {
 
             {/* Action Card */}
             <Card>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-5 space-y-3">
                 <p className="text-xs text-slate-500">
-                  Applying these changes will update your company profile across all future invoices.
+                  Saving updates will immediately apply to all newly generated invoices, purchase orders, and quotations.
                 </p>
 
                 <Button
                   type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
+                  className="w-full h-10 font-semibold"
                 >
-                  <Save className="w-4 h-4" />
-                  Save Changes
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Company Settings
                 </Button>
               </CardContent>
             </Card>

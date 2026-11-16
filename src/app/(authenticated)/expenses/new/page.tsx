@@ -18,11 +18,16 @@ export default async function NewExpensePage() {
     });
 
     return (
-        <div className="space-y-8 animate-fade-up max-w-2xl mx-auto pb-24">
-            <Link href="/expenses" className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors group">
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                Back to Expense Hub
+        <div className="space-y-6 max-w-2xl mx-auto pb-12">
+            <Link href="/expenses" className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Expenses</span>
             </Link>
+
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Record Expense</h1>
+                <p className="text-sm text-slate-500 mt-0.5">Enter details for operational expenses and payments</p>
+            </div>
 
             <ExpenseForm accounts={accounts} />
         </div>

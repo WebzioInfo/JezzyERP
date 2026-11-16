@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   ArrowUpRight, 
   ArrowDownLeft, 
-  History,
   TrendingUp,
   TrendingDown,
   ArrowRightLeft
@@ -15,7 +14,14 @@ import {
 import Link from "next/link";
 import { FinanceService } from "@/features/billing/services/FinanceService";
 import { cn } from "@/utils";
-
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "@/ui/core/Table";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -57,15 +63,12 @@ export default async function AccountDetailPage({ params }: PageProps) {
       debitAccountId: true,
       creditAccountId: true,
       createdAt: true,
-      // transactionType omitted — column not yet migrated to DB
       debitAccount: { select: { id: true, name: true, type: true } },
       creditAccount: { select: { id: true, name: true, type: true } },
     },
     take: 100
   });
 
-
-  // Calculate Credit/Debit Summary
   const debitSum = entries
     .filter((e: any) => e.debitAccountId === id)
     .reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -75,119 +78,122 @@ export default async function AccountDetailPage({ params }: PageProps) {
     .reduce((sum: number, e: any) => sum + Number(e.amount), 0);
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-7xl mx-auto pb-24">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-           <Link href="/accounts" className="h-12 w-12 glass flex items-center justify-center rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-slate-200 group">
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-           </Link>
-           <div>
-              <h1 className="text-4xl font-black text-slate-900 leading-tight tracking-tighter font-display uppercase italic">{account.name}</h1>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] mt-2">{account.type} Account Statement</p>
-           </div>
-        </div>
-
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-           {/* Actions could go here */}
+          <Link 
+            href="/accounts" 
+            className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{account.name}</h1>
+            <p className="text-xs text-slate-500 mt-0.5">{account.type} Account Ledger & Statement</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Balance Card */}
-        <Card className="col-span-1 lg:col-span-1 border-0 bg-slate-900 text-white shadow-2xl overflow-hidden relative rounded-[2.5rem]">
-           <div className="absolute top-0 right-0 p-8 opacity-10">
-              <ArrowRightLeft className="w-32 h-32" />
-           </div>
-           <CardContent className="p-10 relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-2">Current Balance</p>
-              <h2 className="text-5xl font-black italic tracking-tighter tabular-nums mb-4">
-                {formatCurrency(Math.abs(balance))}
-                <span className="text-lg ml-2 opacity-50">{balance >= 0 ? 'DR' : 'CR'}</span>
-              </h2>
-              <p className="text-xs font-bold opacity-40 uppercase tracking-widest">
-                 {balance >= 0 ? 'Debit Balance (Asset/Receivable)' : 'Credit Balance (Liability/Payable)'}
-              </p>
-           </CardContent>
+        <Card className="bg-slate-900 text-white border-0 shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Balance</p>
+            <h2 className="text-2xl font-bold tabular-nums mt-1">
+              {formatCurrency(Math.abs(balance))}
+              <span className="text-xs ml-1.5 opacity-60 font-semibold">{balance >= 0 ? 'DR' : 'CR'}</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-1 font-medium">
+              {balance >= 0 ? 'Debit Balance (Asset / Receivable)' : 'Credit Balance (Liability / Payable)'}
+            </p>
+          </CardContent>
         </Card>
 
-        {/* Stats Grid */}
-        <div className="col-span-1 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-           <Card className="border-0 bg-emerald-50 shadow-xl ring-1 ring-emerald-500/10 rounded-[2.5rem]">
-              <CardContent className="p-8">
-                 <div className="flex items-center gap-3 mb-4 text-emerald-600">
-                    <TrendingUp className="w-5 h-5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Total Debits (+)</span>
-                 </div>
-                 <h3 className="text-3xl font-black text-emerald-900 tabular-nums">{formatCurrency(debitSum)}</h3>
-                 <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest mt-2">Funds Inward / Increases</p>
-              </CardContent>
-           </Card>
+        {/* Debits Card */}
+        <Card className="border border-emerald-200/80 bg-emerald-50/50">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-1.5 text-emerald-800 mb-1">
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Debits (+)</span>
+            </div>
+            <h3 className="text-2xl font-bold text-emerald-900 tabular-nums">{formatCurrency(debitSum)}</h3>
+            <p className="text-xs text-emerald-700 mt-1 font-medium">Inward receipts & increases</p>
+          </CardContent>
+        </Card>
 
-           <Card className="border-0 bg-rose-50 shadow-xl ring-1 ring-rose-500/10 rounded-[2.5rem]">
-              <CardContent className="p-8">
-                 <div className="flex items-center gap-3 mb-4 text-rose-600">
-                    <TrendingDown className="w-5 h-5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Total Credits (-)</span>
-                 </div>
-                 <h3 className="text-3xl font-black text-rose-900 tabular-nums">{formatCurrency(creditSum)}</h3>
-                 <p className="text-[10px] font-bold text-rose-600/60 uppercase tracking-widest mt-2">Funds Outward / Decreases</p>
-              </CardContent>
-           </Card>
-        </div>
+        {/* Credits Card */}
+        <Card className="border border-rose-200/80 bg-rose-50/50">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-1.5 text-rose-800 mb-1">
+              <TrendingDown className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Credits (-)</span>
+            </div>
+            <h3 className="text-2xl font-bold text-rose-900 tabular-nums">{formatCurrency(creditSum)}</h3>
+            <p className="text-xs text-rose-700 mt-1 font-medium">Outward payments & deductions</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="border-0 shadow-2xl ring-1 ring-slate-200 overflow-hidden rounded-[2.5rem]">
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-           <div className="flex items-center gap-3">
-              <History className="w-5 h-5 text-slate-400" />
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recent Activity</h3>
-           </div>
-        </div>
+      {/* Ledger Entries Table */}
+      <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-900/5">
-                  <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                  <th className="text-left px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
-                  <th className="text-center px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Counter Account</th>
-                  <th className="text-right px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {entries.map((entry: any) => {
+          <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">General Ledger Activity</h2>
+            <span className="text-xs text-slate-500 font-medium">{entries.length} recent entries</span>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-32">Date</TableHead>
+                <TableHead>Description & Reference</TableHead>
+                <TableHead className="text-center w-36">Offset Account</TableHead>
+                <TableHead className="text-right w-36">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {entries.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-12 text-slate-400 text-xs">
+                    No transactions recorded for this account.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                entries.map((entry: any) => {
                   const isDebit = entry.debitAccountId === id;
                   const counterAccount = isDebit ? entry.creditAccount : entry.debitAccount;
                   
                   return (
-                    <tr key={entry.id} className="hover:bg-slate-50/80 transition-all">
-                      <td className="px-8 py-6">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{fmtDate(entry.date)}</span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{entry.description || "General Entry"}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {entry.referenceType} | #{entry.id.slice(-6)}</p>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
-                            {counterAccount?.name || "System"}
-                         </span>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                         <div className={cn(
-                           "text-lg font-black italic tracking-tighter tabular-nums flex items-center justify-end gap-2",
-                           isDebit ? "text-emerald-600" : "text-rose-600"
-                         )}>
-                           {isDebit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
-                           {formatCurrency(Number(entry.amount))}
-                         </div>
-                      </td>
-                    </tr>
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-medium text-slate-600 text-xs">
+                        {fmtDate(entry.date)}
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-semibold text-slate-900 text-sm">{entry.description || "General Entry"}</p>
+                        <p className="text-[10px] text-slate-400">Ref: {entry.referenceType} | #{entry.id.slice(-6)}</p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          {counterAccount?.name || "System"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className={cn(
+                          "font-semibold tabular-nums text-sm inline-flex items-center justify-end gap-1",
+                          isDebit ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                          {isDebit ? <ArrowDownLeft className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
+                          {formatCurrency(Number(entry.amount))}
+                        </span>
+                      </TableCell>
+                    </TableRow>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                })
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

@@ -3,9 +3,8 @@ import { verifySessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/utils/financials";
 import { Card, CardContent } from "@/ui/core/Card";
-import {
-  Plus,
-} from "lucide-react";
+import { Button } from "@/ui/core/Button";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { serializePrisma } from "@/utils/serialization";
 import { LoansList } from "@/features/billing/components/LoansList";
@@ -39,56 +38,52 @@ export default async function LoansPage() {
   });
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-7xl mx-auto pb-24">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-[10px] font-black text-primary-500 uppercase tracking-[0.4em] italic">Capital Node</span>
-            <div className="h-1.5 w-1.5 rounded-full bg-primary-500 shadow-lg shadow-primary-500/20" />
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 leading-tight tracking-tighter font-display uppercase italic">
-            Loans <span className="text-primary-600">&</span> Advances
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Loans & Capital Advances</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Track borrowing liabilities, receivables, and unallocated advances</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link href="/loans/new" className="h-16 px-10 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-primary-600 transition-all flex items-center justify-center gap-3 group">
-            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+        <Link href="/loans/new">
+          <Button className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
             <span>New Capital Entry</span>
-          </Link>
-        </div>
+          </Button>
+        </Link>
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl">
-          <CardContent className="p-8">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Total Liabilities</p>
-            <h3 className="text-3xl font-black tabular-nums tracking-tighter italic">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-slate-900 text-white border-0">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Liabilities (Taken)</p>
+            <h3 className="text-2xl font-bold tabular-nums tracking-tight mt-1">
               {formatCurrency(loans.filter((l: any) => l.type === 'TAKEN').reduce((sum: number, l: any) => sum + Number(l.amount), 0))}
             </h3>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-primary-600 text-white rounded-[2.5rem] shadow-2xl">
-          <CardContent className="p-8">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Total Receivables</p>
-            <h3 className="text-3xl font-black tabular-nums tracking-tighter italic">
+        <Card className="bg-primary-600 text-white border-0">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary-200">Total Receivables (Given)</p>
+            <h3 className="text-2xl font-bold tabular-nums tracking-tight mt-1">
               {formatCurrency(loans.filter((l: any) => l.type === 'GIVEN').reduce((sum: number, l: any) => sum + Number(l.amount), 0))}
             </h3>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-emerald-50 ring-1 ring-emerald-100 rounded-[2.5rem]">
-          <CardContent className="p-8">
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Advances Received</p>
-            <h3 className="text-3xl font-black text-emerald-900 tabular-nums tracking-tighter italic">
+        <Card className="border border-emerald-200 bg-emerald-50/50">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Advances Received</p>
+            <h3 className="text-2xl font-bold text-emerald-900 tabular-nums tracking-tight mt-1">
               {formatCurrency(advances.filter((a: any) => a.type === 'RECEIVED').reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
             </h3>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-amber-50 ring-1 ring-amber-100 rounded-[2.5rem]">
-          <CardContent className="p-8">
-            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">Advances Given</p>
-            <h3 className="text-3xl font-black text-amber-900 tabular-nums tracking-tighter italic">
+        <Card className="border border-amber-200 bg-amber-50/50">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Advances Given</p>
+            <h3 className="text-2xl font-bold text-amber-900 tabular-nums tracking-tight mt-1">
               {formatCurrency(advances.filter((a: any) => a.type === 'GIVEN').reduce((sum: number, a: any) => sum + Number(a.amount), 0))}
             </h3>
           </CardContent>

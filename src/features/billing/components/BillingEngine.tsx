@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Client } from "@/features/clients/types";
 import { Product } from "@/features/inventory/types";
 import { Button } from "@/ui/core/Button";
 import { formatCurrency } from "@/utils/financials";
-import { CheckCircle2, AlertCircle, ClipboardList, ArrowRight, Zap, Truck } from "lucide-react";
+import { CheckCircle2, AlertCircle, ArrowLeft, Truck, FileText } from "lucide-react";
 import { useTransactionStore, useTransactionTotals } from "@/lib/store/transactionStore";
 import { InvoiceDetailsCard } from "./InvoiceDetailsCard";
 import { TransactionTable } from "@/ui/core/TransactionTable";
-import { Card } from "@/ui/core/Card";
+import { Card, CardContent } from "@/ui/core/Card";
 import { createInvoiceAction, updateInvoiceAction } from "@/features/billing/actions/billing";
 import { createQuotationAction } from "@/features/billing/actions/quotations";
 
@@ -29,8 +29,8 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
     const store = useTransactionStore();
     const totals = useTransactionTotals();
 
-    // Memoize the freight total calculation for UI smoothness
-    const freightTotal = React.useMemo(() => {
+    // Memoize the freight total calculation
+    const freightTotal = useMemo(() => {
         if (!store.isFreightCollect) return 0;
         return (store.freightAmount || 0) * (1 + (store.freightTaxPercent || 0) / 100);
     }, [store.isFreightCollect, store.freightAmount, store.freightTaxPercent]);
@@ -43,7 +43,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
             store.initialize(initialData);
         }
 
-        // AI Resell Workflow: Handle data from Procurement Page
+        // Resell Workflow: Handle data from Procurement Page
         if (typeof window !== "undefined") {
             const resellData = sessionStorage.getItem("jezzy_resell_pack");
             if (resellData) {
@@ -77,8 +77,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
                     store.setField("shippingAddress", address);
                 }
 
-                // Automated GST Selection:
-                // Per request: Kerala = CGST_SGST, Others = IGST
+                // Kerala = CGST_SGST, Others = IGST
                 const stateStr = client.state?.trim().toLowerCase() || "";
                 const isKerala = stateStr === "kerala" || stateStr.includes("kerala") || stateStr === "kl";
                 if (isKerala) {
@@ -90,7 +89,7 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
         }
     }, [store.entityId, clients, store.shippingSameAsBilling]);
 
-    // Also watch for manual billing address state changes
+    // Manual billing address state changes
     useEffect(() => {
         const stateStr = store.billingAddress?.state?.trim().toLowerCase() || "";
         if (!stateStr) return;
@@ -160,14 +159,14 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
     };
 
     return (
-        <div className="space-y-12 max-w-7xl mx-auto pb-32">
-            {/* Error Notifications */}
+        <div className="space-y-6 max-w-5xl mx-auto pb-20">
+            {/* Error Notification */}
             {error && (
-                <div className="flex items-start gap-3 rounded-4xl bg-red-50 p-6 text-sm text-red-700 border border-red-100 shadow-xl shadow-red-500/5 animate-in fade-in slide-in-from-top-4">
-                    <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
-                    <div className="space-y-1">
-                        <p className="font-black uppercase tracking-[0.2em] text-[10px] text-red-400">System Validation Error</p>
-                        <p className="font-bold opacity-80">{error}</p>
+                <div className="flex items-start gap-3 rounded-lg bg-red-50 p-4 text-xs text-red-700 border border-red-200" role="alert">
+                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-semibold">Validation Notice</p>
+                        <p className="mt-0.5">{error}</p>
                     </div>
                 </div>
             )}
@@ -178,125 +177,109 @@ export function BillingEngine({ clients, products, mode = "INVOICE", initialData
             {/* Step 2: Line Items */}
             <TransactionTable products={products} />
 
-            {/* Summaries & Global Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pt-10 border-t border-slate-100">
+            {/* Step 3: Financial Summary & Actions */}
+            <Card>
+                <CardContent className="p-6">
+                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-slate-500" />
+                            <h4 className="text-sm font-semibold text-slate-900">Financial Summary</h4>
+                        </div>
+                    </div>
 
-                {/* Totals & Submit */}
-                <div className="lg:col-span-12  w-full">
-                    <Card className="border-0 shadow-3xl ring-1 ring-slate-900/5 bg-white p-10 overflow-hidden rounded-[3rem]">
-                        <div className="flex items-center justify-between mb-10">
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300 italic">Financial Summary</h4>
-                            <div className="flex h-3 w-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
+                    <div className="space-y-3 max-w-md ml-auto">
+                        <div className="flex justify-between items-center text-xs text-slate-600">
+                            <span>Taxable Value (Subtotal)</span>
+                            <span className="tabular-nums font-medium text-slate-900">{formatCurrency(totals.subTotal)}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-xs text-slate-600">
+                            <span>Tax Contribution (GST)</span>
+                            <span className="tabular-nums font-medium text-slate-900">{formatCurrency(totals.taxTotal)}</span>
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center text-sm font-black text-slate-400">
-                                <span className="uppercase tracking-[0.2em] text-[10px]">Net Taxable Value</span>
-                                <span className="tabular-nums text-slate-900 italic transform transition-all group-hover:scale-110">{formatCurrency(totals.subTotal)}</span>
+                        {totals.roundOff !== 0 && (
+                            <div className="flex justify-between items-center text-xs text-slate-600">
+                                <span>Round Off</span>
+                                <span className="tabular-nums font-medium text-slate-900">{totals.roundOff > 0 ? '+' : ''}{totals.roundOff.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm font-black text-slate-400">
-                                <span className="uppercase tracking-[0.2em] text-[10px]">Tax Contribution (GST)</span>
-                                <span className="tabular-nums text-primary-600 italic">{formatCurrency(totals.taxTotal)}</span>
+                        )}
+
+                        {/* Freight Section */}
+                        {store.isFreightCollect && (
+                            <div className="pt-3 border-t border-slate-100 space-y-2">
+                                <div className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                                    <Truck className="w-4 h-4 text-slate-500" />
+                                    <span>Freight Collect</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[11px] text-slate-500">Amount (excl. GST) ₹</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            className="w-full h-9 rounded-lg border border-slate-300 px-3 text-right text-xs text-slate-900 tabular-nums focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                                            value={store.freightAmount || ""}
+                                            onChange={e => store.setField("freightAmount", parseFloat(e.target.value) || 0)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[11px] text-slate-500">GST %</label>
+                                        <select
+                                            className="w-full h-9 rounded-lg border border-slate-300 px-2 text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                                            value={store.freightTaxPercent || 0}
+                                            onChange={e => store.setField("freightTaxPercent", parseFloat(e.target.value) || 0)}
+                                        >
+                                            {[0, 5, 12, 18, 28].map(v => <option key={v} value={v}>{v}%</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                {(store.freightAmount || 0) > 0 && (
+                                    <div className="flex justify-between text-xs text-slate-500 bg-slate-50 p-2 rounded-md">
+                                        <span>Freight Total (incl. GST)</span>
+                                        <span className="font-semibold text-slate-900 tabular-nums">{formatCurrency(freightTotal)}</span>
+                                    </div>
+                                )}
                             </div>
+                        )}
 
-                            {totals.roundOff !== 0 && (
-                                <div className="flex justify-between items-center text-sm font-black text-slate-400 animate-in fade-in slide-in-from-top-1">
-                                    <span className="uppercase tracking-[0.2em] text-[10px]">Mathematical Round Off</span>
-                                    <span className="tabular-nums text-slate-500 italic">{totals.roundOff > 0 ? '+' : ''}{totals.roundOff.toFixed(2)}</span>
-                                </div>
-                            )}
-
-                            {/* Freight Row — only shown when Freight Collect is active */}
-                            {store.isFreightCollect && (
-                                <div className="pt-4 border-t border-slate-50 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Truck className="w-4 h-4 text-slate-600" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Freight Amount</span>
-                                        <span className="ml-auto text-[9px] font-black text-primary-500 uppercase tracking-widest">Freight Collect Active</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Amount (excl. GST) ₹</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                className="w-full h-11 rounded-2xl border-0 bg-slate-50 px-4 text-right text-sm font-black text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500/20 focus:bg-white focus:outline-none transition-all tabular-nums"
-                                                value={store.freightAmount || ""}
-                                                onChange={e => store.setField("freightAmount", parseFloat(e.target.value) || 0)}
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">GST %</label>
-                                            <select
-                                                className="w-full h-11 rounded-2xl border-0 bg-slate-50 px-4 text-sm font-black text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500/20 focus:bg-white focus:outline-none transition-all appearance-none"
-                                                value={store.freightTaxPercent || 0}
-                                                onChange={e => store.setField("freightTaxPercent", parseFloat(e.target.value) || 0)}
-                                            >
-                                                {[0, 5, 12, 18, 28].map(v => <option key={v} value={v}>{v}%</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    {(store.freightAmount || 0) > 0 && (
-                                        <div className="mt-3 flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-50 rounded-xl px-4 py-2">
-                                            <span>Freight incl. GST</span>
-                                            <span className="text-slate-900 tabular-nums">
-                                                {formatCurrency((store.freightAmount || 0) * (1 + (store.freightTaxPercent || 0) / 100))}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="pt-10 border-t border-slate-50 mt-6 relative">
-                                <div className="flex justify-between items-end mb-12">
-                                    <div className="space-y-2">
-                                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-primary-600 italic">Total Payable</p>
-                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter  opacity-60 italic">INR (₹) Final Value</p>
-                                    </div>
-                                    <p className="text-6xl font-black tracking-tighter text-emerald-600 italic animate-reveal">
-                                        {formatCurrency(totals.grandTotal)}
-                                    </p>
-                                </div>
-
-                                <div className="flex gap-4">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="h-20 w-20 flex-none rounded-3xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all group"
-                                        onClick={() => router.back()}
-                                        disabled={isPending}
-                                    >
-                                        <Zap className="w-6 h-6 rotate-180 group-hover:scale-125 transition-transform" />
-                                    </Button>
-                                    <Button
-                                        className="flex-1 h-20 w-full text-2xl font-black gap-4 rounded-4xl shadow-3xl transition-all uppercase italic tracking-widest bg-primary-600 text-white hover:bg-primary-700 active:scale-95 group/submit overflow-hidden"
-                                        onClick={handleSubmit}
-                                        loading={isPending}
-                                        variant="primary"
-                                        disabled={isPending || store.items.length === 0 || !store.entityId}
-                                    >
-                                        <div className="group/submit absolute w-full inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover/submit:translate-x-full transition-transform duration-1000" />
-                                        {initialData?.id ? (
-                                            <><CheckCircle2 className="w-8 h-8" /> Update</>
-                                        ) : mode === "QUOTATION" ? (
-                                            <><ClipboardList className="w-8 h-8" /> Commit</>
-                                        ) : (
-                                            <><CheckCircle2 className="w-8 h-8" /> Deploy</>
-                                        )}
-                                        <ArrowRight size={24} className="ml-2 group-hover/submit:translate-x-2 transition-transform" />
-                                    </Button>
-                                </div>
-
-                                <p className="text-center text-[9px] text-slate-300 mt-8 leading-relaxed font-black uppercase tracking-[0.5em] italic">
-                                    Transaction Engine Secure Node v5
-                                </p>
-                            </div>
+                        {/* Grand Total */}
+                        <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
+                            <span className="text-sm font-semibold text-slate-900">Total Payable</span>
+                            <span className="text-2xl font-bold text-slate-900 tabular-nums">
+                                {formatCurrency(totals.grandTotal)}
+                            </span>
                         </div>
-                    </Card>
-                </div>
-            </div >
-        </div >
+                    </div>
+
+                    {/* Actions Toolbar */}
+                    <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="md"
+                            onClick={() => router.back()}
+                            disabled={isPending}
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-1.5" />
+                            Back
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="md"
+                            onClick={handleSubmit}
+                            loading={isPending}
+                            disabled={isPending || store.items.length === 0 || !store.entityId}
+                        >
+                            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                            {initialData?.id ? "Update Document" : mode === "QUOTATION" ? "Save Quotation" : "Create Invoice"}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

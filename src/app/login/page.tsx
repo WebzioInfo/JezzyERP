@@ -1,32 +1,12 @@
 "use client";
+
 import { loginAction } from "@/features/auth/actions/auth";
-import { Loader2, AlertCircle } from "lucide-react";
-import { useActionState, useCallback, useEffect, useState } from "react";
+import { Loader2, AlertCircle, Building2, Eye, EyeOff } from "lucide-react";
+import { useActionState, useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [particles, setParticles] = useState<any[]>([]);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-
-    // Generate random particles only on the client
-    const newParticles = [...Array(20)].map(() => ({
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      opacity: Math.random(),
-      duration: `${10 + Math.random() * 20}s`,
-      delay: `${-Math.random() * 20}s`,
-    }));
-    setParticles(newParticles);
-
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [handleMouseMove]);
 
   const [state, formAction, pending] = useActionState(
     async (prevState: any, formData: FormData) => {
@@ -42,122 +22,112 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 relative overflow-hidden selection:bg-primary-100">
-
-      {/* ── Subtle Background Watermark Layer ── */}
-      <div className="absolute inset-0 z-0 opacity-[0.035] pointer-events-none select-none overflow-hidden flex flex-wrap gap-16 p-10 rotate-[-12deg] scale-110">
-        {[...Array(60)].map((_, i) => (
-          <div key={i} className="text-3xl font-bold font-display tracking-tight uppercase whitespace-nowrap text-slate-900">
-            Webzio
-          </div>
-        ))}
-      </div>
-
-      {/* ── Main Login Container ── */}
-      <div className="relative z-10 w-full max-w-[400px] flex flex-col items-center animate-reveal">
-
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 selection:bg-slate-200">
+      <div className="w-full max-w-sm flex flex-col items-center animate-reveal">
         {/* Branding Area */}
-        <div className="flex flex-col items-center mb-12">
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Jezzy Enterprises
+        <div className="flex flex-col items-center mb-8 text-center">
+          <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center text-white mb-3 shadow-sm">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            JEZZY ERP
           </h1>
-          <div className="h-0.5 w-8 bg-slate-200 mt-2 rounded-full" />
+          <p className="text-xs text-slate-500 mt-1">
+            Enterprise Resource Planning Command Center
+          </p>
         </div>
 
         {/* Minimal Login Card */}
-        <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-          <div className="mb-8">
-            <h2 className="text-lg font-bold text-slate-900">Sign In</h2>
-            <p className="text-slate-500 mt-1 text-sm">Access the management system.</p>
+        <div className="w-full bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-xs">
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-slate-900">Sign in to your account</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Enter your credentials to access the workspace.</p>
           </div>
 
           {/* Error Message */}
           {state?.error && (
-            <div className="mb-6 p-3.5 rounded-xl bg-slate-50 border border-red-100 flex items-center gap-3 animate-in">
-              <AlertCircle className="w-4 h-4 text-red-500" />
-              <p className="text-xs text-red-700 font-bold">{state.error}</p>
+            <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5" role="alert">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700 font-medium">{state.error}</p>
             </div>
           )}
 
-          <form action={formAction} className="space-y-6">
+          <form action={formAction} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-0.5" htmlFor="email">
-                Email
+              <label className="block text-xs font-medium text-slate-700" htmlFor="email">
+                Email address
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="email@example.com"
+                autoComplete="email"
+                placeholder="name@company.com"
                 required
-                className="w-full h-12 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-0 transition-all outline-none text-sm text-slate-700 placeholder:text-slate-300"
+                className="w-full h-10 px-3 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-colors"
               />
             </div>
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between ml-0.5">
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider" htmlFor="password">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-medium text-slate-700" htmlFor="password">
                   Password
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
               </div>
               <div className="relative">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   required
-                  className="w-full h-12 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-0 transition-all outline-none text-sm text-slate-700 placeholder:text-slate-300"
+                  className="w-full h-10 pl-3 pr-10 rounded-lg bg-white border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 rounded transition-colors"
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
               </div>
-            </div>
-
-            {/* Options */}
-            <div className="flex items-center justify-between px-0.5">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-slate-600 focus:ring-transparent transition-all cursor-pointer" />
-                <span className="text-xs font-medium text-slate-400 group-hover:text-slate-600 transition-colors">Remember me</span>
-              </label>
-              <a href="#" className="text-xs font-bold text-slate-400 hover:underline">Forgot?</a>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={pending}
-              className="w-full h-12 rounded-xl bg-slate-900 text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 mt-2"
+              className="w-full h-10 rounded-lg bg-slate-900 text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer shadow-xs"
             >
               {pending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                   <span>Signing in...</span>
                 </>
               ) : (
-                <span>Login</span>
+                <span>Sign in</span>
               )}
             </button>
           </form>
+
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500">
+              Need a company workspace?{" "}
+              <Link href="/signup" className="font-semibold text-slate-900 hover:underline">
+                Create an account
+              </Link>
+            </p>
+          </div>
         </div>
 
-        {/* ── Footer Credits ── */}
-        <div className="mt-12 text-center flex flex-col gap-1.5">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Powered by Webzio Technology
-          </p>
-          <p className="text-[10px] font-medium text-slate-300 uppercase tracking-[0.05em]">
-            A product of Webzio International
-          </p>
-        </div>
-
+        {/* Footer */}
+        <p className="mt-8 text-xs text-slate-400 text-center">
+          &copy; {new Date().getFullYear()} Jezzy Enterprises. Built with enterprise security.
+        </p>
       </div>
     </div>
   );

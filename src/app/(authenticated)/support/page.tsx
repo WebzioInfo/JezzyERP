@@ -1,25 +1,13 @@
 import {
-  BookOpen,
   LifeBuoy,
-  Search,
-  ChevronRight,
   MessageCircle,
-  HelpCircle,
-  ShieldCheck,
   FileText,
   CreditCard,
-  UserCheck,
-  Zap,
-  ArrowRight,
   TrendingUp,
   Package,
   FileSearch,
-  RefreshCw,
-  Trash2,
   Building2
 } from "lucide-react";
-import Link from "next/link";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Card, CardContent } from "@/ui/core/Card";
 
 export default function SupportPage() {
@@ -27,27 +15,27 @@ export default function SupportPage() {
     {
       title: "Sales Cycle",
       subtitle: "From Quote to Cash",
-      icon: <FileText className="w-6 h-6 text-primary-600" />,
+      icon: <FileText className="w-5 h-5 text-primary-600" />,
       explanation: "Start with a Quotation (Estimate) for your client. Once approved, convert it to an Invoice. Finally, track the Payment to close the deal.",
       features: ["Drafting Quotes", "GST Invoicing", "Payment Tracking"]
     },
     {
       title: "Procurement",
       subtitle: "Stock Acquisition",
-      icon: <Package className="w-6 h-6 text-amber-600" />,
+      icon: <Package className="w-5 h-5 text-amber-600" />,
       explanation: "Record your Purchase Bills from vendors. The system automatically adds these items to your Inventory and updates your Outgoing Credit (Payable).",
       features: ["Vendor Ledger", "Purchase Entry", "Auto-Stock Update"]
     },
     {
       title: "Inventory",
-      icon: <TrendingUp className="w-6 h-6 text-emerald-600" />,
+      icon: <TrendingUp className="w-5 h-5 text-emerald-600" />,
       subtitle: "Smart Tracking",
       explanation: "Monitor live stock levels. The system calculates 'Purchases minus Sales' to give you an exact count. Get alerts when items are 'Out of Stock'.",
       features: ["SKU Management", "Stock Levels", "Shortage Alerts"]
     },
     {
       title: "Finance",
-      icon: <CreditCard className="w-6 h-6 text-indigo-600" />,
+      icon: <CreditCard className="w-5 h-5 text-indigo-600" />,
       subtitle: "Credit Analysis",
       explanation: "View your Incoming Credits (money clients owe you) and Outgoing Credits (money you owe vendors) in a single financial dashboard.",
       features: ["AR/AP Tracking", "Tax Reports", "Profit Analysis"]
@@ -55,115 +43,118 @@ export default function SupportPage() {
   ];
 
   return (
-    <div className="space-y-16 animate-in fade-in duration-700 pb-20">
-      {/* ── Hero Section ── */}
-      <div className="relative overflow-hidden rounded-[3rem] bg-slate-900 p-12 lg:p-20 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 -m-20 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl" />
-        <div className="relative z-10 max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-xs font-black uppercase tracking-widest mb-8 border border-white/10 backdrop-blur-md">
-            <LifeBuoy className="w-4 h-4 text-primary-400" />
-            Beginner's Masterclass
+    <div className="space-y-8 max-w-6xl mx-auto pb-16">
+      {/* Hero Section */}
+      <div className="rounded-xl bg-slate-900 p-8 sm:p-12 text-white shadow-md relative overflow-hidden">
+        <div className="relative z-10 max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold">
+            <LifeBuoy className="w-3.5 h-3.5 text-primary-400" />
+            <span>ERP User Guide & Architecture</span>
           </div>
-          <h1 className="text-5xl lg:text-7xl font-black tracking-tight font-display italic leading-none mb-6">
-            Understand your <span className="text-primary-400 underline decoration-primary-500/30 underline-offset-8">Workflow</span> like a Pro.
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            How Your ERP System Works
           </h1>
-          <p className="text-xl text-slate-400 font-medium leading-relaxed italic max-w-2xl">
-            JEZZY ERP simplifies complex business logic into three easy steps: Buy, Sell, and Track. This guide explains every component of your new ecosystem.
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            JEZZY ERP coordinates your commercial operations across three core pillars: procurement, sales billing, and double-entry financial accounting.
           </p>
         </div>
       </div>
 
-      {/* ── Workflow Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Workflow Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {guideSections.map((section, i) => (
-          <div key={i} className="clay-card p-10 border-0 bg-white group hover:scale-[1.02] transition-all duration-500">
-            <div className="flex items-start gap-6 mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-primary-50 transition-colors shadow-inner">
-                {section.icon}
+          <Card key={i} className="hover:border-slate-300 transition-colors">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                  {section.icon}
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">{section.title}</h2>
+                  <p className="text-xs text-primary-600 font-medium">{section.subtitle}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-2xl font-black text-slate-900 font-display italic uppercase tracking-tighter">{section.title}</h3>
-                <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest">{section.subtitle}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {section.explanation}
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {section.features.map((f, fi) => (
+                  <span key={fi} className="px-2.5 py-1 bg-slate-100 rounded-md text-[11px] font-medium text-slate-700">
+                    {f}
+                  </span>
+                ))}
               </div>
-            </div>
-            <p className="text-slate-500 font-medium leading-relaxed mb-8 uppercase text-xs tracking-wider italic">
-              {section.explanation}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {section.features.map((f, fi) => (
-                <span key={fi} className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-tight border border-slate-100">
-                  {f}
-                </span>
-              ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* ── Workflow Explanation ── */}
-      <div className="bg-white rounded-[3rem] p-12 lg:p-20 shadow-2xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
-        <h2 className="text-4xl font-black text-slate-900 tracking-tighter font-display italic uppercase mb-12 text-center">Standard <span className="text-primary-600">Business Workflow</span></h2>
+      {/* Workflow Explanation */}
+      <Card>
+        <CardContent className="p-6 sm:p-10 space-y-8">
+          <div className="text-center max-w-xl mx-auto space-y-1">
+            <h2 className="text-xl font-bold text-slate-900">Standard Business Workflow</h2>
+            <p className="text-xs text-slate-500">How everyday transactions flow through your organization</p>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
-          {/* Step 1 */}
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-slate-900 text-white rounded-3xl flex items-center justify-center text-3xl font-black mx-auto shadow-xl">1</div>
-            <h4 className="font-black uppercase tracking-widest text-sm italic">Stock Entry</h4>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed italic">Add Products to your catalog and record Purchases to fill your inventory.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            {/* Step 1 */}
+            <div className="space-y-3 p-4 rounded-lg bg-slate-50">
+              <div className="w-10 h-10 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-bold mx-auto">1</div>
+              <h3 className="font-semibold text-sm text-slate-900">Procurement & Stock</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Record Purchases from vendors. Inward inventory is automatically added to product stock balances.</p>
+            </div>
+            {/* Step 2 */}
+            <div className="space-y-3 p-4 rounded-lg bg-primary-50/50">
+              <div className="w-10 h-10 bg-primary-600 text-white rounded-lg flex items-center justify-center text-sm font-bold mx-auto">2</div>
+              <h3 className="font-semibold text-sm text-slate-900">Sales & Billing</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Create Quotations and convert to GST Invoices. Outward items decrement stock and record accounts receivable.</p>
+            </div>
+            {/* Step 3 */}
+            <div className="space-y-3 p-4 rounded-lg bg-emerald-50/50">
+              <div className="w-10 h-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-sm font-bold mx-auto">3</div>
+              <h3 className="font-semibold text-sm text-slate-900">Payments & Ledger</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Record client collections and vendor payouts. Real-time trial balance and statement ledgers update automatically.</p>
+            </div>
           </div>
-          {/* Step 2 */}
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-primary-600 text-white rounded-3xl flex items-center justify-center text-3xl font-black mx-auto shadow-xl">2</div>
-            <h4 className="font-black uppercase tracking-widest text-sm italic">Sales Operations</h4>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed italic">Generate Invoices for your clients. Every sale automatically reduces your stock level.</p>
-          </div>
-          {/* Step 3 */}
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-emerald-500 text-white rounded-3xl flex items-center justify-center text-3xl font-black mx-auto shadow-xl">3</div>
-            <h4 className="font-black uppercase tracking-widest text-sm italic">Analysis</h4>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed italic">Monitor the Payments dashboard to see who owes you money and who you need to pay.</p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* ── Contact Section (Webzio) ── */}
-      <div className="bg-slate-950 rounded-[3rem] p-12 lg:p-20 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-20 opacity-5">
-          <Building2 className="w-64 h-64" />
-        </div>
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
-          <div className="max-w-xl text-center lg:text-left">
-            <h2 className="text-4xl font-black italic tracking-tight mb-4">Technical <span className="text-primary-400">Consultancy</span></h2>
-            <p className="text-slate-400 font-medium leading-relaxed">
-              This ERP system is developed and maintained by **Webzio Technology**. If you encounter any bugs, need new features, or require professional training, please reach out to our technical desk.
+      {/* Contact Section */}
+      <div className="bg-slate-900 rounded-xl p-6 sm:p-8 text-white relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="max-w-xl space-y-2">
+            <h2 className="text-lg font-bold">Technical Support & Architecture</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              For technical queries, feature enhancements, custom migrations, or maintenance support, please contact the development desk.
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 w-full lg:w-auto">
-            <div className="clay-card p-8 bg-white/5 border border-white/10 flex items-center gap-6 group hover:bg-white/10 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-primary-500 flex items-center justify-center shrink-0 shadow-lg shadow-primary-500/20">
-                <MessageCircle className="w-6 h-6 text-white" />
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="p-4 rounded-lg bg-white/10 border border-white/10 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-primary-500 flex items-center justify-center shrink-0">
+                <MessageCircle className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Direct Support Line</p>
-                <h4 className="text-xl font-black italic tracking-tighter text-slate-700">8089864422</h4>
+                <p className="text-[10px] uppercase font-semibold text-slate-400">Support Desk</p>
+                <p className="text-sm font-bold text-white">8089864422</p>
               </div>
             </div>
 
-            <div className="clay-card p-8 bg-white/5 border border-white/10 flex items-center gap-6 group hover:bg-white/10 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
-                <FileSearch className="w-6 h-6 text-white" />
+            <div className="p-4 rounded-lg bg-white/10 border border-white/10 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-emerald-500 flex items-center justify-center shrink-0">
+                <FileSearch className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Official Inquiry</p>
-                <h4 className="text-xl font-black italic tracking-tighter text-slate-700">info@webziointernational.in</h4>
+                <p className="text-[10px] uppercase font-semibold text-slate-400">Email Inquiry</p>
+                <p className="text-sm font-bold text-white">info@webziointernational.in</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-12 border-t border-white/5 text-center">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Built with Excellence by Webzio Technology &copy; 2026</p>
+        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+          <p className="text-xs text-slate-500">JezzyERP Enterprise Architecture &copy; 2026</p>
         </div>
       </div>
     </div>
