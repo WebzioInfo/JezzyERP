@@ -336,16 +336,6 @@ function SidebarContent({
     return pathname.startsWith(href);
   };
 
-  // Auto-expand section containing active path
-  useEffect(() => {
-    for (const section of NAV_SECTIONS) {
-      const hasActive = section.items.some(item => (item.exact ? pathname === item.href : pathname.startsWith(item.href)));
-      if (hasActive && !expandedSections.includes(section.label)) {
-        toggleSection(section.label);
-      }
-    }
-  }, [pathname, expandedSections, toggleSection]);
-
   return (
     <div className="flex-1 flex flex-col py-3 overflow-hidden">
       {!isMobile && !sidebarCollapsed && (
@@ -373,7 +363,8 @@ function SidebarContent({
         sidebarCollapsed ? "overflow-y-auto scrollbar-hide px-1.5" : "overflow-y-auto px-2 custom-scrollbar"
       )} data-lenis-prevent>
         {NAV_SECTIONS.map((section) => {
-          const isExpanded = expandedSections.includes(section.label);
+          const isSectionActive = section.items.some(item => isActive(item.href, item.exact));
+          const isExpanded = expandedSections.includes(section.label) || isSectionActive;
 
           return (
             <div key={section.label}>

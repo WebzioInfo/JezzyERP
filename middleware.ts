@@ -47,9 +47,10 @@ export async function middleware(req: NextRequest) {
     // Content Security Policy
     const cspHeader = `
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://va.vercel-scripts.com;
+        connect-src 'self' https://cloudflareinsights.com https://vitals.vercel-insights.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        img-src 'self' blob: data:;
+        img-src 'self' blob: data: https:;
         font-src 'self' https://fonts.gstatic.com;
         frame-src 'self' blob:;
         object-src 'none';
