@@ -25,27 +25,27 @@ export function Skeleton({
 
 export function SidebarSkeleton() {
   return (
-    <div className="flex-1 flex flex-col py-6 px-4 space-y-6 overflow-hidden animate-pulse">
-      <div className="px-2 mb-6 flex items-center gap-3">
-        <Skeleton className="w-8 h-8 rounded-lg" />
-        <Skeleton className="h-5 w-28 rounded-md" />
+    <div className="flex-1 flex flex-col py-3 px-3 space-y-4 overflow-hidden animate-pulse">
+      <div className="px-1 mb-3 flex items-center gap-2.5">
+        <Skeleton className="w-7 h-7 rounded-lg" />
+        <Skeleton className="h-4 w-20 rounded-md" />
       </div>
 
-      <nav className="flex-1 space-y-6 px-0">
+      <nav className="flex-1 space-y-3 px-0">
         {[1, 2, 3].map((section) => (
-          <div key={section} className="space-y-3">
-            <Skeleton className="h-3 w-16 ml-2" />
-            <div className="space-y-1.5">
+          <div key={section} className="space-y-1.5">
+            <Skeleton className="h-2.5 w-12 ml-1" />
+            <div className="space-y-1">
               {[1, 2, 3].map((item) => (
-                <Skeleton key={item} className="h-9 w-full rounded-lg" />
+                <Skeleton key={item} className="h-7 w-full rounded-lg" />
               ))}
             </div>
           </div>
         ))}
       </nav>
       
-      <div className="pt-4 mt-auto border-t border-slate-100">
-        <Skeleton className="h-10 w-full rounded-lg" />
+      <div className="pt-2.5 mt-auto border-t border-slate-100">
+        <Skeleton className="h-8 w-full rounded-lg" />
       </div>
     </div>
   );

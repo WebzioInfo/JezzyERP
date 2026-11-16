@@ -16,7 +16,7 @@ export const useUIStore = create<UIState>()(
     (set) => ({
       sidebarCollapsed: false,
       mobileMenuOpen: false,
-      expandedSections: ["Overview", "Billing", "Management"], // Default expanded
+      expandedSections: ["EXECUTIVE", "BANKING", "SALES", "PROCUREMENT", "INVENTORY", "CAPITAL", "SYSTEM"], // Default all sections expanded
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),

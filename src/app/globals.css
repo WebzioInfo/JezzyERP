@@ -60,8 +60,8 @@
   --font-display: var(--font-outfit), var(--font-inter), sans-serif;
 
   /* Layout Constants */
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 72px;
+  --sidebar-width: 210px;
+  --sidebar-collapsed-width: 60px;
   --header-height: 56px;
 }
 

@@ -225,7 +225,7 @@ export default function AuthenticatedLayout({
       <aside
         className={cn(
           "hidden lg:flex flex-col transition-all duration-300 z-50 relative bg-white border-r border-slate-200 shrink-0",
-          !sidebarCollapsed ? "w-[260px]" : "w-[72px]"
+          !sidebarCollapsed ? "w-[210px]" : "w-[60px]"
         )}
       >
         <div className="h-full flex flex-col overflow-hidden">
@@ -236,9 +236,9 @@ export default function AuthenticatedLayout({
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-xs z-50 transition-colors cursor-pointer"
+          className="absolute -right-3 top-5 w-5 h-5 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-xs z-50 transition-colors cursor-pointer"
         >
-          {sidebarCollapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
+          {sidebarCollapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
         </button>
       </aside>
 
@@ -259,27 +259,27 @@ export default function AuthenticatedLayout({
       {/* ── Mobile Sidebar Drawer ── */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 w-[270px] z-70 transition-transform duration-300 ease-out bg-white border-r border-slate-200 lg:hidden shadow-xl",
+          "fixed top-0 bottom-0 left-0 w-[240px] z-70 transition-transform duration-300 ease-out bg-white border-r border-slate-200 lg:hidden shadow-xl",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="h-full flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between p-3.5 border-b border-slate-100 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center">
+                <Building2 className="w-3.5 h-3.5 text-white" />
               </div>
               <div>
-                <span className="font-semibold text-sm text-slate-900 tracking-tight block leading-tight">JEZZY ERP</span>
-                <span className="text-[10px] text-slate-400 block font-normal">Command Center</span>
+                <span className="font-semibold text-xs text-slate-900 tracking-tight block leading-tight">JEZZY ERP</span>
+                <span className="text-[10px] text-slate-400 block font-normal">Enterprise ERP</span>
               </div>
             </div>
             <button 
               onClick={() => setMobileMenuOpen(false)} 
               aria-label="Close sidebar"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           </div>
           <div className="overflow-y-auto flex-1 custom-scrollbar" data-lenis-prevent>
@@ -336,31 +336,41 @@ function SidebarContent({
     return pathname.startsWith(href);
   };
 
+  // Auto-expand section containing active path
+  useEffect(() => {
+    for (const section of NAV_SECTIONS) {
+      const hasActive = section.items.some(item => (item.exact ? pathname === item.href : pathname.startsWith(item.href)));
+      if (hasActive && !expandedSections.includes(section.label)) {
+        toggleSection(section.label);
+      }
+    }
+  }, [pathname, expandedSections, toggleSection]);
+
   return (
-    <div className="flex-1 flex flex-col py-4 overflow-hidden">
+    <div className="flex-1 flex flex-col py-3 overflow-hidden">
       {!isMobile && !sidebarCollapsed && (
-        <div className="px-5 mb-5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 shadow-xs">
-            <Building2 className="w-4 h-4 text-white" />
+        <div className="px-3.5 mb-3 flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 shadow-xs">
+            <Building2 className="w-3.5 h-3.5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-slate-900 text-sm tracking-tight leading-tight">JEZZY ERP</p>
-            <p className="text-[11px] text-slate-400 font-normal truncate">Enterprise Command Center</p>
+            <p className="font-semibold text-slate-900 text-xs tracking-tight leading-tight">JEZZY ERP</p>
+            <p className="text-[10px] text-slate-400 font-normal truncate">Enterprise ERP</p>
           </div>
         </div>
       )}
 
       {!isMobile && sidebarCollapsed && (
-        <div className="flex justify-center mb-5">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-xs" title="JEZZY ERP">
-            <Building2 className="w-4 h-4 text-white" />
+        <div className="flex justify-center mb-3">
+          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shadow-xs" title="JEZZY ERP">
+            <Building2 className="w-3.5 h-3.5 text-white" />
           </div>
         </div>
       )}
 
       <nav className={cn(
-        "flex-1 space-y-3 pb-6",
-        sidebarCollapsed ? "overflow-y-auto scrollbar-hide px-2" : "overflow-y-auto px-3 custom-scrollbar"
+        "flex-1 space-y-1.5 pb-4",
+        sidebarCollapsed ? "overflow-y-auto scrollbar-hide px-1.5" : "overflow-y-auto px-2 custom-scrollbar"
       )} data-lenis-prevent>
         {NAV_SECTIONS.map((section) => {
           const isExpanded = expandedSections.includes(section.label);
@@ -371,13 +381,13 @@ function SidebarContent({
                 <button
                   type="button"
                   onClick={() => toggleSection(section.label)}
-                  className="w-full flex items-center justify-between px-2.5 py-1 mb-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors group cursor-pointer"
+                  className="w-full flex items-center justify-between px-2 py-0.5 mb-0.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group cursor-pointer"
                 >
-                  <span className="text-[11px] font-semibold tracking-wider text-slate-400 group-hover:text-slate-600 uppercase">
+                  <span className="text-[10px] font-semibold tracking-wider text-slate-400 group-hover:text-slate-600 uppercase">
                     {section.label}
                   </span>
                   <ChevronRight
-                    size={12}
+                    size={11}
                     className={cn(
                       "text-slate-400 transition-transform duration-200",
                       isExpanded ? "rotate-90" : "rotate-0"
@@ -386,7 +396,7 @@ function SidebarContent({
                 </button>
               )}
               {sidebarCollapsed && (
-                <div className="h-px bg-slate-100 mx-2 my-3" />
+                <div className="h-px bg-slate-100 mx-1.5 my-2" />
               )}
 
               <AnimatePresence initial={false}>
@@ -412,20 +422,20 @@ function SidebarContent({
                               }
                             }}
                             className={cn(
-                              "group flex items-center gap-2.5 rounded-lg text-xs font-medium transition-colors relative",
+                              "group flex items-center gap-2 rounded-lg text-xs font-medium transition-colors relative",
                               active
-                                ? "bg-slate-900 text-white font-medium"
+                                ? "bg-slate-900 text-white font-medium shadow-xs"
                                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-                              sidebarCollapsed ? "justify-center p-2" : "px-2.5 py-2"
+                              sidebarCollapsed ? "justify-center p-2" : "px-2 py-1.5"
                             )}
                             title={sidebarCollapsed ? `${item.name} - ${item.description}` : ""}
                           >
                             {isLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
                             ) : (
                               <item.icon
                                 className={cn(
-                                  "h-4 w-4 shrink-0 transition-colors",
+                                  "h-3.5 w-3.5 shrink-0 transition-colors",
                                   active ? "text-white" : "text-slate-400 group-hover:text-slate-600"
                                 )}
                               />
@@ -444,22 +454,22 @@ function SidebarContent({
       </nav>
 
       {/* User / Profile Footer */}
-      <div className="px-3 pt-3 mt-auto shrink-0 border-t border-slate-100">
+      <div className="px-2 pt-2 mt-auto shrink-0 border-t border-slate-100">
         {!sidebarCollapsed ? (
           <div className="relative">
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               className={cn(
-                "w-full p-2 flex items-center gap-2.5 rounded-lg transition-colors cursor-pointer text-left",
+                "w-full p-1.5 flex items-center gap-2 rounded-lg transition-colors cursor-pointer text-left",
                 isProfileMenuOpen ? "bg-slate-100" : "hover:bg-slate-100"
               )}
             >
-              <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-xs font-semibold text-white shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-semibold text-white shrink-0">
                 EA
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-slate-900 truncate">JEZZY Admin</p>
-                <p className="text-[11px] text-slate-400 truncate">Administrator</p>
+                <p className="text-[10px] text-slate-400 truncate">Administrator</p>
               </div>
             </button>
 
@@ -512,7 +522,7 @@ function SidebarContent({
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               title="Profile & Settings"
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold border transition-colors cursor-pointer",
+                "w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-semibold border transition-colors cursor-pointer",
                 isProfileMenuOpen ? "bg-slate-900 text-white border-slate-900" : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
               )}
             >
